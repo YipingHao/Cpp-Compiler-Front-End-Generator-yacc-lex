@@ -1,0 +1,15 @@
+//=======================================================================================================
+/********************************************Notice*****************************************************/
+//Format of the parameter file:
+//         Keys should be in front of corresponding values within the same line, and  symbol ""  is crucial for a string.
+//         Keys are crucial too, don't change the former keys of the input values.
+//=======================================================================================================
+{
+	//server = "GPU";
+	//item = 11;//grammerT
+	item = 13;
+	InputFileName = "./data/LR1.txt";
+	//InputFileName = "./data/grammerT2.txt";
+}
+/*
+*/
