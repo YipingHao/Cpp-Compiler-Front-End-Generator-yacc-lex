@@ -1,0 +1,7 @@
+terminal -> if | then | else | id; 
+stmt -> matched_stmt | open_stmt;
+open_stmt -> if expr then stmt | if expr then matched_stmt else open_stmt;
+expr -> id;
+matched_stmt -> if expr then matched_stmt else matched_stmt;
+
+

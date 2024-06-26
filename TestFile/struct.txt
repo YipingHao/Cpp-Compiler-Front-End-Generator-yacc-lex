@@ -1,0 +1,18 @@
+//=======================================================================================================
+/********************************************Notice*****************************************************/
+//Format of the parameter file:
+//         Keys should be in front of corresponding values within the same line, and  symbol ""  is crucial for a string.
+//         Keys are crucial too, don't change the former keys of the input values.
+//=======================================================================================================
+{
+	MoleculeLabel = [H2O, H2O, H2O, H2O]
+	//MoleculeLabel = [B, A, A, B, A]
+	AtomLabel = [H, H, H, H, H, H, H, H, O, O, O, O]
+	MoleculeOfAtom = [0, 0, 1, 1, 2, 2, 3, 3, 0, 1, 2, 3]
+	Order = 5;  		
+}
+/*
+ Labels of molecule denoted as MoleculeLabel, have the format of C-type Identifiers, i.e. ([_]|[a-z]|[A-Z])([_]|[a-z]|[A-Z]|[0-9])*
+ Labels of atom have the same format, too.
+ Range of MoleculeOfAtom is [n, n + m - 1] n is any integer, m is amount of molecules.
+*/

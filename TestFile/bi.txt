@@ -1,0 +1,4 @@
+terminal->add | multi | left | right | id;
+
+Ep->E;
+E->E add E | E multi E | left E right | id;
