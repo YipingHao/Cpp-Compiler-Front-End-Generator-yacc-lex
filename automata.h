@@ -42,6 +42,7 @@ namespace hyperlex
 		void refresh(void);
 		void refresh(size_t NewCount);
 		void reshape(size_t NewSize);
+		void renew(size_t NewSize);
 		void append(const T& element);
 		size_t SearchAppend(const T& element);
 		size_t pop(T& element);
@@ -155,6 +156,26 @@ namespace hyperlex
 		size_t top(void) const;
 		T& operator[](size_t target);
 	};
+	template <class T> class bitree
+	{
+		bitree<T>* left;
+		bitree<T>* right;
+		T content;
+	public:
+		bitree();
+		~bitree();
+		const bitree<T>*& L(void) const;
+		const bitree<T>*& R(void) const;
+		bitree<T>*& L(void);
+		bitree<T>*& R(void);
+		const T&C(void) const;
+		T& C(void);
+		void postorderTraversal(buffer<size_t>& output, list<size_t>& s) const;
+		void postorderTraversal(buffer<size_t>& output) const;
+		void inorderTraversal(buffer<size_t>& output, list<size_t>& s) const;
+		void inorderTraversal(buffer<size_t>& output) const;
+		bool IfLeaf(size_t site)const;
+	};
 	template <class T> class Bitree
 	{
 	public:
@@ -180,6 +201,11 @@ namespace hyperlex
 		void inorderTraversal(buffer<size_t>& output, list<size_t>& s) const;
 		void inorderTraversal(buffer<size_t>& output) const;
 		bool IfLeaf(size_t site)const;
+		void removal(size_t site);
+		void removal(size_t site, buffer<size_t>& output, list<size_t>& s);
+		size_t append(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s);
+		void append(const Bitree<T>& left, size_t parent);
+		void append(const Bitree<T>& left, const Bitree<T>& right, size_t parent);
 	private:
 		size_t Head;
 		size_t Size;
@@ -261,11 +287,17 @@ namespace hyperlex
 		RegTree();
 		~RegTree();
 		void build(const char* reg);
+		void grow(const RegTree* reg, NodeType T);
+		void grow(const RegTree* regL, const RegTree* regR, NodeType T);
+		void grow(char L, char U);
 		void Reserved(const char* res);
 		void Int(void);
 		void Identifier(void);
+		void IdentifierHead(void);
+		void IdentifierInner(void);
 		void spaces(void);
 		void LineFeeds(void);
+		static void swap(const RegTree* &regL, const RegTree* &regR);
 		void Demo(FILE* fp) const;
 		static void Demo(FILE* fp, NodeType T);
 		static void Demo(FILE* fp, char L, char U);
@@ -278,13 +310,6 @@ namespace hyperlex
 	class lexicalPanel
 	{
 	public:
-		friend class NFA;
-		lexicalPanel();
-		~lexicalPanel();
-		
-		void build(void);
-		void SetGrammer(void);
-		void Demo(FILE*fp) const; 
 		class infor
 		{
 		public:
@@ -298,6 +323,16 @@ namespace hyperlex
 			void SetName(const char* input);
 			void SetAttribute(const char* input);
 		};
+		friend class NFA;
+		lexicalPanel();
+		~lexicalPanel();
+		
+		void build(void);
+		void SetGrammer(void);
+		void SetReg(void);
+		void append(infor* II);
+		void Demo(FILE*fp) const; 
+		
 	private:
 		list<infor*> regular;
 	};
@@ -651,8 +686,12 @@ namespace hyperlex
 		size_t StateCount;
 		size_t TerminalCount;
 		size_t NonTerminalCount;
+		size_t RulesCount;
+
 		infor* ACTION;
 		infor* GOTO;
+		int* RulesToSmbol;
+
 
 		ErrorType ET;
 		ErrorInfor EI;
@@ -836,6 +875,15 @@ namespace hyperlex
 	{
 		content = (T*)realloc(content, NewCount * sizeof(T));
 		Size = NewCount;
+		Count = NewCount;
+	}
+	template <class T> void list<T>::renew(size_t NewCount)
+	{
+		if (NewSize > Size)
+		{
+			content = (T*)realloc(content, NewCount * sizeof(T));
+			Size = NewCount;
+		}
 		Count = NewCount;
 	}
 	template <class T> void list<T>::reshape(size_t NewSize)
@@ -1474,7 +1522,7 @@ namespace hyperlex
 				if (Scount == 0) sheet[now][(size_t)ele] = -1;
 				else
 				{
-					std::cout << "Scount: " << Scount << ", symbol = " << symbol << std::endl;
+					//std::cout << "Scount: " << Scount << ", symbol = " << symbol << std::endl;
 					old = Dstates.row();
 					sheet[now][(size_t)ele] = Dstates.SearchAdd(to.vector());
 					if (old != Dstates.row())
@@ -1495,6 +1543,77 @@ namespace hyperlex
 }
 namespace hyperlex
 {
+	template <class T> bitree<T>::bitree()
+	{
+		left = NULL;
+		right = NULL;
+	}
+	template <class T> bitree<T>::~bitree()
+	{
+		
+	}
+	template <class T> const bitree<T>*& bitree<T>::L(void) const
+	{
+		return left;
+	}
+	template <class T> const bitree<T>*& bitree<T>::R(void) const
+	{
+		return right;
+	}
+	template <class T> bitree<T>*& bitree<T>::L(void) 
+	{
+		return left;
+	}
+	template <class T> bitree<T>*& bitree<T>::R(void) 
+	{
+		return right;
+	}
+	template <class T> const T& bitree<T>::C(void) const
+	{
+		return content;
+	}
+	template <class T> T& bitree<T>::C(void) 
+	{
+		return content;
+	}
+	template <class T> void bitree<T>::postorderTraversal(buffer<size_t>& output, list<size_t>& s) const
+	{
+
+	}
+	template <class T> void bitree<T>::postorderTraversal(buffer<size_t>& output) const
+	{
+		list<size_t> s;
+		postorderTraversal(output, s);
+	}
+	template <class T> void bitree<T>::inorderTraversal(buffer<size_t>& output, list<size_t>& s) const
+	{
+		size_t LeftMost;
+		bitree<T>* now;
+		now = this;
+		while (now != NULL || s.count() != 0)
+		{
+			while (now != NULL)
+			{
+				s.append(now);
+				now = now->left;
+			}
+			s.pop(LeftMost);
+			output.append(LeftMost);
+			now = Nodes[LeftMost].right;
+		}
+	}
+	template <class T> void bitree<T>::inorderTraversal(buffer<size_t>& output) const
+	{
+		list<size_t> s;
+		inorderTraversal(output, s);
+	}
+	template <class T> bool bitree<T>::IfLeaf(size_t site)const
+	{
+		return left == NULL && right == NULL;
+	}
+
+
+
 	template <class T> Bitree<T>::Bitree()
 	{
 		Nodes = NULL;
@@ -1632,6 +1751,68 @@ namespace hyperlex
 	template <class T> bool Bitree<T>::IfLeaf(size_t site)const
 	{
 		return Nodes[site].left == SizeMax && Nodes[site].right == SizeMax;
+	}
+	template <class T> void Bitree<T>::removal(size_t site)
+	{
+		buffer<size_t>& output;
+		list<size_t>& s;
+		removal(site, output, s);
+	}
+	template <class T> void Bitree<T>::removal(size_t site, buffer<size_t>& output, list<size_t>& s)
+	{
+		if (site == SizeMax) return;
+		size_t now;
+		s.refresh();
+		output.refresh();
+		inorderTraversal(output, s);
+		while (output.dequeue(now))
+		{
+			Count -= 1;
+			(Nodes + now)->right = SizeMax;
+			(Nodes + now)->left = FirstEmpty;
+			FirstEmpty = now;
+		}
+	}
+	template <class T> size_t Bitree<T>::append(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s)
+	{
+		size_t newHead;
+		size_t now, new_node, temp;
+		s.refresh();
+		output.refresh();
+		newHead = SizeMax;
+		postorderTraversal(output, s);
+		s.refresh();
+		s.renew(source.Size);
+		while (output.dequeue(now))
+		{
+			new_node = NewNodeOffset();
+
+			temp = source.Nodes[now].left;
+			(Nodes + new_node)->left = (temp == SizeMax ? SizeMax : s[temp]);
+
+			temp = source.Nodes[now].right;
+			(Nodes + new_node)->right = (temp == SizeMax ? SizeMax : s[temp]);
+
+			s[now] = new_node;
+			if (newHead == SizeMax) newHead = new_node;
+		}
+		return newHead;
+	}
+	template <class T> void Bitree<T>::append(const Bitree<T>& L, size_t parent)
+	{
+		buffer<size_t>& output;
+		list<size_t>& s;
+		removal((Nodes + parent)->left, output, s);
+		(Nodes + parent)->left = append(L, output, s);
+	}
+	template <class T> void Bitree<T>::append(const Bitree<T>& L, const Bitree<T>& R, size_t parent)
+	{
+		buffer<size_t>& output;
+		list<size_t>& s;
+		removal((Nodes + parent)->left, output, s);
+		removal((Nodes + parent)->right, output, s);
+		(Nodes + parent)->left = append(L, output, s);
+		(Nodes + parent)->right = append(R, output, s);
 	}
 }
 
