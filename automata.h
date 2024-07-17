@@ -3,6 +3,7 @@
 #include<stdio.h>
 #include<iostream>
 #include<stdlib.h>
+//template
 namespace hyperlex
 {
 	template <class T> class buffer
@@ -136,7 +137,7 @@ namespace hyperlex
 		size_t ArcTo(size_t) const;
 		size_t ArcCount(size_t) const;
 		size_t append(size_t from, size_t to, const Ca & C);
-		size_t append(const Dgraph<Cg, Ca>& right, size_t VerticeOffset);
+		void append(const Dgraph<Cg, Ca>& right, size_t VerticeOffset);
 		void Demo(FILE* fp) const;
 	};
 	template <class T> class stack
@@ -201,13 +202,21 @@ namespace hyperlex
 		void inorderTraversal(buffer<size_t>& output, list<size_t>& s) const;
 		void inorderTraversal(buffer<size_t>& output) const;
 		bool IfLeaf(size_t site)const;
+		void Demo(FILE* fp)const;
+
+
 		void removal(size_t site);
 		void removal(size_t site, buffer<size_t>& output, list<size_t>& s);
-		size_t append(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s);
+		void append(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s, size_t & NewSite);
+		
 		void append(const Bitree<T>& left, size_t parent);
 		void append(const Bitree<T>& left, const Bitree<T>& right, size_t parent);
-	private:
+
+		//size_t append_t(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s, bool key);
+		//void append_t(const Bitree<T>& left, const Bitree<T>& right, size_t parent, bool key);
 		size_t Head;
+	private:
+		
 		size_t Size;
 		size_t Count;
 		size_t FirstEmpty;
@@ -275,6 +284,7 @@ namespace hyperlex
 			char upper;
 			char lower;
 			NodeType type;
+			void Demo(FILE* fp);
 		};
 	private:
 		Bitree<info> tree;
@@ -289,14 +299,24 @@ namespace hyperlex
 		void build(const char* reg);
 		void grow(const RegTree* reg, NodeType T);
 		void grow(const RegTree* regL, const RegTree* regR, NodeType T);
+		void grow_t(const RegTree* regL, const RegTree* regR, NodeType T, bool key);
 		void grow(char L, char U);
+		void value(const RegTree* regL);
+
 		void Reserved(const char* res);
 		void Int(void);
 		void Identifier(void);
 		void IdentifierHead(void);
 		void IdentifierInner(void);
+		void ConstChar(void);
+		void CommonChar(void);
+		void EscapeAll(void);
+		void EscapeChar(void);
+		void HexaChar(void);
+		void OctaChar(void);
 		void spaces(void);
 		void LineFeeds(void);
+
 		static void swap(const RegTree* &regL, const RegTree* &regR);
 		void Demo(FILE* fp) const;
 		static void Demo(FILE* fp, NodeType T);
@@ -330,6 +350,7 @@ namespace hyperlex
 		void build(void);
 		void SetGrammer(void);
 		void SetReg(void);
+		void SetRegS(void);
 		void append(infor* II);
 		void Demo(FILE*fp) const; 
 		
@@ -357,7 +378,7 @@ namespace hyperlex
 		void refresh(void);
 		void refresh(size_t newlength);
 		size_t append(size_t from, size_t to, size_t site);
-		size_t append(DirectedGraph & right, size_t VerticeOffset, size_t ArcsOffset, size_t siteOffset);
+		void append(DirectedGraph & right, size_t VerticeOffset, size_t ArcsOffset, size_t siteOffset);
 		list<vortex> vertice;
 		buffer<arc> arcs;
 	private:
@@ -612,7 +633,7 @@ namespace hyperlex
 		size_t NonTerminalCount;
 		matlist<int> sheet;
 		matlist<bool> Dstates;
-		void build(const grammerS* G);
+		//void build(const grammerS* G);
 		
 	};
 	class LR1
@@ -758,7 +779,7 @@ namespace hyperlex
 	}
 	template <class T> size_t buffer<T>::expand(void)
 	{
-		size_t should, i, new_size;
+		size_t should, new_size;
 		if (Site >= Size)
 		{
 			new_size = (Size + Size / 4 + 8);
@@ -885,7 +906,11 @@ namespace hyperlex
 	{
 		if (NewCount > Size)
 		{
+			//std::cout <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<< std::endl;
+			//std::cout << "NewCount: " << NewCount << "Size: " << Size << std::endl;
+			//std::cout << "old content: " << content << std::endl;
 			content = (T*)realloc(content, NewCount * sizeof(T));
+			//std::cout << "new content: " << content << std::endl;
 			Size = NewCount;
 		}
 		Count = NewCount;
@@ -912,7 +937,7 @@ namespace hyperlex
 	}
 	template <class T> size_t list<T>::append(void)
 	{
-		size_t should, i, new_size;
+		size_t should, new_size;
 		if (Count >= Size)
 		{
 			new_size = (Size + Size / 4 + 8);
@@ -1049,12 +1074,13 @@ namespace hyperlex
 	//size_t pop(T* element);
 	template <class T> T* matlist<T>::append(void)
 	{
-		size_t should, i, new_size;
+		size_t should, new_size;
 		if (Row >= Length)
 		{
 			new_size = (Length + Length / 4 + 8);
 			content = (T*)realloc(content, Column * new_size * sizeof(T));
 			Length = new_size;
+			//std::cout << "content: " << content << ", new_size: " << new_size << "Row: " << Row << std::endl;
 		}
 		should = Row;
 		Row += 1;
@@ -1297,7 +1323,7 @@ namespace hyperlex
 		}
 		return should;
 	}
-	template <class Cg, class Ca> size_t Dgraph<Cg, Ca>::append(const Dgraph<Cg, Ca>& right, size_t VerticeOffset)
+	template <class Cg, class Ca> void Dgraph<Cg, Ca>::append(const Dgraph<Cg, Ca>& right, size_t VerticeOffset)
 	{
 		size_t ArcsOffset;
 		size_t i, length, temp;
@@ -1516,10 +1542,10 @@ namespace hyperlex
 		//return;
 		while (stack.pop(now) != 0)
 		{
-			state = Dstates[now];
 			//Demo(stdout, state, nfa.StateAmount);
 			for (ele = 0; (size_t)ele < TotalSymbol; ele++)
 			{
+				state = Dstates[now];
 				symbol = ele < NonTcount ? ele : -(long long int)((ele + 1) - NonTcount);
 				Scount = move(state, to.vector(), symbol, auxiliary);
 				//std::cout << "Scount: " << Scount << ");" << std::endl;
@@ -1554,7 +1580,7 @@ namespace hyperlex
 	}
 	template <class T> bitree<T>::~bitree()
 	{
-		
+
 	}
 	template <class T> const bitree<T>*& bitree<T>::L(void) const
 	{
@@ -1564,11 +1590,11 @@ namespace hyperlex
 	{
 		return right;
 	}
-	template <class T> bitree<T>*& bitree<T>::L(void) 
+	template <class T> bitree<T>*& bitree<T>::L(void)
 	{
 		return left;
 	}
-	template <class T> bitree<T>*& bitree<T>::R(void) 
+	template <class T> bitree<T>*& bitree<T>::R(void)
 	{
 		return right;
 	}
@@ -1576,7 +1602,7 @@ namespace hyperlex
 	{
 		return content;
 	}
-	template <class T> T& bitree<T>::C(void) 
+	template <class T> T& bitree<T>::C(void)
 	{
 		return content;
 	}
@@ -1735,6 +1761,7 @@ namespace hyperlex
 		size_t LeftMost;
 		size_t now;
 		now = Head;
+		LeftMost = Head;
 		while (now != SizeMax || s.count() != 0)
 		{
 			while (now != SizeMax)
@@ -1756,6 +1783,28 @@ namespace hyperlex
 	{
 		return Nodes[site].left == SizeMax && Nodes[site].right == SizeMax;
 	}
+	template <class T> void Bitree<T>::Demo(FILE* fp)const
+	{
+		size_t i;
+		fprintf(fp, "Head = %zu\n", Head);
+		fprintf(fp, "Size = %zu\n", Size);
+		fprintf(fp, "Count = %zu\n", Count);
+		fprintf(fp, "FirstEmpty = %zu\n", FirstEmpty);
+		if (Nodes == NULL)
+		{
+			fprintf(fp, "Nodes == NULL\n");
+			return;
+		}
+		for (i = 0; i < Size; i++)
+		{
+			fprintf(fp, "Nodes[%zu].left = %22zu, ",i , Nodes[i].left); 
+			fprintf(fp, "Nodes[%zu].right = %22zu  ", i, Nodes[i].right);
+			Nodes[i].content.Demo(fp);
+			//fprintf(fp, "\n");
+		}
+	}
+
+
 	template <class T> void Bitree<T>::removal(size_t site)
 	{
 		buffer<size_t>& output;
@@ -1777,14 +1826,13 @@ namespace hyperlex
 			FirstEmpty = now;
 		}
 	}
-	
-	template <class T> size_t Bitree<T>::append(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s)
+	template <class T> void Bitree<T>::append(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s, size_t& NewSite)
 	{
-		size_t newHead;
+		//size_t newHead;
 		size_t now, new_node, temp;
 		s.refresh();
 		output.refresh();
-		newHead = SizeMax;
+		new_node = SizeMax;
 		source.postorderTraversal(output, s);
 		s.refresh();
 		s.renew(source.Size);
@@ -1804,31 +1852,155 @@ namespace hyperlex
 			(Nodes + new_node)->content = source.Nodes[now].content;
 			s[now] = new_node;
 			//if (newHead == SizeMax) newHead = new_node;
-			newHead = new_node;
+			//newHead = new_node;
 		}
+		//std::cout << "newHead: " << new_node << std::endl;
 		//std::cout << "newHead: " << newHead << std::endl;
-		//std::cout << "return newHead;\n\n" << std::endl;
-		return newHead;
+		
+		NewSite = new_node;
+		//std::cout << "return NewSite: " << NewSite << "\n\n" << std::endl;
 	}
 	template <class T> void Bitree<T>::append(const Bitree<T>& L, size_t parent)
 	{
 		buffer<size_t> output;
 		list<size_t> s;
+		size_t NewSite;
 		removal((Nodes + parent)->left, output, s);
-		(Nodes + parent)->left = append(L, output, s);
+		append(L, output, s, NewSite);
+		(Nodes + parent)->left = NewSite;
 	}
 	template <class T> void Bitree<T>::append(const Bitree<T>& L, const Bitree<T>& R, size_t parent)
 	{
 		buffer<size_t> output;
 		list<size_t> s;
+		size_t NewSite;
+		//size_t temp;
+		//size_t as[15];
 		removal((Nodes + parent)->left, output, s);
 		removal((Nodes + parent)->right, output, s);
-		(Nodes + parent)->left = append(L, output, s);
-		(Nodes + parent)->right = append(R, output, s);
+		//std::cout << "parent: " << parent << std::endl;
+		//std::cout << "(Nodes + parent)->left: " << (Nodes + parent)->left << std::endl;
+		append(L, output, s, NewSite);
+		(Nodes + parent)->left = NewSite;
+		//std::cout << "parent: " << parent << std::endl;
+		//temp = (Nodes + parent)->right;
+		//std::cout << "(Nodes + parent)->left: " << (Nodes + parent)->left << std::endl;
+		//std::cout << "(Nodes + parent)->right: " << temp << std::endl;
+		//(Nodes + parent)->right = 10007;
+		//std::cout << "(Nodes + parent)->right: " << (Nodes + parent)->right << std::endl;
+		//std::cout << "temp ptr: " << &temp << std::endl;
+		//std::cout << "(Nodes + parent) ptr: " << (Nodes + parent) << std::endl;
+		//std::cout << "(Nodes + parent)->left ptr: " << (size_t) & ((Nodes + parent)->left) << std::endl;
+		//std::cout << "(Nodes + parent)->right ptr: " << &((Nodes + parent)->right) << std::endl;
+		
+		append(R, output, s, NewSite);
+		(Nodes + parent)->right = NewSite;// the style that produced the bug.
+		//temp = append(R, output, s);// the style that produced no bug.
+		//Nodes[parent].right = temp;// the style that produced no bug. 
+
+		//std::cout << "parent: " << parent << std::endl;
+		//std::cout << "(Nodes + parent)->right: " << (Nodes + parent)->right << std::endl;
 	}
+
+
+	
+}
+namespace hyperlex
+{
+	int PostfixSwitch(char c);
+	bool IfHexa(char c);
+	int SwitchHexa(char c);
+	int SwitchOcta(char c);
+	char dequeue(const char* list, size_t end, size_t& head);
+	char CharGet(int& error, const char* list, size_t end, size_t& head);
 }
 
 #undef SizeMax 
 #undef CharSize
 
 #endif
+
+/*
+template <class T> size_t Bitree<T>::append_t(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s, bool key)
+	{
+		//size_t newHead;
+		size_t now, new_node, temp;
+		new_node = 0;
+		//std::cout << "new_node site: " << &new_node << std::endl;
+		//std::cout << "%rbx in stack: " << *(&new_node + 6) << std::endl;
+		//std::cout << "%rbx in stack: " << *(&new_node + 5) << std::endl;
+		//std::cout << "%rbx in stack: " << *(&new_node + 4) << std::endl;
+		//std::cout << "new_node: " << new_node << std::endl;
+		s.refresh();
+		//std::cout << "%rbx in stack: " << *(&new_node + 4) << std::endl;
+		output.refresh();
+		//std::cout << "%rbx in stack: " << *(&new_node + 4) << std::endl;
+		new_node = SizeMax;
+		source.postorderTraversal(output, s);
+		//std::cout << "%rbx in stack: " << *(&new_node + 4) << std::endl;
+		s.refresh();
+		//std::cout << "%rbx in stack: " << *(&new_node + 4) << std::endl;
+		s.renew(source.Size);
+		//std::cout << "%rbx in stack: " << *(&new_node + 4) << std::endl;
+		while (output.dequeue(now))
+		{
+			new_node = NewNodeOffset();
+			//std::cout << "new_node: " << new_node << std::endl;
+			//std::cout << "now: " << now << std::endl;
+			temp = source.Nodes[now].left;
+			(Nodes + new_node)->left = (temp == SizeMax ? SizeMax : s[temp]);
+			//std::cout << "source.Nodes[now].left: " << temp << std::endl;
+			//std::cout << "(Nodes + new_node)->left: " << (Nodes + new_node)->left << std::endl;
+			temp = source.Nodes[now].right;
+			(Nodes + new_node)->right = (temp == SizeMax ? SizeMax : s[temp]);
+			//std::cout << "source.Nodes[now].right: " << temp << std::endl;
+			//std::cout << "(Nodes + new_node)->right: " << (Nodes + new_node)->right << std::endl;
+			(Nodes + new_node)->content = source.Nodes[now].content;
+			s[now] = new_node;
+			//if (newHead == SizeMax) newHead = new_node;
+			//newHead = new_node;
+		}
+		//std::cout << "newHead: " << newHead << std::endl;
+		//std::cout << "return newHead: " << new_node << "\n\n" << std::endl;
+		//std::cout << "%rbx in stack: " << *(&new_node + 4) << std::endl;
+		return new_node;
+	}
+	template <class T> void Bitree<T>::append_t(const Bitree<T>& L, const Bitree<T>& R, size_t parent, bool key)
+	{
+		buffer<size_t> output;
+		list<size_t> s;
+		size_t temp;
+		size_t as[15];
+		//if(key) std::cout << "============key is on: ============" << std::endl;
+		//else std::cout << "============key is off: ============" << std::endl;
+		removal((Nodes + parent)->left, output, s);
+		removal((Nodes + parent)->right, output, s);
+		//std::cout << "parent: " << parent << std::endl;
+		//std::cout << "(Nodes + parent)->left: " << (Nodes + parent)->left << std::endl;
+		(Nodes + parent)->left = append(L, output, s);
+		//std::cout << "parent: " << parent << std::endl;
+		temp = (Nodes + parent)->right;
+		//std::cout << "(Nodes + parent)->left: " << (Nodes + parent)->left << std::endl;
+		//std::cout << "(Nodes + parent)->right: " << temp << std::endl;
+		(Nodes + parent)->right = 10007;
+		//std::cout << "(Nodes + parent)->right: " << (Nodes + parent)->right << std::endl;
+		//std::cout << "temp ptr: " << &temp << std::endl;
+		//std::cout << "(Nodes + parent) ptr: " << (Nodes + parent) << std::endl;
+		//std::cout << "(Nodes + parent)->left ptr: " << (size_t) &((Nodes + parent)->left) << std::endl;
+		//std::cout << "(Nodes + parent)->right ptr: " << &((Nodes + parent)->right) << std::endl;
+		//if(key) std::cout << "append(R, output, s);: " << append(R, output, s) << std::endl;
+		//if (key)
+		//{
+			//temp = append(R, output, s);
+			//Nodes[parent].right = temp;
+		//}
+		if (key) Nodes[parent].right = append_t(R, output, s, key);
+		else Nodes[parent].right = append(R, output, s);
+
+
+		//std::cout << "parent: " << parent << std::endl;
+		//std::cout << "(Nodes + parent)->right(temp): " << temp << std::endl;
+		//std::cout << "(Nodes + parent)->right: " << Nodes[parent].right << std::endl;
+		if (key) exit(1);
+	}
+*/
