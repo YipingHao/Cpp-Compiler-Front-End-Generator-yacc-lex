@@ -41,6 +41,53 @@ void RegTree::build(const char* reg)
 	tree.clear();
 }
 
+void RegTree::grow(const RegTree* reg, NodeType T)
+{
+	size_t site;
+	tree.clear();
+	site = tree.NewNodeOffset();
+	tree.SetHead(site);
+	tree.append(reg->tree, site);
+	tree[site].content.type = T;
+}
+void RegTree::grow(const RegTree* regL, const RegTree* regR, NodeType T)
+{
+	size_t site;
+	tree.clear();
+	site = tree.NewNodeOffset();
+	tree.SetHead(site);
+	tree.append(regL->tree, regR->tree, site);
+	tree[site].content.type = T;
+}
+
+void RegTree::grow(char L, char U)
+{
+	size_t site;
+	tree.clear();
+	site = tree.NewNodeOffset();
+	tree.SetHead(site);
+	value(site, L, U);
+}
+void RegTree::value(const RegTree* reg)
+{
+	size_t site;
+	buffer<size_t> output;
+	list<size_t> s;
+
+	//std::cout << "\n\n====++++++====== " << std::endl;
+	//reg->Demo(stdout);
+	//std::cout << "\ntree.clear();" << std::endl;
+	tree.clear();
+	//std::cout << "site = tree.append(reg->tree, output, s);" << std::endl;
+	tree.append(reg->tree, output, s, site);
+	//std::cout << "tree.SetHead(site);" << std::endl;
+	tree.SetHead(site);
+	
+	//std::cout << "\nsite: "<< site << std::endl;
+	//Demo(stdout);
+	//std::cout << "\n=============== \n" << std::endl;
+}
+
 void RegTree::Reserved(const char* res)
 {
 	size_t i, length, inner, remain, L, R, parent;
@@ -150,6 +197,155 @@ void RegTree::Identifier(void)
 	value(12, '_');
 	value(13, '0', '9');
 }
+void RegTree::IdentifierHead(void)
+{
+	RegTree* left, * right, *middle;
+	left = new RegTree();
+	left->grow('a', 'z');
+	right = new RegTree();
+	right->grow('A', 'Z');
+	middle = new RegTree();
+	//left->Demo(stdout);
+	//right->Demo(stdout);
+	//std::cout << "\nmiddle = new RegTree();\n" << std::endl;
+	middle->grow(left, right, Alternation);
+	//std::cout << "grow(left, right, Alternation);\n\n" << std::endl;
+	//middle->Demo(stdout);
+	delete left;
+	left = middle;
+	right->grow('_', '_');
+	grow(left, right, Alternation);
+	delete right;
+	delete left;
+}
+void RegTree::IdentifierInner(void)
+{
+	RegTree* left, * right, * middle, *temp;
+	left = new RegTree();
+	left->grow('a', 'z');
+	right = new RegTree();
+	right->grow('A', 'Z');
+	middle = new RegTree();
+	temp = new RegTree();
+	middle->grow(left, right, Alternation);
+	left->grow('_', '_');
+	right->grow('0', '9');
+	temp->grow(left, right, Alternation);
+	grow(middle, temp, Alternation);
+	delete right;
+	delete left;
+	delete temp;
+	delete middle;
+}
+void RegTree::ConstChar(void)
+{
+	RegTree LR, ESC, common__;
+	RegTree temp1, temp2;
+	LR.grow('\'', '\'');
+	ESC.EscapeAll();
+	common__.CommonChar();
+	
+	temp2.grow(&ESC, &common__, Alternation);
+	temp1.grow(&LR, &temp2, Concatenation);
+	grow(&temp1, &LR, Concatenation);
+	//temp1.grow('', '');
+}
+void RegTree::CommonChar(void)
+{
+	RegTree range1, range2, range3, range4, range5;
+	RegTree temp1, temp2, temp3;
+	range1.grow(' ', '!');//32, 33
+	range2.grow('#', '&');//35, 38
+	range3.grow('(', '.');//40, 46
+	range4.grow('0', '[');//48, 91
+	range5.grow(']', '~');//93, 126
+
+	temp1.grow(&range1, &range2, Alternation);
+	temp2.grow(&range3, &range4, Alternation);
+	temp3.grow(&temp1, &temp2, Alternation);
+	grow(&temp3, &range5, Alternation);
+}
+void RegTree::EscapeAll(void)
+{
+	RegTree all__, ESC, Octa, Hexa, num;
+	Hexa.HexaChar();
+	Octa.OctaChar();
+	ESC.EscapeChar();
+	num.grow(&Octa, &Hexa, Alternation);
+	all__.grow(&num, &ESC, Alternation);
+	ESC.grow('\\', '\\');
+	grow(&ESC, &all__, Concatenation);
+}
+void RegTree::EscapeChar(void)
+{
+	int ele;
+	bool temp;
+	RegTree temp1, temp2, temp3;
+	temp = false;
+	for (ele = 0; (size_t)ele < CharSize; ele++)
+	{
+		if (PostfixSwitch((char)ele) == -1) continue;
+		//std::cout << "ele: " << ele << std::endl;
+		temp1.grow((char)ele, (char)ele);
+		//std::cout << "ele: " << (char)ele << std::endl;
+		if (temp)
+		{
+			//std::cout << "temp1.Demo(stdout);"  << std::endl;
+			//temp1.Demo(stdout);
+			//std::cout << "\ntemp2.Demo(stdout);" << std::endl;
+			//temp2.Demo(stdout);
+			//std::cout << "\ntemp3.grow(&temp1, &temp2, Alternation);" << std::endl;
+			temp3.grow(&temp1, &temp2, Alternation);
+			//std::cout << "temp3.tree.Demo(stdout);" << std::endl;
+			//temp3.tree.Demo(stdout);
+			//std::cout << "temp3.Demo(stdout);" << std::endl;
+			//temp3.Demo(stdout);
+
+			//std::cout << "\ntemp2.value(&temp3);"  << std::endl;
+			temp2.value(&temp3);
+
+		}
+		else
+		{
+			temp2.value(&temp1);
+			temp = !temp;
+		}
+		//std::cout << "end"<< std::endl;
+	}
+	value(&temp2);
+}
+void RegTree::HexaChar(void)
+{
+	RegTree temp1, temp2, temp3, temp4;
+	temp1.grow('0', '9');
+	temp2.grow('a', 'f');
+	temp3.grow(&temp1, &temp2, Alternation);
+	temp2.grow('A', 'F');
+	temp1.grow(&temp3, &temp2, Alternation);
+	temp3.grow(&temp1, &temp1, Concatenation);
+	temp4.grow(&temp3, &temp1, Alternation);
+	temp1.grow('x', 'x');
+	temp2.grow('X', 'X');
+	temp3.grow(&temp1, &temp2, Alternation);
+	grow(&temp3, &temp4, Concatenation);
+}
+void RegTree::OctaChar(void)
+{
+	RegTree temp1, temp2, temp3, temp4;
+	temp1.grow('0', '7');
+	temp2.grow(&temp1, &temp1, Concatenation);
+	temp3.grow(&temp2, &temp1, Concatenation);
+	temp4.grow(&temp1, &temp2, Alternation);
+	grow(&temp3, &temp4, Alternation);
+}
+void RegTree::swap(const RegTree*& regL, const RegTree*& regR)
+{
+	const RegTree* middle;
+	middle = regL;
+	regL = regR;
+	regR = middle;
+	return;
+}
 void RegTree::spaces(void)
 {
 	size_t i;
@@ -182,7 +378,7 @@ void RegTree::Demo(FILE* fp) const
 	traverse temp;
 	NodeType T;
 	char U, L;
-	temp.site = 0;
+	temp.site = tree.Head;
 	temp.state = 0;
 	if (temp.site != SizeMax)s.append(temp);
 	while (s.count())
@@ -287,6 +483,12 @@ void RegTree::Demo(FILE* fp, char L, char U)
 	}
 }
 
+void RegTree::info::Demo(FILE* fp)
+{
+	RegTree::Demo(fp, lower, upper);
+	RegTree::Demo(fp, type);
+}
+
 static const char* Copy(const char* input)
 {
 	char* nnnn;
@@ -381,6 +583,121 @@ void lexicalPanel::SetGrammer(void)
 	regular.append(II);
 
 }
+void lexicalPanel::SetReg(void)
+{
+	infor* II;
+
+	II = new infor;
+	II->SetAttribute("braket");
+	II->SetName("left");
+	II->reg = new RegTree();
+	II->reg->Reserved("(");
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("braket");
+	II->SetName("right");
+	II->reg = new RegTree();
+	II->reg->Reserved(")");
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("braket");
+	II->SetName("begin");
+	II->reg = new RegTree();
+	II->reg->Reserved("[");
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("braket");
+	II->SetName("end");
+	II->reg = new RegTree();
+	II->reg->Reserved("]");
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("braket");
+	II->SetName("range");
+	II->reg = new RegTree();
+	II->reg->Reserved("-");
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("superscript");
+	II->SetName("star");
+	II->reg = new RegTree();
+	II->reg->Reserved("*");
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("superscript");
+	II->SetName("plus");
+	II->reg = new RegTree();
+	II->reg->Reserved("+");
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("char");
+	II->SetName("reserved");
+	II->reg = new RegTree();
+	II->reg->IdentifierInner();
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("char");
+	II->SetName("CommonChar");
+	II->reg = new RegTree();
+	II->reg->ConstChar();
+	regular.append(II);
+
+	
+}
+void lexicalPanel::SetRegS(void)
+{
+	infor* II;
+
+	SetReg();
+
+	II = new infor;
+	II->SetAttribute("Id");
+	II->SetName("identifier");
+	II->reg = new RegTree();
+	II->reg->Identifier();
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("division");
+	II->SetName("spaces");
+	II->reg = new RegTree();
+	II->reg->spaces();
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("division");
+	II->SetName("enters");
+	II->reg = new RegTree();
+	II->reg->LineFeeds();
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("division");
+	II->SetName("semicolon");
+	II->reg = new RegTree();
+	II->reg->Reserved(";");
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("division");
+	II->SetName("colon");
+	II->reg = new RegTree();
+	II->reg->Reserved(":");
+	regular.append(II);
+}
+void lexicalPanel::append(lexicalPanel::infor* II)
+{
+	regular.append(II);
+}
+
 void lexicalPanel::Demo(FILE* fp) const
 {
 	size_t i;
@@ -399,7 +716,6 @@ void lexicalPanel::infor::Demo(FILE* fp)
 	reg->Demo(stdout);
 	fprintf(fp, "\n");
 }
-
 
 DirectedGraph::DirectedGraph()
 {
@@ -443,7 +759,7 @@ size_t DirectedGraph::append(size_t from, size_t to, size_t site)
 	}
 	return should;
 }
-size_t DirectedGraph::append(DirectedGraph& right, size_t VerticeOffset, size_t ArcsOffset, size_t siteOffset)
+void DirectedGraph::append(DirectedGraph& right, size_t VerticeOffset, size_t ArcsOffset, size_t siteOffset)
 {
 	size_t i, length, temp, begin;
 	length = right.vertice.count();
@@ -484,26 +800,28 @@ bool convert::in(int ele)
 sNFA::sNFA()
 {
 	StateAmount = 0;
+	accepted = 0;
 }
 sNFA::~sNFA()
 {
 }
 void sNFA::Demo(FILE* fp) const
 {
-	size_t i, first, count, To;
+	size_t i, first, count;
+	//size_t To;
 	char U, L;
-	fprintf(fp, "\nStateAmount = %llu.\n", (long long unsigned int)StateAmount);
-	fprintf(fp, "accepted state = %llu.\n", (long long unsigned int)accepted);
-	fprintf(fp, "Amount od Arcs = %llu.\n", graph.arcs.count());
+	fprintf(fp, "\nStateAmount = %zu.\n", StateAmount);
+	fprintf(fp, "accepted state = %zu.\n", accepted);
+	fprintf(fp, "Amount od Arcs = %zu.\n", graph.arcs.count());
 	fprintf(fp, "=========================================================\n");
 	for (i = 0; i < StateAmount; i++)
 	{
-		fprintf(fp, "State[%llu], Arc count: %llu\n", (long long unsigned int)i, (long long unsigned int)graph.ArcCount(i));
+		fprintf(fp, "State[%zu], Arc count: %zu\n", i, graph.ArcCount(i));
 		count = 0;
 		first = graph.vertice[i].first;
 		while (first != SizeMax)
 		{
-			fprintf(fp, "\tNo[%llu], to: %llu, ", (long long unsigned int)count, graph.ArcTo(first));
+			fprintf(fp, "\tNo[%zu], to: %zu, ", count, graph.ArcTo(first));
 			if(graph.arcs[first].content.epsilon)
 				fprintf(fp, "a default epsilon conversion.\n");
 			else
@@ -557,6 +875,10 @@ void sNFA::build(const RegTree* Reg, buffer<size_t> &output, list<size_t> &s, li
 	nfa.refresh();
 	Reg->tree.postorderTraversal(output, s);
 	length = output.count();
+	R = NULL;
+	L = NULL;
+	highest = NULL;
+	now = NULL;
 	//for (i = 0; i < length; i++)
 	//	std::cout << "output[" << i << "] = site = " << output[i] << std::endl;
 	for (i = 0; i < length; i++)
@@ -605,7 +927,7 @@ void sNFA::build(const RegTree* Reg, buffer<size_t> &output, list<size_t> &s, li
 			break;
 		case hyperlex::RegTree::Range:
 			for (j = 0; j < CharSize; j++)
-				input[j] = (j <= Reg->tree[site].content.upper && j >= Reg->tree[site].content.lower);
+				input[j] = (j <= (size_t)Reg->tree[site].content.upper && j >= (size_t)Reg->tree[site].content.lower);
 			now->build(input);
 			break;
 		default:
@@ -1073,11 +1395,25 @@ size_t NFA::move(const bool* from, bool* to, const char ele, list<size_t>& stack
 	size_t i; 
 	size_t Scount;
 	size_t now, arc;
+	
+	/*
+	size_t count__ = 0;
+	bool flag;
+	flag = false;
+	for (i = 0; i < StateAmount; i++) count__ += from[i] ? 1 : 0;
+	if (count__ == 39 && ele == '\'') flag = true;
+	if (count__ == 10 && ele == '\\' && from[150]) flag = true;
+	*/
+
 	Scount = 0;
 	for (i = 0; i < StateAmount; i++) to[i] = false;
 	for (i = 0; i < StateAmount; i++)
 		if (from[i])
 		{
+			//if (flag)
+			//{
+			//	std::cout << "from[" << i << "]:" << std::endl;
+			//}
 			arc = graph.vertice[i].first;
 			while (arc != SizeMax)
 			{
@@ -1086,6 +1422,7 @@ size_t NFA::move(const bool* from, bool* to, const char ele, list<size_t>& stack
 					now = graph.arcs[arc].to;
 					Scount += (to[now] ? 0 : 1);
 					to[now] = true;
+					//if (flag) std::cout << "to: " << now << std::endl;
 				}
 				arc = graph.arcs[arc].next;
 			}
@@ -1115,21 +1452,22 @@ size_t NFA::FirstAccepted(const bool* accept) const
 }
 void NFA::Demo(FILE* fp) const
 {
-	size_t i, first, count, To;
+	size_t i, first, count;
+	//size_t To;
 	char U, L;
-	fprintf(fp, "\nStateAmount = %llu.\n", (long long unsigned int)StateAmount);
-	fprintf(fp, "accepted state amount= %llu.\n", (long long unsigned int)accepted);
-	fprintf(fp, "Amount od Arcs = %llu.\n", graph.arcs.count());
+	fprintf(fp, "\nStateAmount = %zu.\n", StateAmount);
+	fprintf(fp, "accepted state amount= %zu.\n", accepted);
+	fprintf(fp, "Amount od Arcs = %zu.\n", graph.arcs.count());
 	fprintf(fp, "=========================================================\n");
 	for (i = 0; i < StateAmount; i++)
 	{
-		fprintf(fp, "State[%llu], Arc count: %llu, ", (long long unsigned int)i, (long long unsigned int)graph.ArcCount(i));
-		fprintf(fp, "accepted label: [%llu]\n", (long long unsigned int)graph.vertice[i].content);
+		fprintf(fp, "State[%zu], Arc count: %zu, ", i, graph.ArcCount(i));
+		fprintf(fp, "accepted label: [%d]\n", graph.vertice[i].content);
 		count = 0;
 		first = graph.vertice[i].first;
 		while (first != SizeMax)
 		{
-			fprintf(fp, "\tNo[%llu], to: %llu, ", (long long unsigned int)count, graph.ArcTo(first));
+			fprintf(fp, "\tNo[%zu], to: %zu, ", count, graph.ArcTo(first));
 			if (graph.arcs[first].content.epsilon)
 				fprintf(fp, "a default epsilon conversion.\n");
 			else
@@ -1155,9 +1493,11 @@ sheetDFA::sheetDFA(const NFA& nfa) : sheet(CharSize)
 	size_t now, old;
 	bool* state;
 	vec<bool> to;
-	char ele;
+	int ele;
 	size_t Scount;
-	
+	size_t NewSite_;
+
+
 	to.Malloc(nfa.StateAmount);
 	auxiliary.reshape(nfa.StateAmount);
 	auxiliary.refresh();
@@ -1170,26 +1510,60 @@ sheetDFA::sheetDFA(const NFA& nfa) : sheet(CharSize)
 	//return;
 	while (stack.pop(now) != 0)
 	{
-		state = Dstates[now];
-		//Demo(stdout, state, nfa.StateAmount);
+		//std::cout << "****************state number = " << now << ";" << std::endl;
+		//Demo(stdout, Dstates[now], nfa.StateAmount);
 		for (ele = 0; (size_t)ele < CharSize; ele++)
 		{
-			Scount = nfa.move(state, to.vector(), ele, auxiliary);
+			
+			//std::cout << "ele[" << (size_t)ele << "] = " << (char)ele << ";" << std::endl;
+			state = Dstates[now];
+			Scount = nfa.move(state, to.vector(), (char)ele, auxiliary);
+			//if (state[7])
+			//{
+				//std::cout << "Scount: " << Scount << ", No: " << ele << ", ele: " << (char)ele << std::endl;
+				//Demo(stdout, state, nfa.StateAmount);
+				//Demo(stdout, to.vector(), nfa.StateAmount);
+				//']','Z', '[';
+			//}
 			//std::cout << "Scount: " << Scount << ");" << std::endl;
 			if (Scount == 0) sheet[now][(size_t)ele] = 0;
 			else
 			{
+				//std::cout << "Scount: " << Scount << ", No: " << ele << ", ele: " << (char)ele << std::endl;
+				//bool tempKK;
+				//tempKK = state[7];
+				//if (state[7]) std::cout << "All is well 1 " << std::endl;
 				old = Dstates.row();
-				sheet[now][(size_t)ele] = Dstates.SearchAdd(to.vector());
+				//if (state[7]) std::cout << "All is well 2 " << std::endl;
+				NewSite_ = Dstates.SearchAdd(to.vector());
+				//if (state[7]) std::cout << "All is well 2.5 " << std::endl;
+				//else std::cout << "All is wrong 2.5 " << std::endl;
+				sheet[now][(size_t)ele] = NewSite_;
+				//sheet[now][(size_t)ele] = Dstates.SearchAdd(to.vector());
+				//if (tempKK) std::cout << "All is well 3: " << NewSite_ << std::endl;
 				if (old != Dstates.row())
 				{
+					//std::cout << "Scount: " << Scount << ", No: " << ele << ", ele: " << (char)ele << std::endl;
+					//std::cout << "To *****new***** state: " << old << " : ";
+					//Demo(stdout, to.vector(), nfa.StateAmount);
 					sheet.append();
 					stack.append(old);
 				}
+				//else
+				//{
+					//std::cout << "To old state: " << old << std::endl;
+				//}
+				//if (state[7]) std::cout << "All is well 4" << std::endl;
 				//if (old != Dstates.row()) Demo(stdout, Dstates[old], nfa.StateAmount);
 			}
+			//if (true)
+			//{
+			//	std::cout << "=========Scount: " << Scount << ", No: " << ele << ", ele: " << (char)ele << std::endl;
+				//Demo(stdout, state, nfa.StateAmount);
+			//}
 			//std::cout << "Scount: " << Scount << ");" << std::endl;
 		}
+		//std::cout << "now: (" << now << ");" << std::endl;
 	}
 	//std::cout << "Dstates.row(): " << Dstates.row() << std::endl;
 	//Demo(stdout, Dstates[old], nfa.StateAmount);
@@ -1204,10 +1578,11 @@ void sheetDFA::acceptSet(const matlist<bool>& Dstates, const NFA& nfa)
 {
 	matlist<bool> __AcceptSheet(nfa.accepted + 1);
 	list<size_t> __accpetedCount;
-	size_t i, j, to;
+	size_t i;
+	//size_t to, j;
 	bool* __AcceptList;
-	int* SheetTemp;
-	char ele;
+	//int* SheetTemp;
+	//char ele;
 	//std::cout << "Dstates.row(): " << Dstates.row() << std::endl;
 	AcceptCount = nfa.accepted;
 	accept.refresh(Dstates.row());
@@ -1248,15 +1623,18 @@ void sheetDFA::Demo(FILE* fp)const
 	size_t i, j, arc;
 	char U, L;
 	int state, to, acc;
+	U = '?';
+	L = '?';
+	to = 0;
 	fprintf(fp, "=========================================================\n");
-	fprintf(fp, "\nStateAmount = %llu.\n", (long long unsigned int)count);
-	fprintf(fp, "accepted state amount= %llu.\n", (long long unsigned int)AcceptCount);
+	fprintf(fp, "\nStateAmount = %zu.\n", count);
+	fprintf(fp, "accepted state amount= %zu.\n", AcceptCount);
 	//fprintf(fp, "Amount od Arcs = %llu.\n", graph.arcs.count());
 	fprintf(fp, "=========================================================\n");
 	for (i = 0; i < count; i++)
 	{
 		acc = action(i);
-		fprintf(fp, "State[%llu]: acc = %d\n", (long long unsigned int)i, acc);
+		fprintf(fp, "State[%zu]: acc = %d\n", i, acc);
 		state = 0;
 		arc = 0;
 		for (j = 0; j < CharSize; j++)
@@ -1275,11 +1653,11 @@ void sheetDFA::Demo(FILE* fp)const
 				if (to != sheet[i][j])
 				{
 					U = j - 1;
-					fprintf(fp, "\t Arc[%llu]: ", (long long unsigned int)arc);
+					fprintf(fp, "\t Arc[%zu]: ", arc);
 					arc += 1;
 					RegTree::Demo(fp, L, U);
 					
-					fprintf(fp, ", to: %llu.\n", to);
+					fprintf(fp, ", to: %d.\n", to);
 					if (sheet[i][j] != 0)
 					{
 						L = j;
@@ -1292,12 +1670,12 @@ void sheetDFA::Demo(FILE* fp)const
 		}
 		if (state == 1)
 		{
-			U = CharSize - 1;
-			fprintf(fp, "\t Arc[%llu]: ", (long long unsigned int)arc);
+			U = (char)(CharSize - 1);
+			fprintf(fp, "\t Arc[%zu]: ", arc);
 			RegTree::Demo(fp, L, U);
-			acc = action(i);
-			fprintf(fp, ", to: %llu, acc = %d.\n", to, acc);
-			fprintf(fp, ", to: %llu.\n", to);
+			acc = action((int)i);
+			fprintf(fp, ", to: %d, acc = %d.\n", to, acc);
+			fprintf(fp, ", to: %d.\n", to);
 		}
 	}
 }
@@ -1306,9 +1684,9 @@ void sheetDFA::Demo(FILE* fp, const bool* state, size_t n)
 	size_t i, count;
 	for (i = 0, count = 0; i < n; i++)
 		count += state[i] ? 1 : 0;
-	fprintf(fp, "count: %llu.", (long long int)count);
+	fprintf(fp, "count: %6zu | ", count);
 	for (i = 0, count = 0; i < n; i++)
-		if(state[i]) fprintf(fp, "%llu ", (long long int)i);
+		if(state[i]) fprintf(fp, "%zu ", i);
 	fprintf(fp, "\n");
 }
 void sheetDFA::shrink(void)
@@ -1325,32 +1703,34 @@ void sheetDFA::shrink(void)
 	do
 	{
 		change = false;
-		for (state = 0; state < SL->Count(); state++)
+		for (state = 0; state < SL->Statecount; state++)
 		{
 			for (j = 0; j < CharSize; j++)
 			{
 				now = SL->Head(state);
 				toRecord = SL->group[sheet[now][j]];
 				NewS = SizeMax;
-				
+				//printf("state: %zu, char:%c", state, (char)j);
 				nextS = SL->next[now];
+				//printf(", now: %zu, nextS:%zu\n", now, nextS);
 				while (nextS != SizeMax)
 				{
 					toNow = SL->group[sheet[nextS][j]];
 					change = change || (toNow != toRecord);
 					if (toNow != toRecord)
 					{
-						//printf("state: %llu, char:%c, ", state, (char)j);
-						//printf("now: %llu, nextS:%llu, ", now, nextS);
-						//printf("toNow: %llu, toRecord:%llu\n", toNow, toRecord);
+						//printf("\t\tstate: %zu, char:%c, ", state, (char)j);
+						//printf("now: %zu, nextS:%zu, ", now, nextS);
+						//printf("toNow: %zu, toRecord:%zu", toNow, toRecord);
 						NewS = SL->NewState(NewS);
 						SL->DeleteNext(now);
 						SL->Insert(nextS, NewS);
-						nextS = SL->next[now];
+						//nextS = SL->next[now];
+						//printf(", nextS:%zu\n", nextS);
 					}
 					else now = nextS;
 					nextS = SL->next[now];
-					
+					//printf("\tnow: %zu, nextS:%zu\n", now, nextS);
 				}
 				if (change) break;
 			}
@@ -1387,11 +1767,16 @@ void sheetDFA::shrink(const ShrinkList* SL)
 
 DFA::DFA(const sheetDFA* dfa)
 {
-	size_t i, j, arc;
+	//size_t i, j, arc;
+	size_t i, j;
 	convert CC;
-	char U, L;
-	int state, to, acc;
+	//char U, L;
+	int state, to;
+	//int acc;
 	//printf("????\n");
+	CC.lower = 'c';
+	CC.upper = 'c';
+	to = 0;
 	graph.refresh();
 	StateAmount = dfa->sheet.row();
 	AcceptCount = dfa->AcceptCount;
@@ -1403,7 +1788,7 @@ DFA::DFA(const sheetDFA* dfa)
 	for (i = 0; i < dfa->count; i++)
 	{ 
 		state = 0;
-		arc = 0;
+		//arc = 0;
 		//printf("%llu==\n", i);
 		for (j = 0; j < CharSize; j++)
 		{
@@ -1454,7 +1839,8 @@ int DFA::next(int state, const char c)const
 	from = graph.FirstArc((size_t)state);
 	while (from != SizeMax)
 	{
-		if (graph.arcs[from].content.in(c));
+		if (graph.arcs[from].content.in(c))
+			return graph.arcs[from].to;
 		from = graph.NextArc(from);
 	}
 	return 0;
@@ -1574,7 +1960,8 @@ void DFA::Cprint(FILE* fp, convert& CC)
 
 ShrinkList::ShrinkList(size_t AcceptCount, size_t size)
 {
-	size_t i, j, toRecord, now;
+	size_t i;
+	//size_t j, toRecord, now;
 	group.Malloc(size);
 	next.Malloc(size);
 	Statecount = AcceptCount;
@@ -1601,7 +1988,7 @@ void ShrinkList::Insert(size_t site, size_t state)
 }
 size_t ShrinkList::NewState(size_t Now)
 {
-	if (Now != SizeMax)return Now;
+	if (Now != SizeMax) return Now;
 	head.append(SizeMax);
 	rear.append(SizeMax);
 	Statecount += 1;
@@ -1644,6 +2031,11 @@ void ShrinkList::Demo(FILE* fp)const
 grammerS::grammerS()
 {
 	ERROR = undone;
+	count = 0;
+	TerminalCount = 0;
+	
+	epsilon = 0;
+	end = 0;
 }
 grammerS::~grammerS()
 {
@@ -1740,7 +2132,8 @@ bool grammerS::RunBuild(int& accept, BufferChar& result, BufferChar& input, Buff
 	3 Bcc
 	input: aaBcc
 	*/
-	char now, cc;
+	char now;
+	//char cc;
 	int state, acc;
 	int action;
 	intermediate.refresh();
@@ -1966,15 +2359,15 @@ int grammerS::build(BufferChar& input)
 void grammerS::SetExample(void)
 {
 	size_t i;
-	count = 3; // ·ÇÖÕ½á·ûÊýÁ¿
-	TerminalCount = 5; // ÖÕ½á·ûÊýÁ¿
+	count = 3; // éžç»ˆç»“ç¬¦æ•°é‡
+	TerminalCount = 5; // ç»ˆç»“ç¬¦æ•°é‡
 
-	// ÉèÖÃ·ÇÖÕ½á·ûµÄÃû³Æ
+	// è®¾ç½®éžç»ˆç»“ç¬¦çš„åç§°
 	append("E");
 	append("T");
 	append("F");
 	
-	// ÉèÖÃÖÕ½á·ûµÄÃû³Æ
+	// è®¾ç½®ç»ˆç»“ç¬¦çš„åç§°
 
 
 	Tappend("+");//-1
@@ -1985,7 +2378,7 @@ void grammerS::SetExample(void)
 
 	Tappend("epsilon");//-6
 	Tappend("END-EOF");//-7
-	// ÉèÖÃÃ¿¸ö·ÇÖÕ½á·ûµÄ degeneracy
+	// è®¾ç½®æ¯ä¸ªéžç»ˆç»“ç¬¦çš„ degeneracy
 
 	epsilon = TerminalCount;
 	epsilon = -epsilon - 1;
@@ -2003,7 +2396,7 @@ void grammerS::SetExample(void)
 		pp += degeneracy[i];
 	}
 
-	// ÉèÖÃ²úÉúÊ½¹æÔò
+	// è®¾ç½®äº§ç”Ÿå¼è§„åˆ™
 	production PP;
 	PP.begin = 0;
 	all.append(0);
@@ -2015,8 +2408,10 @@ void grammerS::SetExample(void)
 }
 void grammerS::Demo(FILE* fp) const
 {
-	size_t i, j, k, site;
-	long long int index, *R;
+	size_t i, j, k;
+	//size_t site;
+	long long int index;
+	//long long int  *R;
 	production PP;
 	fprintf(fp, "error code: %d\n", (int)ERROR);
 	fprintf(fp, "count: %zu\n", count);
@@ -2051,7 +2446,7 @@ void grammerS::Demo(FILE* fp) const
 		for (j = 0; j < TerminalCount + 2; j++)
 			if(first[i][j]) 
 				fprintf(fp, "%s  ", ternimal[j]);
-		fprintf(fp, "\n\t FOLLOW: ", ternimal[j]);
+		fprintf(fp, "\n\t FOLLOW: ");
 		for (j = 0; j < TerminalCount + 2; j++)
 			if (follow[i][j])
 				fprintf(fp, "%s  ", ternimal[j]);
@@ -2104,8 +2499,9 @@ size_t grammerS::SearchAppend(const char* input)
 }
 long long int grammerS::SearchTerminal(const char* input)
 {
-	long long int i;
-	for (i = 0; i < ternimal.count(); i++)
+	long long int i, length;
+	length = ternimal.count();
+	for (i = 0; i < length; i++)
 		if (compare(input, ternimal[i])) return -i - 1;
 	return 0;
 }
@@ -2132,9 +2528,10 @@ void grammerS::Tappend(const char* input)
 
 void grammerS::FirstBiuld(void)
 {
-	size_t i, j, k, l;
+	size_t i, j, k;
+	//size_t l;
 	production PP;
-	long long int temp; 
+	//long long int temp; 
 	long long int * vect;
 	bool change;
 	first.refresh(count, TerminalCount + 2, count);
@@ -2193,8 +2590,9 @@ bool grammerS::IfEpsilon(long long int site) const
 }
 bool grammerS::FirstOr(long long int symbol, bool* to) const
 {
-	size_t i;
+	//size_t i;
 	bool change;
+	change = false;
 	if (symbol < 0)//symbol is terminal
 	{
 		if (symbol != epsilon)
@@ -2255,16 +2653,16 @@ bool grammerS::AddFirstBeta(bool* result, size_t L, const long long int* in) con
 void grammerS::FirstBeta(bool* result, size_t L, const long long int* in) const
 {
 	size_t i;
-	bool change;
+	//bool change;
 	for (i = 0; i < TerminalCount + 2; i++) result[i] = false;
-	change = AddFirstBeta(result, L, in);
+	AddFirstBeta(result, L, in);
 }
 void grammerS::FollowBiuld(void)
 {
 	size_t i, j, k, l;
 	production PP;
 	list<bool> FB;
-	long long int temp;
+	//long long int temp;
 	long long int* vect;
 	bool change;
 
@@ -2307,7 +2705,8 @@ LR0::LR0(const grammerS* G)
 	size_t prefix_, count__, length__;
 	size_t i, j;
 	const long long int* vect;
-	size_t k, l, NonT;
+	//size_t k, l, NonT;
+	size_t k, l;
 	prefix_ = 0;
 	
 	for (i = 0; i < G->rules.count(); i++)
@@ -2351,19 +2750,19 @@ LR0::LR0(const grammerS* G)
 	TerminalCount = G->TerminalCount;
 	NonTerminalCount = G->count;
 }
-void LR0::build(const grammerS* G)
-{
-	item aa;
-	aa.dot = 1;
-	aa.rules = 2;
+//void LR0::build(const grammerS* G)
+//{
+	//item aa;
+	//aa.dot = 1;
+	//aa.rules = 2;
 	//graph.vertice.SearchAppend(aa);
-}
+//s}
 LR0::~LR0()
 {
 }
 void LR0::Demo(FILE* fp, const grammerS* G)
 {
-	size_t i, j, RR, now, count;
+	size_t i, j, now, count;
 	item Item;
 	long long int index;
 	fprintf(fp, "Items count: vertice.count() = %zu\n", graph.vertice.count());
@@ -2518,8 +2917,9 @@ void LR1::Demo(FILE* fp, size_t site, const grammerS* G)
 }
 void LR1::Demo(FILE* fp, const grammerS* G)
 {
-	size_t i, j, RR, now, count;
-	item Item;
+	//size_t i, j, RR, now, count;
+	size_t i, j, now, count;
+	//item Item;
 	long long int index;
 	fprintf(fp, "Items count: vertice.count() = %zu\n", graph.vertice.count());
 	fprintf(fp, "arcs.count() = %zu\n", graph.arcs.count());
@@ -2588,7 +2988,7 @@ size_t LR1::SearchAppend(const LR1::item & I, bool & IfAppend)
 {
 	size_t i, length;
 	item temp;
-	bool middle;
+	//bool middle;
 	length = graph.vertice.count();
 	IfAppend = false;
 	for (i = 0; i < length; i++)
@@ -2600,7 +3000,6 @@ size_t LR1::SearchAppend(const LR1::item & I, bool & IfAppend)
 	graph.VortexAppend(I);
 	return length;
 }
-
 
 Gsheet::Gsheet()
 {
@@ -2619,14 +3018,15 @@ Gsheet::~Gsheet()
 	NonTerminalCount = 0;
 	free(ACTION);
 	free(GOTO);
+	free(RulesToSmbol);
 }
 void Gsheet::build(const LR0* lr, const grammerS* G)
 {
-	size_t i, j, k, end, column; 
+	size_t i, j, k, column; 
 	LR0::item II; 
 	grammerS::production PP;
 	const matlist<bool>& Dstates = lr->Dstates;
-	const matlist<int>& sheet = lr->sheet;
+	//const matlist<int>& sheet = lr->sheet;
 	const bool* followLine;
 	int ErrorTemp;
 	bool temp;
@@ -2672,16 +3072,18 @@ void Gsheet::build(const LR0* lr, const grammerS* G)
 			}
 		}
 	ET = NoError;
+
+	build();
 	return;
 }
 void Gsheet::build(const LR1* lr, const grammerS* G)
 {
-	size_t i, j, k, end, column;
+	size_t i, j, column;
 	LR1::item II;
 	grammerS::production PP;
 	const matlist<bool>& Dstates = lr->Dstates;
-	const matlist<int>& sheet = lr->sheet;
-	const bool* followLine;
+	//const matlist<int>& sheet = lr->sheet;
+	//const bool* followLine;
 	int ErrorTemp;
 	bool temp;
 	//const LRNFA<LR1::item>& graph = lr->graph;
@@ -2719,7 +3121,7 @@ void Gsheet::build(const LR1* lr, const grammerS* G)
 			}
 		}
 
-
+	build();
 
 	ET = NoError;
 }
@@ -2729,6 +3131,12 @@ int Gsheet::build(const matlist<int>& sheet, const matlist<bool>& Dstates, const
 	bool temp;
 	TerminalCount = G->TerminalCount;
 	NonTerminalCount = G->count;
+	
+	RulesCount = G->rules.count();
+	RulesToSmbol = (int*)malloc(sizeof(int) * RulesCount);
+	for (i = 0; i < RulesCount; i++)
+		RulesToSmbol[i] = G->rules[i].symbol;
+	
 	StateCount = Dstates.row();
 
 	ACTION = (infor*)malloc(sizeof(infor) * StateCount * (TerminalCount + 1));
@@ -2764,6 +3172,21 @@ int Gsheet::build(const matlist<int>& sheet, const matlist<bool>& Dstates, const
 			}
 		}
 	return 0;
+}
+void Gsheet::build(void)
+{
+	size_t i, j;
+	for (i = 0; i < StateCount; i++)
+		for (j = 0; j < NonTerminalCount; j++)
+		{
+			if(GOTO[i * NonTerminalCount + j].action == error)
+				GOTO[i * NonTerminalCount + j].state += 1;
+		}
+	for (i = 0; i < StateCount * (TerminalCount + 1); i++)
+	{
+		if(ACTION[i].action == error)
+			ACTION[i].state += 1;
+	}
 }
 bool Gsheet::gotoAdd(size_t i, size_t j, Gsheet::type Action, int State)
 {
@@ -2859,6 +3282,7 @@ void Gsheet::Demo(FILE* fp)const
 }
 void Gsheet::Demo01(FILE* fp)const
 {
+	fprintf(fp, "TerminalCount: %zu, NonTerminalCount: %zu\n", TerminalCount, NonTerminalCount);
 	if (ET == uninitialized)
 	{
 		fprintf(fp, "Error type: uninitialized\n");
@@ -2879,6 +3303,7 @@ void Gsheet::Demo03(FILE* fp)const
 	fprintf(fp, "ACTION: \n");
 	for (i = 0; i < StateCount; i++)
 	{
+		fprintf(fp, "[%4zu]: ", i);
 		for (j = 0; j < TerminalCount + 1; j++)
 		{
 			InF = ACTION[i * (TerminalCount + 1) + j];
@@ -2889,12 +3314,17 @@ void Gsheet::Demo03(FILE* fp)const
 	fprintf(fp, "GOTO: \n");
 	for (i = 0; i < StateCount; i++)
 	{
-		for (j = 0; j < TerminalCount; j++)
+		fprintf(fp, "[%4zu]: ", i);
+		for (j = 0; j < NonTerminalCount; j++)
 		{
-			InF = GOTO[i * TerminalCount + j];
+			InF = GOTO[i * NonTerminalCount + j];
 			fprintf(fp, "(%6s, %3d) ", TypeToChar(InF.action), InF.state);
 		}
 		fprintf(fp, "\n");
+	}
+	for (i = 0; i < RulesCount; i++)
+	{
+		fprintf(fp, "rules[%4zu]: %d\n", i, RulesToSmbol[i]);
 	}
 }
 const char* Gsheet::TypeToChar(Gsheet::type TT)
@@ -2912,6 +3342,56 @@ const char* Gsheet::TypeToChar(Gsheet::type TT)
 	default:
 		return "error";
 	}
+}
+
+Gsheet::infor Gsheet::Goto(size_t state, size_t symbol) const
+{
+	return GOTO[state * NonTerminalCount + symbol];
+}
+Gsheet::infor Gsheet::Action(size_t state, size_t symbol) const
+{
+	return ACTION[state * (TerminalCount + 1) + symbol];
+}
+int Gsheet::GetSymbol(size_t rules) const
+{
+	return RulesToSmbol[rules];
+}
+void Gsheet::Cprint(const char* name, FILE* fp)const
+{
+	size_t i, j;
+	//size_t No;
+	int infor;
+	fprintf(fp, "int GOTO");
+	if (name != NULL) fprintf(fp, "_%s", name);
+	fprintf(fp, "(int* list)\n{\n");
+	for (i = 0; i < StateCount; i++)
+		for (j = 0; j < NonTerminalCount; j++)
+		{
+			infor = 4 * GOTO[i * NonTerminalCount + j].state;
+			infor += (int)GOTO[i * NonTerminalCount + j].action;
+			fprintf(fp, "\tlist[%zu] = %d;\n", i * NonTerminalCount + j, infor);
+		}
+	fprintf(fp, "}\n");
+	//====================================================
+	fprintf(fp, "int ACTION");
+	if (name != NULL) fprintf(fp, "_%s", name);
+	fprintf(fp, "(int* list)\n{\n");
+	for (i = 0; i < StateCount * (TerminalCount + 1); i++)
+	{
+		infor = 4 * ACTION[i].state;
+		infor += (int)ACTION[i].action;
+		fprintf(fp, "\tlist[%zu] = %d;\n", i, infor);
+	}
+	fprintf(fp, "}\n");
+	//====================================================
+	fprintf(fp, "int RulesToSymbol");
+	if (name != NULL) fprintf(fp, "_%s", name);
+	fprintf(fp, "(int* list)\n{\n");
+	for (i = 0; i < RulesCount; i++)
+	{
+		fprintf(fp, "\tlist[%zu] = %d;\n", i, RulesToSmbol[i]);
+	}
+	fprintf(fp, "}\n");
 }
 
 static bool compare(const char* str1, const char* str2)
@@ -3029,6 +3509,17 @@ bool grammerS::FirstOr(long long int symbol, size_t to)
 */
 
 
+/*
+void RegTree::grow_t(const RegTree* regL, const RegTree* regR, NodeType T, bool key)
+{
+	size_t site;
+	tree.clear();
+	site = tree.NewNodeOffset();
+	tree.SetHead(site);
+	tree.append_t(regL->tree, regR->tree, site, key);
+	tree[site].content.type = T;
+}
+*/
 
 
 
@@ -3041,6 +3532,115 @@ bool grammerS::FirstOr(long long int symbol, size_t to)
 
 
 
+
+
+
+int hyperlex::PostfixSwitch(char c)
+{
+	switch (c)
+	{
+	case 'a':
+		return 7;
+	case 'b':
+		return 8;
+	case 'f':
+		return 12;
+	case 'n':
+		return 10;
+	case 'r':
+		return 13;
+	case 't':
+		return 9;
+	case 'v':
+		return 11;
+	case '\\':
+		return 92;
+	case '\'':
+		return 39;
+	case '\"':
+		return 34;
+	case '?':
+		return 63;
+	case '\0':
+		return 0;
+	default:
+		return -1;
+	}
+}
+bool hyperlex::IfHexa(char c)
+{
+	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+int hyperlex::SwitchHexa(char c)
+{
+	int e;
+	if (c >= '0' && c <= '9')
+		c -= '0';
+	else if (c >= 'a' && c <= 'f')
+		c = c - 'a' + (char)10;
+	else
+		c = c - 'A' + (char)10;
+	e = (int)c;
+	return e;
+}
+int hyperlex::SwitchOcta(char c)
+{
+	return c - '0';
+}
+char hyperlex::dequeue(const char* list, size_t end, size_t& head)
+{
+	char c;
+	if (head < end)
+	{
+		c = list[head];
+		head++;
+	}
+	else c = EOF;
+	return c;
+}
+char hyperlex::CharGet(int& error, const char* list, size_t end, size_t& head)
+{
+	char c, result;
+	int temp;
+	//int state;
+	char c1, c2;
+	c = dequeue(list, end, head);
+	error = 0;
+	if (c != '\\') return c;
+	//state = 0;
+	c = dequeue(list, end, head);
+	if (c == 'x' || c == 'X')
+	{
+		temp = -1;
+		c1 = dequeue(list, end, head);
+		if (IfHexa(c1))
+		{
+			temp = SwitchHexa(c1);
+			c2 = dequeue(list, end, head);
+			if (IfHexa(c2)) temp = 16 * temp + SwitchHexa(c2);
+		}
+		else
+			error = -2;
+	}
+	else if('0' <= c && c <= '8')
+	{
+		temp = SwitchOcta(c);
+		c1 = dequeue(list, end, head);
+		if (IfHexa(c1))
+		{
+			temp = 8 * temp + SwitchOcta(c1);
+			c2 = dequeue(list, end, head);
+			if ('0' <= c && c <= '8') temp = 8 * temp + SwitchOcta(c2);
+		}
+	}
+	else
+	{
+		temp = PostfixSwitch(c);
+		if (temp == -1) error = -1;
+	}
+	result = temp;
+	return result;
+}
 
 
 
