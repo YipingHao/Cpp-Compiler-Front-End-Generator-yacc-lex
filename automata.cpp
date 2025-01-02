@@ -2214,12 +2214,14 @@ int grammerS::build(BufferChar& input)
 	const char* Result;
 	production PP;
 	size_t from, i, j;
-	size_t Count_;
+	size_t Count_;//degeneracy
 	list<const char*> nameTemp;
 	PP.symbol = 0;
 	state = 0;
 	from = 0;
 	Count_ = 0;
+	//accept == 4: ->
+	//accept == 5: id
 	while (RunBuild(accept, result, input, intermediate))
 	{
 		if (accept == 0)

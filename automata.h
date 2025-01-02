@@ -3,7 +3,27 @@
 #include<stdio.h>
 #include<iostream>
 #include<stdlib.h>
-//template
+//namespace hyperlex 1: template
+//namespace hyperlex 2: DFA class declaring without members
+/*
+	class NFA;
+	class sNFA;
+	class sheetDFA;
+	class DFA;
+	class LR0;
+	class LR1;
+	class Gsheet;
+*/
+//namespace hyperlex 3: DFA class declaring 
+//namespace hyperlex 4: grammer analysis declaring
+/*
+class grammerS;
+template <class Cg> class LRNFA;
+class LR0;
+class LR1;
+class Gsheet;
+*/
+//namespace hyperlex 5: template
 namespace hyperlex
 {
 	template <class T> class buffer
@@ -541,7 +561,7 @@ namespace hyperlex
 		};
 	private:
 		ErrorCode ERROR;
-		size_t count;
+		size_t count;// count of non-terminal
 		size_t TerminalCount;
 		//[0,count-1] non-terminal
 		//[count,TerminalCount + count -1]; terminal
@@ -549,15 +569,15 @@ namespace hyperlex
 		//erminalCount + count + 1: END-EOF
 		long long int epsilon;
 		long long int end;
-		list<size_t> degeneracy;
-		list<size_t> prefix;
-		list<const char*> name;
+		list<size_t> degeneracy;//has length of count
+		list<size_t> prefix;//has length of count
+		list<const char*> name;//has length of count
 		list<const char*> ternimal;
-		list<production> rules;
-		list<long long int> all;
+		list<production> rules;//has length of count of all rules 
+		list<long long int> all;//Production Rules
 
-		matlist<bool> first;
-		matlist<bool> follow;
+		matlist<bool> first;//matrix of count * TerminalCount + 2
+		matlist<bool> follow;//matrix of count * TerminalCount + 2
 	private:
 		void append(const char* input);
 		void Tappend(const char* input);
