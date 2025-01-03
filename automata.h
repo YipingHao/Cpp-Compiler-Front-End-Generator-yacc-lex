@@ -729,6 +729,7 @@ namespace hyperlex
 		infor Action(size_t state, size_t symbol) const;
 		int GetSymbol(size_t rules) const;
 		void Cprint(const char* name, FILE* fp)const;
+		void CppPrint(const char* name, FILE* fp)const;
 		static const char* TypeToChar(type TT);
 	private:
 		size_t StateCount;
@@ -739,7 +740,7 @@ namespace hyperlex
 		infor* ACTION;
 		infor* GOTO;
 		int* RulesToSmbol;
-
+		int* RulesLength;
 
 		ErrorType ET;
 		ErrorInfor EI;

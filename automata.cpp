@@ -3011,6 +3011,9 @@ Gsheet::Gsheet()
 	ACTION = NULL;
 	GOTO = NULL;
 
+	RulesLength = NULL;
+	RulesToSmbol = NULL;
+
 	ET = uninitialized;
 }
 Gsheet::~Gsheet()
@@ -3020,6 +3023,8 @@ Gsheet::~Gsheet()
 	NonTerminalCount = 0;
 	free(ACTION);
 	free(GOTO);
+
+	free(RulesLength);
 	free(RulesToSmbol);
 }
 void Gsheet::build(const LR0* lr, const grammerS* G)
@@ -3136,8 +3141,13 @@ int Gsheet::build(const matlist<int>& sheet, const matlist<bool>& Dstates, const
 	
 	RulesCount = G->rules.count();
 	RulesToSmbol = (int*)malloc(sizeof(int) * RulesCount);
+	RulesLength = (int*)malloc(sizeof(int) * RulesCount);
 	for (i = 0; i < RulesCount; i++)
+	{
 		RulesToSmbol[i] = G->rules[i].symbol;
+		RulesLength[i] = G->rules[i].length;
+	}
+		
 	
 	StateCount = Dstates.row();
 
@@ -3395,7 +3405,45 @@ void Gsheet::Cprint(const char* name, FILE* fp)const
 	}
 	fprintf(fp, "}\n");
 }
+void Gsheet::CppPrint(const char* name, FILE* fp)const
+{
+	size_t i, j;
+	//size_t No;
+	int infor;
+	fprintf(fp, "void %s::build()\n{\n", name);
 
+	fprintf(fp, "\tStateCount = %zu;\n", StateCount);
+	fprintf(fp, "\tNonTerminalCount = %zu;\n", NonTerminalCount);
+	fprintf(fp, "\tTerminalCount = %zu;\n", TerminalCount);
+
+	fprintf(fp, "\tGOTO = (int*)malloc(sizeof(int) * StateCount * NonTerminalCount);\n");
+	for (i = 0; i < StateCount; i++)
+		for (j = 0; j < NonTerminalCount; j++)
+		{
+			infor = 4 * GOTO[i * NonTerminalCount + j].state;
+			infor += (int)GOTO[i * NonTerminalCount + j].action;
+			fprintf(fp, "\tGOTO[%zu] = %d;\n", i * NonTerminalCount + j, infor);
+		}
+	fprintf(fp, "//==============================\n");//
+	//====================================================
+	fprintf(fp, "\tACTION = (int*)malloc(sizeof(int) * StateCount * (TerminalCount + 1));\n");
+	for (i = 0; i < StateCount * (TerminalCount + 1); i++)
+	{
+		infor = 4 * ACTION[i].state;
+		infor += (int)ACTION[i].action;
+		fprintf(fp, "\tACTION[%zu] = %d;\n", i, infor);
+	}
+	fprintf(fp, "//==============================\n");//
+	//====================================================
+	fprintf(fp, "\tRulesToSymbol = (int*)malloc(sizeof(int) * RulesCount);\n");
+	fprintf(fp, "\tRulesLength = (int*)malloc(sizeof(int) * RulesCount);\n");
+	for (i = 0; i < RulesCount; i++)
+	{
+		fprintf(fp, "\tRulesToSymbol[%zu] = %d;\n", i, RulesToSmbol[i]);
+		fprintf(fp, "\tRulesLength[%zu] = %d;\n", i, RulesLength[i]);
+	}
+	fprintf(fp, "}\n");
+}
 static bool compare(const char* str1, const char* str2)
 {
 	size_t i;
@@ -3411,6 +3459,8 @@ static void inverse(list<size_t>& out, const list<size_t>& in)
 		out[in[i]] = i;
 }
 
+
+//int LRrun(int * )
 /*
 struct postorder
 {
