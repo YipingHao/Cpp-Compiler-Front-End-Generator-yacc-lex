@@ -974,6 +974,11 @@ static int test_13(const char* output_path, ParaFile& pf)
     Gsheet1.build(lr1, &G);
     Gsheet1.Demo(stdout);
     Gsheet1.Cprint("Heihei", stdout);
+
+    Gsheet0.CppPrint("Retree", stdout);
+    Gsheet0.CppStructPrint("Retree", stdout);
+
+    G.Cprint(stdout);
     delete lr1;
     delete lr;
     return 0;
@@ -1126,7 +1131,7 @@ static int test_17(const char* output_path, ParaFile& pf)
     sheetDFA* dfa;
     DFA* ddfa;
     lP.SetReg();
-    lP.Demo(stdout);
+    
     if (0) 
     {
         nfa = new NFA(lP);
@@ -1159,7 +1164,7 @@ static int test_17(const char* output_path, ParaFile& pf)
     {
         lP.build(stdout);
         lP.Cprint(stdout, "Reg");
-
+        lP.Demo(stdout);
         RegTree RTT;
         RTT.build("([a-z]|[A-Z]|_)([a-z]|[A-Z]|_|[0-9])*");
     }
@@ -1188,8 +1193,118 @@ static int test_18(const char* output_path, ParaFile& pf)
     lP.Demo(stdout);
     return 0;
 }
+
+struct aa1
+{
+    static const size_t a;
+    static const size_t b;
+    static const int w[4];
+    aa1(void)
+    {
+        //a = 11;
+        //b = 12;
+        //w[0] = 1;
+        //w[1] = 11;
+        //w[2] = 111;
+       //w[3] = 1111;
+    }
+    void value(void)
+    {
+        std::cout << "a: " << a << std::endl;
+        std::cout << "b: " << b << std::endl;
+        std::cout << "w[0]: " << w[0] << std::endl;
+        std::cout << "w[1]: " << w[1] << std::endl;
+        std::cout << "w[2]: " << w[2] << std::endl;
+        std::cout << "w[3]: " << w[3] << std::endl;
+    }
+};
+
+const size_t aa1::a = 11;
+const size_t aa1::b = 12;
+const int aa1::w[4] = { 1, \
+11, 111, 1111 };
+
+
+template<class T> class sheetDemo
+{
+public:
+    void demo(void);
+};
+template<class T> void sheetDemo<T>::demo(void)
+{
+    size_t i, j;
+    std::cout << "GOTO[" << T::StateCount << "][" << T::NonTerminalCount << "]" << std::endl;
+    for (i = 0; i < T::StateCount; i++)
+    {
+        for (j = 0; j < T::NonTerminalCount; j++)
+        {
+            std::cout << T::GOTO[i][j] << "  ";
+
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "ACTION[" << T::StateCount << "][" << T::TerminalCount + 1 << "]" << std::endl;
+    for (i = 0; i < T::StateCount; i++)
+    {
+        for (j = 0; j < T::TerminalCount + 1; j++)
+        {
+            std::cout << T::ACTION[i][j] << "  ";
+
+        }
+        std::cout << std::endl;
+    }
+}
 static int test_19(const char* output_path, ParaFile& pf)
 {
+    struct aa
+    {
+        const size_t a;
+        const size_t b;
+    };
+
+    
+
+
+    struct aa2
+    {
+        const size_t a = 11;
+        const size_t b = 12;
+        int w[64];
+    };
+
+    struct aa3
+    {
+        const size_t a = 11;
+        const size_t b = 12;
+        const int w[4] = {1, 2, 3, 4};
+    };
+    
+
+    aa1 A;
+    size_t i, j;
+    //sheetDemo<Retree> fdg;
+
+    std::cout << "sizeof(aa): " << sizeof(aa) << std::endl;
+    std::cout << "sizeof(aa1): " << sizeof(aa1) << std::endl;
+    std::cout << "aa1.a: " << A.a << std::endl;
+    A.value();
+    std::cout << "aa1.w[2]: " << A.w[2] << std::endl;
+    
+    //fdg.demo();
+    //for (i = 0; i < Retree::StateCount; i++)
+    //{
+    //    for (j = 0; j < Retree::NonTerminalCount; j++)
+     //   {
+     //       std::cout << Retree::GOTO[i][j] << "  ";
+
+     //   }
+    //    std::cout << std::endl;
+    //}
+    //A.w[3] = 5;
+    //A.a = 5;
+
+    std::cout << "sizeof(aa2): " << sizeof(aa2) << std::endl;
+    std::cout << "sizeof(aa3): " << sizeof(aa3) << std::endl;
     return 0;
 }
 

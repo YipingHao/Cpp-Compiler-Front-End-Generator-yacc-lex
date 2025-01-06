@@ -11,7 +11,10 @@ using namespace hyperlex;
 #include <bitset>
 
 static bool compare(const char* str1, const char* str2);
+static size_t strlength(const char* str);
+static void strfree(const char** strs, size_t length);
 static void inverse(list<size_t>& out, const list<size_t>& in);
+static int PostfixSwitch_small(char c);
 
 BufferChar::BufferChar()
 {
@@ -24,10 +27,121 @@ void BufferChar::operator<<(FILE* fp)
 	while (feof(fp) == 0)
 		append((const char)getc(fp));	
 }
+void BufferChar::operator=(const char* input)
+{
+	size_t i;
+	Head = 0;
+	Site = 0;
+	for (i = 0; input[i] != '\0'; i++) append(input[i]);
+}
 char* BufferChar::vector(void)
 {
 	append('\0');
 	return content + Head;
+}
+char* BufferChar::CopyVector(void) const
+{
+	char* Newchar;
+	size_t i;
+	Newchar = (char*)malloc(sizeof(char) * (Site - Head + 1));
+	for (i = 0; i < Site - Head; i++)
+		Newchar[i] = content[i + Head];
+	Newchar[i] = '\0';
+	return Newchar;
+}
+size_t BufferChar::CopyVector(list<char>& storage, size_t& length) const
+{
+	size_t i;
+	size_t Newchar;
+	length = Site - Head;
+	Newchar = storage.count();
+	for (i = 0; i < Site - Head; i++)
+		storage.append(content[i + Head]);
+	return Newchar;
+}
+
+
+Morpheme::Morpheme()
+{
+	count = 0;
+}
+Morpheme::~Morpheme()
+{
+
+}
+char* Morpheme::Copy(size_t site) const
+{
+	char* Newchar;
+	size_t i, offset__, length__;
+	if (site >= count) return NULL;
+	offset__ = lex[site].begin;
+	length__ = lex[site].length;
+	Newchar = (char*)malloc(sizeof(char) * (length__ + 1));
+	for (i = 0; i < length__; i++)
+		Newchar[i] = storage[i + offset__];
+	Newchar[i] = '\0';
+	return Newchar;
+}
+size_t Morpheme::GetCount(void) const
+{
+	return count;
+}
+const char* Morpheme::GetWord(size_t site) const
+{
+	return storage.vector(lex[site].begin);
+}
+void Morpheme::append(const BufferChar& input, int accept, int category)
+{
+	size_t offset__, length__;
+	result temp;
+	offset__ = input.CopyVector(storage, length__);
+	count += 1;
+	storage.append('\0');
+	//begin.append(offset__);
+	//length.append(length__);
+	temp.accept = accept;
+	temp.category = category;
+	temp.length = length__;
+	temp.begin = offset__;
+	lex.append(temp);
+	return;
+}
+void Morpheme::AppendEnd(int TerminalCount)
+{
+	result temp;
+	count += 1;
+	storage.append('#');
+	storage.append('\0');
+	//begin.append(offset__);
+	//length.append(length__);
+	temp.accept = TerminalCount;
+	temp.category = TerminalCount;
+	temp.length = 1;
+	temp.begin = storage.count() - 2;
+	lex.append(temp);
+}
+void Morpheme::Demo(FILE* fp)const
+{
+	size_t i;
+	fprintf(fp, "count = %zu\n", count);
+	for (i = 0; i < count; i++)
+	{
+		fprintf(fp, "<%4d : %4d , %s>\n", lex[i].category, lex[i].accept, storage.vector(lex[i].begin));
+	}
+}
+const Morpheme::result& Morpheme::operator[](const size_t target)const
+{
+	return lex[target];
+}
+char Morpheme::GetChar(size_t site) const
+{
+	size_t head;
+	const char* input;
+	int error;
+	input = storage.vector(lex[site].begin);
+	head = 1;
+	if (input[0] != '\'') return input[0];
+	else CharGet(error, input, lex[site].length, head);
 }
 
 RegTree::RegTree()
@@ -36,9 +150,635 @@ RegTree::RegTree()
 RegTree::~RegTree()
 {
 }
+
+/*int RegTree::next_Reg(int state, const char c)
+{
+	switch (state)
+	{
+	case 0:
+		if (c == '\'') return 12;
+		else if (c == '(') return 1;
+		else if (c == ')') return 2;
+		else if (c == '*') return 6;
+		else if (c == '+') return 7;
+		else if (c == '-') return 5;
+		else if ('0' <= c && c <= '9') return 8;
+		else if ('A' <= c && c <= 'Z') return 8;
+		else if (c == '[') return 3;
+		else if (c == ']') return 4;
+		else if (c == '_') return 8;
+		else if ('a' <= c && c <= 'z') return 8;
+		else return 0;
+	case 1:
+		return 0;
+	case 2:
+		return 0;
+	case 3:
+		return 0;
+	case 4:
+		return 0;
+	case 5:
+		return 0;
+	case 6:
+		return 0;
+	case 7:
+		return 0;
+	case 8:
+		return 0;
+	case 9:
+		return 0;
+	case 10:
+		if (c == '\'') return 9;
+		else return 0;
+	case 11:
+		if (c == (char)0) return 10;
+		else if (c == '"') return 10;
+		else if (c == '\'') return 10;
+		else if ('0' <= c && c <= '7') return 14;
+		else if (c == '?') return 10;
+		else if (c == 'X') return 13;
+		else if (c == '\\') return 10;
+		else if ('a' <= c && c <= 'b') return 10;
+		else if (c == 'f') return 10;
+		else if (c == 'n') return 10;
+		else if (c == 'r') return 10;
+		else if (c == 't') return 10;
+		else if (c == 'v') return 10;
+		else if (c == 'x') return 13;
+		else return 0;
+	case 12:
+		if (' ' <= c && c <= '!') return 10;
+		else if ('#' <= c && c <= '&') return 10;
+		else if ('(' <= c && c <= '.') return 10;
+		else if ('0' <= c && c <= '[') return 10;
+		else if (c == '\\') return 11;
+		else if (']' <= c && c <= '~') return 10;
+		else return 0;
+	case 13:
+		if ('0' <= c && c <= '9') return 15;
+		else if ('A' <= c && c <= 'F') return 15;
+		else if ('a' <= c && c <= 'f') return 15;
+		else return 0;
+	case 14:
+		if (c == '\'') return 9;
+		else if ('0' <= c && c <= '7') return 16;
+		else return 0;
+	case 15:
+		if (c == '\'') return 9;
+		else if ('0' <= c && c <= '9') return 10;
+		else if ('A' <= c && c <= 'F') return 10;
+		else if ('a' <= c && c <= 'f') return 10;
+		else return 0;
+	case 16:
+		if (c == '\'') return 9;
+		else if ('0' <= c && c <= '7') return 10;
+		else return 0;
+	}
+	return 0;
+	int RegTree::action_Reg(int state)
+{
+	switch (state)
+	{
+	case 1:
+		return 1;
+	case 2:
+		return 2;
+	case 3:
+		return 3;
+	case 4:
+		return 4;
+	case 5:
+		return 5;
+	case 6:
+		return 6;
+	case 7:
+		return 7;
+	case 8:
+		return 8;
+	case 9:
+		return 9;
+	}
+	return 0;
+}
+}*/
+int RegTree::next_Reg(int state, const char c)
+{
+	switch (state)
+	{
+	case 0:
+		if (c == '\'') return 14;
+		else if (c == '(') return 1;
+		else if (c == ')') return 2;
+		else if (c == '*') return 6;
+		else if (c == '+') return 7;
+		else if (c == '-') return 5;
+		else if ('0' <= c && c <= '9') return 9;
+		else if (c == '\?') return 8;
+		else if ('A' <= c && c <= 'Z') return 9;
+		else if (c == '[') return 3;
+		else if (c == ']') return 4;
+		else if (c == '_') return 9;
+		else if ('a' <= c && c <= 'z') return 9;
+		else if (c == '|') return 11;
+		else return 0;
+	case 1:
+		return 0;
+	case 2:
+		return 0;
+	case 3:
+		return 0;
+	case 4:
+		return 0;
+	case 5:
+		return 0;
+	case 6:
+		return 0;
+	case 7:
+		return 0;
+	case 8:
+		return 0;
+	case 9:
+		return 0;
+	case 10:
+		return 0;
+	case 11:
+		return 0;
+	case 12:
+		if (c == '\'') return 10;
+		else return 0;
+	case 13:
+		if (c == (char)0) return 12;
+		else if (c == '\"') return 12;
+		else if (c == '\'') return 12;
+		else if ('0' <= c && c <= '7') return 16;
+		else if (c == '\?') return 12;
+		else if (c == 'X') return 15;
+		else if (c == '\\') return 12;
+		else if ('a' <= c && c <= 'b') return 12;
+		else if (c == 'f') return 12;
+		else if (c == 'n') return 12;
+		else if (c == 'r') return 12;
+		else if (c == 't') return 12;
+		else if (c == 'v') return 12;
+		else if (c == 'x') return 15;
+		else return 0;
+	case 14:
+		if (' ' <= c && c <= '!') return 12;
+		else if ('#' <= c && c <= '&') return 12;
+		else if ('(' <= c && c <= '.') return 12;
+		else if ('0' <= c && c <= '[') return 12;
+		else if (c == '\\') return 13;
+		else if (']' <= c && c <= '~') return 12;
+		else return 0;
+	case 15:
+		if ('0' <= c && c <= '9') return 17;
+		else if ('A' <= c && c <= 'F') return 17;
+		else if ('a' <= c && c <= 'f') return 17;
+		else return 0;
+	case 16:
+		if (c == '\'') return 10;
+		else if ('0' <= c && c <= '7') return 18;
+		else return 0;
+	case 17:
+		if (c == '\'') return 10;
+		else if ('0' <= c && c <= '9') return 12;
+		else if ('A' <= c && c <= 'F') return 12;
+		else if ('a' <= c && c <= 'f') return 12;
+		else return 0;
+	case 18:
+		if (c == '\'') return 10;
+		else if ('0' <= c && c <= '7') return 12;
+		else return 0;
+	}
+	return 0;
+}
+int RegTree::action_Reg(int state)
+{
+	switch (state)
+	{
+	case 1:
+		return 1;//braket: left
+	case 2:
+		return 2;//braket: right
+	case 3:
+		return 3;//braket: begin
+	case 4:
+		return 4;//braket: end
+	case 5:
+		return 5;//braket: range
+	case 6:
+		return 6;//superscript: star
+	case 7:
+		return 7;//superscript: plus
+	case 8:
+		return 8;//superscript: ZeroOrOne
+	case 9:
+		return 9;//char: reserved
+	case 10:
+		return 10;//char: CommonChar
+	case 11:
+		return 11;//Or: Or
+	}
+	return 0;
+}
+int RegTree::GroupGet_Reg(int accept)
+{
+	switch (accept)
+	{
+	case 1:
+		return 0;//braket: left
+	case 2:
+		return 0;//braket: right
+	case 3:
+		return 0;//braket: begin
+	case 4:
+		return 0;//braket: end
+	case 5:
+		return 0;//braket: range
+	case 6:
+		return 1;//superscript: star
+	case 7:
+		return 1;//superscript: plus
+	case 8:
+		return 1;//superscript: ZeroOrOne
+	case 9:
+		return 2;//char: reserved
+	case 10:
+		return 2;//char: CommonChar
+	case 11:
+		return 3;//Or: Or
+	}
+	return -1;
+}
+
+struct Retree
+{
+	enum type
+	{
+		accept = 0,
+		error = 1,
+		push = 2,
+		reduce = 3,
+	};
+	static const size_t StateCount;
+	static const size_t NonTerminalCount;
+	static const size_t TerminalCount;
+	static const size_t RulesCount;
+	static const int GOTO[23][7];
+	static const int ACTION[23][12];
+	static const int RulesToSymbol[15];
+	static const int RulesLength[15];
+};
+const size_t Retree::StateCount = 23;
+const size_t Retree::NonTerminalCount = 7;
+const size_t Retree::TerminalCount = 11;
+const size_t Retree::RulesCount = 15;
+const int Retree::GOTO[23][7] = { \
+{1, 6, 10, 14, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 78, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 62, 10, 14, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 46}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 54}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 74, 14, 18, 22, 26}, \
+{1, 1, 1, 78, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1} };
+//==============================
+const int Retree::ACTION[23][12] = { \
+{30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 0}, \
+{30, 7, 34, 1, 1, 1, 1, 1, 38, 42, 7, 7}, \
+{15, 15, 15, 1, 1, 82, 86, 90, 15, 15, 15, 15}, \
+{23, 23, 23, 1, 1, 23, 23, 23, 23, 23, 23, 23}, \
+{39, 39, 39, 1, 1, 39, 39, 39, 39, 39, 39, 39}, \
+{47, 47, 47, 1, 1, 47, 47, 47, 47, 47, 47, 47}, \
+{30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55}, \
+{59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59}, \
+{1, 1, 1, 1, 50, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{1, 1, 1, 58, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{51, 51, 51, 1, 1, 51, 51, 51, 51, 51, 51, 51}, \
+{1, 66, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1}, \
+{43, 43, 43, 1, 1, 43, 43, 43, 43, 43, 43, 43}, \
+{30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{30, 11, 34, 1, 1, 1, 1, 1, 38, 42, 11, 11}, \
+{19, 19, 19, 1, 1, 82, 86, 90, 19, 19, 19, 19}, \
+{31, 31, 31, 1, 1, 31, 31, 31, 31, 31, 31, 31}, \
+{27, 27, 27, 1, 1, 27, 27, 27, 27, 27, 27, 27}, \
+{35, 35, 35, 1, 1, 35, 35, 35, 35, 35, 35, 35} };
+//==============================
+const int Retree::RulesToSymbol[15] = { \
+0,\
+1,\
+1,\
+2,\
+2,\
+3,\
+3,\
+3,\
+3,\
+4,\
+4,\
+5,\
+5,\
+6,\
+6 };
+//==============================
+const int Retree::RulesLength[15] = { \
+1,\
+1,\
+3,\
+1,\
+2,\
+1,\
+2,\
+2,\
+2,\
+1,\
+3,\
+1,\
+5,\
+1,\
+1 };
+
+
+
 void RegTree::build(const char* reg)
 {
+	BufferChar input;
+	input = reg;
+	build(input);
+}
+void RegTree::build(BufferChar& input)
+{
+	BufferChar result;
+	//BufferChar input;
+	BufferChar intermediate;
+	Morpheme eme;
+	size_t head;
+	list<int> stack;
+	list<RegTree*> SrcTree;
+	RegTree* L,  *R,  *M;
+	int top;
+	int information, temp;
+	Retree::type type;
+	size_t length, i, begin_;
+	int accept, symbol;
+	bool DoNext;
+	char now;
+	int GoFull, GoD, GoI;
 	tree.clear();
+	while (RunBuild(accept, result, input, intermediate))
+	{
+		if(accept != 0) eme.append(result, accept, GroupGet_Reg(accept));
+		else 
+		{
+			input.dequeue(now);
+			result.append(now);
+			eme.append(result, 0, GroupGet_Reg(0));
+		}
+	}
+	eme.AppendEnd(Retree::TerminalCount);
+	eme.Demo(stdout);
+	stack.append(0);
+	SrcTree.append(NULL);
+	head = 0;
+	DoNext = true;
+	do
+	{
+		top = stack.top();
+		temp = Retree::ACTION[top][eme[head].accept - 1];
+		information = temp / 4;
+		type = (Retree::type) (temp % 4);
+		
+		fprintf(stdout, "\n\nT = %5d, top = %5d, information = %5d, type = %5d, ", eme[head].accept - 1, top, information, (int)type);
+		fprintf(stdout, "head = %5zu, lex = %s, ", head, eme.GetWord(head));
+		fprintf(stdout, "stack.count() = %5zu, top = %5zu\n//================================\n", stack.count(), SrcTree.count());
+		for (i = 0; i < stack.count(); i++)
+		{
+			fprintf(stdout, "%5d, ", stack[i]);
+			if (SrcTree[i] == NULL)
+				fprintf(stdout, "SrcTree[%5zu]: NULL\n", i);
+			else
+			{
+				fprintf(stdout, "SrcTree[%5zu]: ", i);
+				SrcTree[i]->Demo(stdout);
+				fprintf(stdout, "\n");
+			}
+		}
+		switch (type)
+		{
+		case Retree::accept:
+			DoNext = false;
+			break;
+		case Retree::error:
+			DoNext = false;
+			break;
+		case Retree::push:
+			stack.append(information);
+			M = new RegTree;
+			M->grow(eme.GetChar(head));
+			SrcTree.append(M);
+			fprintf(stdout, "\tchar = %c\n", eme.GetChar(head));
+			head += 1;
+			break;
+		case Retree::reduce:
+			symbol = Retree::RulesToSymbol[information];
+			length = Retree::RulesLength[information];
+			begin_ = SrcTree.count() - length;
+			fprintf(stdout, "\tsymbol = %5d, length = %5zu, begin_ = %5zu\n", symbol, length, begin_);
+			switch (information)
+			{
+				//No[0], case Ep: prefix: 0, degeneracy: 1
+			case 0: //0: Ep, No[0] production rules: Ep->RegOr
+				M = SrcTree[begin_];
+				SrcTree[begin_] = NULL;
+				break;
+			//No[1], case RegOr: prefix: 1, degeneracy: 2
+			case 1: //1: RegOr, No[0] production rules: RegOr->Reg
+				M = SrcTree[begin_];
+				SrcTree[begin_] = NULL;
+				break;
+			case 2: //1: RegOr, No[1] production rules: RegOr->Reg Or Reg
+				M = new RegTree;
+				M->grow(SrcTree[begin_], SrcTree[begin_ + 2], RegTree::Alternation);
+				break;
+			//No[2], case Reg: prefix: 3, degeneracy: 2
+			case 3: //2: Reg, No[0] production rules: Reg->Complex
+				M = SrcTree[begin_];
+				SrcTree[begin_] = NULL;
+				break;
+			case 4: //2: Reg, No[1] production rules: Reg->Complex Reg
+				M = new RegTree;
+				M->grow(SrcTree[begin_], SrcTree[begin_ + 1], RegTree::Concatenation);
+				break;
+			//No[3], case Complex: prefix: 5, degeneracy: 4
+			case 5: //3: Complex, No[0] production rules: Complex->Node
+				M = SrcTree[begin_];
+				SrcTree[begin_] = NULL;
+				break;
+			case 6: //3: Complex, No[1] production rules: Complex->Complex plus
+				M = new RegTree;
+				M->grow(SrcTree[begin_], RegTree::OneOrMore);
+				break;
+			case 7: //3: Complex, No[2] production rules: Complex->Complex star
+				M = new RegTree;
+				M->grow(SrcTree[begin_], RegTree::ZeroOrMore);
+				break;
+			case 8: //3: Complex, No[3] production rules: Complex->Complex ZeroOrOne
+				M = new RegTree;
+				M->grow(SrcTree[begin_], RegTree::ZeroOrOne);
+				break;
+			//No[4], case Node: prefix: 9, degeneracy: 2
+			case 9: //4: Node, No[0] production rules: Node->Range
+				M = SrcTree[begin_];
+				SrcTree[begin_] = NULL;
+				break;
+			case 10: //4: Node, No[1] production rules: Node->left RegOr right
+				M = SrcTree[begin_ + 1];
+				SrcTree[begin_ + 1] = NULL;
+				break;
+			//No[5], case Range: prefix: 11, degeneracy: 2
+			case 11: //5: Range, No[0] production rules: Range->Char
+				M = SrcTree[begin_];
+				SrcTree[begin_] = NULL;
+				break;
+			case 12: //5: Range, No[1] production rules: Range->begin Char range Char end
+				M = new RegTree;
+				L = SrcTree[begin_ + 1];
+				R = SrcTree[begin_ + 3];
+				M->grow(L->tree[L->tree.Head].content.lower, R->tree[R->tree.Head].content.upper);
+				break;
+			//No[6], case Char: prefix: 13, degeneracy: 2
+			case 13: //6: Char, No[0] production rules: Char->reserved
+				M = SrcTree[begin_];
+				SrcTree[begin_] = NULL;
+				break;
+			case 14: //6: Char, No[1] production rules: Char->CommonChar
+				M = SrcTree[begin_];
+				SrcTree[begin_] = NULL;
+				break;
+			}
+			for (i = 0; i < length; i++) stack.pop();
+			for (i = 0; i < length; i++) delete SrcTree[begin_ + i];
+			for (i = 0; i < length; i++) SrcTree.pop();
+			GoFull = Retree::GOTO[stack.top()][symbol];
+			GoD = GoFull / 4; 
+			GoI = GoFull % 4;
+			stack.append(GoD);
+			SrcTree.append(M);
+			fprintf(stdout, "\tGOTO[%5d][%5d] = (%5d, %5d)\n", stack.top(), symbol, GoD, GoI);
+			break;
+		}
+	} while (DoNext);
+	//for (i = 0; i < eme.GetCount(); i++)
+	//{
+	//	top;
+	//}
+	//size_t i;
+	//fprintf(stdout, "count = %zu\n", eme.GetCount());
+	//for (i = 0; i < eme.GetCount(); i++)
+	//{
+	//	fprintf(stdout, "<%d : %d, %s>\n", eme.GetCategory(i), eme.GetAccept(i), eme.GetWord(i));
+	//}
+}
+bool RegTree::RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate)
+{
+	/*
+	example:
+	1 aa
+	2 aaBB
+	3 Bcc
+	input: aaBcc
+	*/
+	char now;
+	//char cc;
+	int state, acc;
+	int action;
+	intermediate.refresh();
+	state = 0;
+	acc = 0;
+	action = 0;
+	accept = 0;
+	result.refresh();
+	while (input.dequeue(now))
+	{
+		/*state switch*/
+		/*change here to get a different automata*/
+		state = next_Reg(state, now);
+		acc = action_Reg(state);
+		/*change here to get a different automata*/
+		accept = acc != 0 ? acc : accept;
+		switch (action)
+		{
+		case 0://initial
+			if (state != 0 && acc == 0)
+			{
+				intermediate.append(now);
+				action = 1;
+			}
+			else if (state != 0 && acc != 0)
+			{
+				result.append(now);
+				action = 2;
+			}
+			else
+			{
+				input.backspace(now);
+				return true;
+			}
+			break;
+		case 1://run and waiting for accept
+			if (state == 0)
+			{
+				input.backspace(now);
+				input.backspace(intermediate);
+				return true;
+			}
+			else if (acc != 0)
+			{
+				result.append(intermediate);
+				result.append(now);
+				intermediate.refresh();
+				action = 2;
+			}
+			else intermediate.append(now);//continue 
+			break;
+		case 2://accept
+			if (state == 0)//accept
+			{
+				input.backspace(now);
+				//accept = last;
+				return true;
+			}
+			else if (acc == 0)
+			{
+				intermediate.append(now);
+				action = 1;
+			}
+			else result.append(now);
+			break;
+		}
+	}
+	if (action == 1)
+		input.backspace(intermediate);
+	return action != 0;
 }
 
 void RegTree::grow(const RegTree* reg, NodeType T)
@@ -59,7 +799,10 @@ void RegTree::grow(const RegTree* regL, const RegTree* regR, NodeType T)
 	tree.append(regL->tree, regR->tree, site);
 	tree[site].content.type = T;
 }
-
+void RegTree::grow(char C)
+{
+	grow(C, C);
+}
 void RegTree::grow(char L, char U)
 {
 	size_t site;
@@ -502,14 +1245,91 @@ static const char* Copy(const char* input)
 
 lexicalPanel::lexicalPanel()
 {
-
+	nfa = NULL;
+	DFAsheet = NULL;
+	DFAgraph = NULL;
+	/*
+	count = 0;
+	capacity = 0;
+	reg = NULL;
+	name = NULL;
+	attribute = NULL;
+	priority = NULL;
+	*/
 }
 lexicalPanel::~lexicalPanel()
 {
 	size_t i;
 	for (i = 0; i < regular.count(); i++)
 		delete regular[i];
+	delete nfa;
+	delete DFAsheet;
+	delete DFAgraph;
+
+	for (i = 0; i < attribute.count(); i++)
+	{
+		free((void*)attribute[i]);
+	}
+
+	/*
+	for (i = 0; i < count; i++)
+	{
+		delete reg[i];
+		free((void*)name[i]);
+		free((void*)attribute[i]);
+	}
+	free((void*)priority);
+	free((void*)name);
+	free((void*)attribute);
+	free((void*)reg);
+	*/
 }
+const char** lexicalPanel::GetName(void) const
+{
+	const char** name;
+	size_t i;
+	name = (const char**)malloc(regular.count() * sizeof(const char*));
+	for (i = 0; i < regular.count(); i++)
+	{
+		name[i] = Copy(regular[i]->name);
+	}
+	return name;
+}
+const char** lexicalPanel::GetAttribute(void) const
+{
+	const char** atrribute;
+	size_t i;
+	atrribute = (const char**)malloc(regular.count() * sizeof(const char*));
+	for (i = 0; i < regular.count(); i++)
+	{
+		atrribute[i] = Copy(regular[i]->attribute);
+	}
+	return atrribute;
+}
+/*
+void lexicalPanel::expand(void)
+{
+	size_t newCapacity;
+
+	newCapacity = (capacity + capacity / 4 + 8);
+
+	priority = (size_t*)realloc(priority, newCapacity * sizeof(size_t));
+	name = (const char**)realloc(name, newCapacity * sizeof(const char*));
+	attribute = (const char**)realloc(attribute, newCapacity * sizeof(const char*));
+	reg = (RegTree**)realloc(reg, newCapacity * sizeof(RegTree*));
+
+	capacity = newCapacity;
+
+}
+void lexicalPanel::append(const char* Name, const char* Attri, RegTree* Reg, size_t Priority)
+{
+	if (count >= capacity) expand();
+	name[count] = Copy(Name);
+	attribute[count] = Copy(Attri);
+	reg[count] = Reg;
+	priority[count] = Priority;
+	count += 1;
+}*/
 lexicalPanel::infor::infor()
 {
 	priority = 0;
@@ -519,10 +1339,13 @@ lexicalPanel::infor::infor()
 }
 lexicalPanel::infor::~infor()
 {
+	
 	delete reg;
 	reg = NULL;
 	free((void*)name);
 	free((void*)attribute);
+
+
 }
 void lexicalPanel::infor::SetName(const char* input)
 {
@@ -534,8 +1357,45 @@ void lexicalPanel::infor::SetAttribute(const char* input)
 }
 void lexicalPanel::build(void)
 {
+	SetAll();
+	nfa = new NFA(*this);
+	DFAsheet = new sheetDFA(*nfa);
+	DFAsheet->shrink();
+	DFAgraph = new DFA(DFAsheet);
 
+	//ddfa->Demo(stdout);
 }
+void lexicalPanel::build(FILE* fp)
+{
+	SetAll();
+	fprintf(fp, "================nfa = new NFA(*this);=================\n");
+	nfa = new NFA(*this);
+	nfa->Demo(stdout);
+	fprintf(fp, "===========DFAsheet = new sheetDFA(*nfa);=============\n");
+	DFAsheet = new sheetDFA(*nfa);
+	DFAsheet->Demo(stdout);
+	fprintf(fp, "=================DFAsheet->shrink();==================\n");
+	DFAsheet->shrink();
+	DFAsheet->Demo(stdout);
+	fprintf(fp, "============DFAgraph = new DFA(DFAsheet);=============\n");
+	DFAgraph = new DFA(DFAsheet);
+	DFAgraph->Demo(stdout);
+}
+
+void lexicalPanel::Cprint(FILE* fp, const char* name)
+{
+	const char** Atrribute__;
+	const char** Name__;
+	Name__ = GetName();
+	Atrribute__ = GetAttribute();
+	DFAgraph->Cprint(fp, name);
+	DFAgraph->CprintAccept(fp, name, Atrribute__, Name__);
+
+	CppAccept(fp, name, *DFAgraph);
+	strfree(Atrribute__, regular.count());
+	strfree(Name__, regular.count());
+}
+
 void lexicalPanel::SetGrammer(void)
 {
 	infor* II;
@@ -581,6 +1441,8 @@ void lexicalPanel::SetGrammer(void)
 	II->reg = new RegTree();
 	II->reg->Reserved(";");
 	regular.append(II);
+
+
 
 }
 void lexicalPanel::SetReg(void)
@@ -637,6 +1499,13 @@ void lexicalPanel::SetReg(void)
 	regular.append(II);
 
 	II = new infor;
+	II->SetAttribute("superscript");
+	II->SetName("ZeroOrOne");
+	II->reg = new RegTree();
+	II->reg->Reserved("?");
+	regular.append(II);
+
+	II = new infor;
 	II->SetAttribute("char");
 	II->SetName("reserved");
 	II->reg = new RegTree();
@@ -650,7 +1519,12 @@ void lexicalPanel::SetReg(void)
 	II->reg->ConstChar();
 	regular.append(II);
 
-	
+	II = new infor;
+	II->SetAttribute("Or");
+	II->SetName("Or");
+	II->reg = new RegTree();
+	II->reg->Reserved("|");
+	regular.append(II);
 }
 void lexicalPanel::SetRegS(void)
 {
@@ -692,12 +1566,44 @@ void lexicalPanel::SetRegS(void)
 	II->reg = new RegTree();
 	II->reg->Reserved(":");
 	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("division");
+	II->SetName("dot");
+	II->reg = new RegTree();
+	II->reg->Reserved(".");
+	regular.append(II);
 }
 void lexicalPanel::append(lexicalPanel::infor* II)
 {
 	regular.append(II);
 }
-
+void lexicalPanel::CppAccept(FILE* fp, const char* name, const DFA& dfa)const
+{
+	size_t i, No;
+	fprintf(fp, "int GroupGet");
+	if (name != NULL) fprintf(fp, "_%s", name);
+	fprintf(fp, "(int accept)\n{\n");
+	fprintf(fp, "\tswitch (accept)\n\t{\n");
+	//for (i = 0; i < dfa.StateAmountGet(); i++)
+	for (No = 0; No < regular.count(); No++)
+	{
+		//No = (size_t)dfa.GraphStateGet(i);
+		//if (No == 0) continue;
+		//fprintf(fp, "\tcase %zu:\n", i);
+		//fprintf(fp, "\t\tgroup = %zu;\n", regular[No - 1]->group);
+		//fprintf(fp, "\t\treturn %zu;", No);
+		fprintf(fp, "\tcase %zu:\n", No + 1);
+		//fprintf(fp, "\t\tgroup = %zu;\n", regular[No - 1]->group);
+		fprintf(fp, "\t\treturn %zu;", regular[No]->group);
+		fprintf(fp, "//");
+		fprintf(fp, "%s: ", regular[No]->attribute);
+		fprintf(fp, "%s", regular[No]->name);
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\t}\n");
+	fprintf(fp, "\treturn -1;\n}\n");
+}
 void lexicalPanel::Demo(FILE* fp) const
 {
 	size_t i;
@@ -712,9 +1618,22 @@ void lexicalPanel::infor::Demo(FILE* fp)
 {
 	fprintf(fp, "\tpriority: %zu\n", priority);
 	fprintf(fp, "\tname: %s\n", name);
-	fprintf(fp, "\tattribute: %s\n\tregular expression: ", attribute);
+	fprintf(fp, "\tattribute: %s(%zu)\n\tregular expression: ", attribute, group);
 	reg->Demo(stdout);
 	fprintf(fp, "\n");
+}
+
+void lexicalPanel::SetAll(void)
+{
+	size_t i, j;
+	for (i = 0; i < regular.count(); i++)
+	{
+		for (j = 0; j < attribute.count(); j++)
+			if (compare(regular[i]->attribute, attribute[j])) break;
+		if (j == attribute.count())
+			attribute.append(Copy(regular[i]->attribute));
+		regular[i]->group = j;
+	}
 }
 
 DirectedGraph::DirectedGraph()
@@ -1314,7 +2233,7 @@ void NFA::build(const sNFA* const* multiple, size_t count)
 	CC.upper = 'a';
 	for (i = 0; i < count; i++)
 	{
-		graph.vertice[prefix + multiple[i]->accepted].content = i + 1;
+		graph.vertice[prefix + multiple[i]->accepted].content = (int)(i + 1);
 		graph.append(0, prefix, CC);
 		prefix += multiple[i]->StateAmount;
 	}
@@ -1922,17 +2841,28 @@ void DFA::Cprint(FILE* fp, const char* name) const
 	}
 	fprintf(fp, "\t}\n");
 	fprintf(fp, "\treturn 0;\n}\n");
-
+	
+}
+void DFA::CprintAccept(FILE* fp, const char* name, const char** const category, const char** const accept)const
+{
+	size_t i, No;
 	fprintf(fp, "int action");
 	if (name != NULL) fprintf(fp, "_%s", name);
 	fprintf(fp, "(int state)\n{\n");
 	fprintf(fp, "\tswitch (state)\n\t{\n");
 	for (i = 0; i < StateAmount; i++)
 	{
-		No = graph.vertice[i].content;
+		No = (size_t)(graph.vertice[i].content);
 		if (No == 0) continue;
-		fprintf(fp, "\tcase %d:\n", (int)i);
-		fprintf(fp, "\t\treturn %llu;\n", (long long unsigned int)No);
+		fprintf(fp, "\tcase %zu:\n", i);
+		fprintf(fp, "\t\treturn %zu;", No);
+		if (category != NULL || accept != NULL)
+			fprintf(fp, "//");
+		if (category != NULL)
+			fprintf(fp, "%s: ", category[No - 1]);
+		if (accept != NULL)
+			fprintf(fp, "%s", accept[No - 1]);
+		fprintf(fp, "\n");
 	}
 	fprintf(fp, "\t}\n");
 	fprintf(fp, "\treturn 0;\n}\n");
@@ -1946,16 +2876,27 @@ void DFA::Cprint(FILE* fp, convert& CC)
 	if (U != L)
 	{
 		if (L < 32) fprintf(fp, "(char)%d <= c && ", L);
-		else fprintf(fp, "\'%c\' <= c && ", (char)L);
+		else if (PostfixSwitch_small(L) == -1) fprintf(fp, "\'%c\' <= c && ", (char)L);
+		else fprintf(fp, "\'\\%c\' <= c && ", (char)L);
 		if (U < 32) fprintf(fp, "c <= (char)%d", U);
-		else fprintf(fp, "c <= \'%c\'", (char)U);
+		else if (PostfixSwitch_small(U) == -1) fprintf(fp, "c <= \'%c\'", (char)U);
+		else fprintf(fp, "c <= \'\\%c\'", (char)U);
 	}
 	else
 	{
 		if (L < 32) fprintf(fp, "c == (char)%d", L);
-		else fprintf(fp, "c == \'%c\'", (char)L);
+		else if (PostfixSwitch_small(L) == -1) fprintf(fp, "c == \'%c\'", (char)L);
+		else fprintf(fp, "c == \'\\%c\'", (char)L);
 	}
-
+	
+}
+size_t DFA::StateAmountGet(void) const
+{
+	return StateAmount;
+}
+int DFA::GraphStateGet(const size_t site) const
+{
+	return (graph.vertice[site].content);
 }
 
 ShrinkList::ShrinkList(size_t AcceptCount, size_t size)
@@ -2214,14 +3155,12 @@ int grammerS::build(BufferChar& input)
 	const char* Result;
 	production PP;
 	size_t from, i, j;
-	size_t Count_;//degeneracy
+	size_t Count_;
 	list<const char*> nameTemp;
 	PP.symbol = 0;
 	state = 0;
 	from = 0;
 	Count_ = 0;
-	//accept == 4: ->
-	//accept == 5: id
 	while (RunBuild(accept, result, input, intermediate))
 	{
 		if (accept == 0)
@@ -2361,15 +3300,15 @@ int grammerS::build(BufferChar& input)
 void grammerS::SetExample(void)
 {
 	size_t i;
-	count = 3; // ÈùûÁªàÁªìÁ¨¶Êï∞Èáè
-	TerminalCount = 5; // ÁªàÁªìÁ¨¶Êï∞Èáè
+	count = 3; // ∑«÷’Ω·∑˚ ˝¡ø
+	TerminalCount = 5; // ÷’Ω·∑˚ ˝¡ø
 
-	// ËÆæÁΩÆÈùûÁªàÁªìÁ¨¶ÁöÑÂêçÁß∞
+	// …Ë÷√∑«÷’Ω·∑˚µƒ√˚≥∆
 	append("E");
 	append("T");
 	append("F");
 	
-	// ËÆæÁΩÆÁªàÁªìÁ¨¶ÁöÑÂêçÁß∞
+	// …Ë÷√÷’Ω·∑˚µƒ√˚≥∆
 
 
 	Tappend("+");//-1
@@ -2380,7 +3319,7 @@ void grammerS::SetExample(void)
 
 	Tappend("epsilon");//-6
 	Tappend("END-EOF");//-7
-	// ËÆæÁΩÆÊØè‰∏™ÈùûÁªàÁªìÁ¨¶ÁöÑ degeneracy
+	// …Ë÷√√ø∏ˆ∑«÷’Ω·∑˚µƒ degeneracy
 
 	epsilon = TerminalCount;
 	epsilon = -epsilon - 1;
@@ -2398,7 +3337,7 @@ void grammerS::SetExample(void)
 		pp += degeneracy[i];
 	}
 
-	// ËÆæÁΩÆ‰∫ßÁîüÂºèËßÑÂàô
+	// …Ë÷√≤˙…˙ ΩπÊ‘Ú
 	production PP;
 	PP.begin = 0;
 	all.append(0);
@@ -2455,6 +3394,38 @@ void grammerS::Demo(FILE* fp) const
 		fprintf(fp, "\n");
 	}
 }
+void grammerS::Cprint(FILE* fp) const
+{
+	size_t i, j, k;
+	//size_t site;
+	long long int index;
+	//long long int  *R;
+	production PP;
+	fprintf(fp, "\tswitch(information)\n\t{\n");
+	for (i = 0; i < count; i++)//
+	{
+		fprintf(fp, "\t\t//No[%zu], case %s: prefix: %zu, degeneracy: %zu\n", i, name[i], prefix[i], degeneracy[i]);
+		for (j = 0; j < degeneracy[i]; j++)
+		{
+			PP = rules[prefix[i] + j];
+			fprintf(fp, "\t\tcase %zu: //%zu: %s, ", prefix[i] + j, i, name[i]);
+			fprintf(fp, "No[%zu] production rules: %s->", j, name[PP.symbol]);
+			//PP = rules[prefix[i] + j];
+			for (k = 0; k < PP.length; k++)
+			{
+				index = all[PP.begin + k];
+				if (index >= 0)
+					fprintf(fp, "%s ", name[index]);
+				else
+					fprintf(fp, "%s ", ternimal[-index - 1]);
+			}
+			fprintf(fp, "\n\t\t{\n\t\t}\n\t\tbreak;\n");
+		}
+	}
+	fprintf(fp, "\t}\n");
+	//return;
+}
+
 void grammerS::Demo(FILE* fp, size_t rule, size_t dot) const
 {
 	production PP;
@@ -3011,10 +3982,10 @@ Gsheet::Gsheet()
 	ACTION = NULL;
 	GOTO = NULL;
 
+	ET = uninitialized;
+
 	RulesLength = NULL;
 	RulesToSmbol = NULL;
-
-	ET = uninitialized;
 }
 Gsheet::~Gsheet()
 {
@@ -3144,10 +4115,10 @@ int Gsheet::build(const matlist<int>& sheet, const matlist<bool>& Dstates, const
 	RulesLength = (int*)malloc(sizeof(int) * RulesCount);
 	for (i = 0; i < RulesCount; i++)
 	{
-		RulesToSmbol[i] = G->rules[i].symbol;
-		RulesLength[i] = G->rules[i].length;
+		RulesToSmbol[i] = (int)G->rules[i].symbol;
+		RulesLength[i] = (int)G->rules[i].length;
 	}
-		
+
 	
 	StateCount = Dstates.row();
 
@@ -3415,6 +4386,7 @@ void Gsheet::CppPrint(const char* name, FILE* fp)const
 	fprintf(fp, "\tStateCount = %zu;\n", StateCount);
 	fprintf(fp, "\tNonTerminalCount = %zu;\n", NonTerminalCount);
 	fprintf(fp, "\tTerminalCount = %zu;\n", TerminalCount);
+	fprintf(fp, "\tRulesCount = %zu;\n", RulesCount);
 
 	fprintf(fp, "\tGOTO = (int*)malloc(sizeof(int) * StateCount * NonTerminalCount);\n");
 	for (i = 0; i < StateCount; i++)
@@ -3424,7 +4396,7 @@ void Gsheet::CppPrint(const char* name, FILE* fp)const
 			infor += (int)GOTO[i * NonTerminalCount + j].action;
 			fprintf(fp, "\tGOTO[%zu] = %d;\n", i * NonTerminalCount + j, infor);
 		}
-	fprintf(fp, "//==============================\n");//
+	fprintf(fp, "\t//==============================\n");//
 	//====================================================
 	fprintf(fp, "\tACTION = (int*)malloc(sizeof(int) * StateCount * (TerminalCount + 1));\n");
 	for (i = 0; i < StateCount * (TerminalCount + 1); i++)
@@ -3433,7 +4405,7 @@ void Gsheet::CppPrint(const char* name, FILE* fp)const
 		infor += (int)ACTION[i].action;
 		fprintf(fp, "\tACTION[%zu] = %d;\n", i, infor);
 	}
-	fprintf(fp, "//==============================\n");//
+	fprintf(fp, "\t//==============================\n");//
 	//====================================================
 	fprintf(fp, "\tRulesToSymbol = (int*)malloc(sizeof(int) * RulesCount);\n");
 	fprintf(fp, "\tRulesLength = (int*)malloc(sizeof(int) * RulesCount);\n");
@@ -3444,11 +4416,109 @@ void Gsheet::CppPrint(const char* name, FILE* fp)const
 	}
 	fprintf(fp, "}\n");
 }
+void Gsheet::CppStructPrint(const char* name, FILE* fp)const
+{
+	size_t i, j;
+	//size_t No;
+	int infor;
+	fprintf(fp, "struct %s\n{\n", name);
+
+	fprintf(fp, "\tstatic const size_t StateCount;\n");
+	fprintf(fp, "\tstatic const size_t NonTerminalCount;\n");
+	fprintf(fp, "\tstatic const size_t TerminalCount;\n");
+	fprintf(fp, "\tstatic const size_t RulesCount;\n");
+
+	fprintf(fp, "\tstatic const int GOTO[%zu][%zu];\n", StateCount, NonTerminalCount);
+	fprintf(fp, "\tstatic const int ACTION[%zu][%zu];\n", StateCount, (TerminalCount + 1));
+	fprintf(fp, "\tstatic const int RulesToSymbol[%zu];\n", RulesCount);
+	fprintf(fp, "\tstatic const int RulesLength[%zu];\n", RulesCount);
+
+	//fprintf(fp, "\t%s();\n", name);
+	fprintf(fp, "};\n");
+	//const int aa1::w[4] = { 
+
+	fprintf(fp, "const size_t %s::StateCount = %zu;\n", name, StateCount);
+	fprintf(fp, "const size_t %s::NonTerminalCount = %zu;\n", name, NonTerminalCount);
+	fprintf(fp, "const size_t %s::TerminalCount = %zu;\n", name, TerminalCount);
+	fprintf(fp, "const size_t %s::RulesCount = %zu;\n", name, RulesCount);
+
+	fprintf(fp, "const int %s::GOTO[%zu][%zu] = { \\ \n", name, StateCount, NonTerminalCount);
+
+	//fprintf(fp, "\tGOTO = (int*)malloc(sizeof(int) * StateCount * NonTerminalCount);\n");
+	for (i = 0; i < StateCount; i++)
+	{
+		infor = 4 * GOTO[i * NonTerminalCount].state;
+		infor += (int)GOTO[i * NonTerminalCount].action;
+		fprintf(fp, "{%d", infor);
+		for (j = 1; j < NonTerminalCount; j++)
+		{
+			infor = 4 * GOTO[i * NonTerminalCount + j].state;
+			infor += (int)GOTO[i * NonTerminalCount + j].action;
+			fprintf(fp, ", %d", infor);
+		}
+		if(i + 1 < StateCount) fprintf(fp, "}, \\\n");
+		else  fprintf(fp, "}};\n");
+	}
+		
+	fprintf(fp, "//==============================\n");//
+	//====================================================
+	fprintf(fp, "const int %s::ACTION[%zu][%zu] = { \\ \n", name, StateCount, (TerminalCount + 1));
+	//fprintf(fp, "\tACTION = (int*)malloc(sizeof(int) * StateCount * (TerminalCount + 1));\n");
+	for (i = 0; i < StateCount; i++)
+	{
+		infor = 4 * ACTION[i * (TerminalCount + 1)].state;
+		infor += (int)ACTION[i * (TerminalCount + 1)].action;
+		fprintf(fp, "{%d", infor);
+		for (j = 1; j < (TerminalCount + 1); j++)
+		{
+			infor = 4 * ACTION[i * (TerminalCount + 1) + j].state;
+			infor += (int)ACTION[i * (TerminalCount + 1) + j].action;
+			fprintf(fp, ", %d", infor);
+		}
+		if (i + 1 < StateCount) fprintf(fp, "}, \\\n");
+		else  fprintf(fp, "}};\n");
+		//fprintf(fp, "\tACTION[%zu] = %d;\n", i, infor);
+		//if ((i + 1) < (StateCount * (TerminalCount + 1))) fprintf(fp, "%d,\\\n", infor);
+		//else fprintf(fp, "%d};\n", infor);
+	}
+	fprintf(fp, "//==============================\n");//
+	//====================================================
+	fprintf(fp, "const int %s::RulesToSymbol[%zu] = { \\ \n", name, RulesCount);
+	for (i = 0; i < RulesCount; i++)
+	{
+		if (i + 1 < RulesCount) fprintf(fp, "%d,\\\n", RulesToSmbol[i]);
+		else fprintf(fp, "%d};\n", RulesToSmbol[i]);
+	}
+	fprintf(fp, "//==============================\n");//
+
+	fprintf(fp, "const int %s::RulesLength[%zu] = { \\ \n", name, RulesCount);
+	for (i = 0; i < RulesCount; i++)
+	{
+		if (i + 1 < RulesCount) fprintf(fp, "%d,\\\n", RulesLength[i]);
+		else fprintf(fp, "%d};\n", RulesLength[i]);
+	}
+}
+
 static bool compare(const char* str1, const char* str2)
 {
 	size_t i;
 	for (i = 0; (str1[i] != '\0') && (str1[i] == str2[i]); i++);
 	return str1[i] == str2[i];
+}
+static size_t strlength(const char* str)
+{
+	size_t i;
+	for (i = 0; str[i] != '\0'; i++);
+	return i;
+}
+static void strfree(const char** strs, size_t length)
+{
+	size_t i;
+	for (i = 0; i < length; i++)
+	{
+		free((void*)strs[i]);
+	}
+	free(strs);
 }
 static void inverse(list<size_t>& out, const list<size_t>& in)
 {
@@ -3458,9 +4528,53 @@ static void inverse(list<size_t>& out, const list<size_t>& in)
 	for (i = 0; i < length; i++)
 		out[in[i]] = i;
 }
+static int PostfixSwitch_small(char c)
+{
+	switch (c)
+	{
+	/*case 'a':
+		return 7;
+	case 'b':
+		return 8;
+	case 'f':
+		return 12;
+	case 'n':
+		return 10;
+	case 'r':
+		return 13;
+	case 't':
+		return 9;
+	case 'v':
+		return 11;*/
+	case '\\':
+		return 92;
+	case '\'':
+		return 39;
+	case '\"':
+		return 34;
+	case '\?':
+		return 63;
+	case '\0':
+		return 0;
+	default:
+		return -1;
+	}
+}
 
 
-//int LRrun(int * )
+//struct Retree
+//{
+//	int* GOTO;
+//	int* ACTION;
+//	int* RulesToSymbol;
+//	int* RulesLength;
+//	const size_t StateCount = 22;
+//	const size_t NonTerminalCount = 5;
+//	const size_t TerminalCount = 5;
+//	const size_t RulesCount = 9;
+
+//};
+
 /*
 struct postorder
 {
@@ -3582,11 +4696,6 @@ void RegTree::grow_t(const RegTree* regL, const RegTree* regR, NodeType T, bool 
 
 
 
-
-
-
-
-
 int hyperlex::PostfixSwitch(char c)
 {
 	switch (c)
@@ -3693,6 +4802,8 @@ char hyperlex::CharGet(int& error, const char* list, size_t end, size_t& head)
 	result = temp;
 	return result;
 }
+
+
 
 
 

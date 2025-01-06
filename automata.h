@@ -160,23 +160,7 @@ namespace hyperlex
 		void append(const Dgraph<Cg, Ca>& right, size_t VerticeOffset);
 		void Demo(FILE* fp) const;
 	};
-	template <class T> class stack
-	{
-	private:
-		size_t Top;
-		size_t Size;
-		T* content;
-	public:
-		stack();
-		~stack();
-		void clear(void);
-		void reshape(size_t NewSize);
-		void push(const T& element);
-		size_t pop(T& element);
-		size_t size(void) const;
-		size_t top(void) const;
-		T& operator[](size_t target);
-	};
+
 	template <class T> class bitree
 	{
 		bitree<T>* left;
@@ -249,19 +233,22 @@ namespace hyperlex
 		~BufferChar();
 		void operator<<(FILE* fp);
 		char* vector(void);
+		char* CopyVector(void) const;
+		size_t CopyVector(list<char> & storage, size_t & length) const;
+		void operator=(const char* input);
 	private:
 		
 	};
-
-
-
 }
+
+
 namespace hyperlex
 {
 	class NFA;
 	class sNFA;
 	class sheetDFA;
 	class DFA;
+	class lexicalPanel;
 	class LR0;
 	class LR1;
 	class Gsheet;
@@ -309,6 +296,10 @@ namespace hyperlex
 			NodeType type;
 			void Demo(FILE* fp);
 		};
+
+		static int next_Reg(int state, const char c);
+		static int action_Reg(int state);
+		static int GroupGet_Reg(int accept);
 	private:
 		Bitree<info> tree;
 		struct traverse
@@ -320,10 +311,15 @@ namespace hyperlex
 		RegTree();
 		~RegTree();
 		void build(const char* reg);
+		void build(BufferChar& input);
+		bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
+
+
 		void grow(const RegTree* reg, NodeType T);
 		void grow(const RegTree* regL, const RegTree* regR, NodeType T);
-		void grow_t(const RegTree* regL, const RegTree* regR, NodeType T, bool key);
+		//void grow_t(const RegTree* regL, const RegTree* regR, NodeType T, bool key);
 		void grow(char L, char U);
+		void grow(char C);
 		void value(const RegTree* regL);
 
 		void Reserved(const char* res);
@@ -350,6 +346,34 @@ namespace hyperlex
 		void link(size_t site, size_t L, size_t R, NodeType T);
 		void link(size_t site, size_t L, NodeType T);
 	};
+	class Morpheme
+	{
+	public:
+		struct result
+		{
+			int accept;
+			int category;
+			size_t length;
+			size_t begin;
+		};
+		Morpheme();
+		~Morpheme();
+		char* Copy(size_t site) const;
+		void append(const BufferChar& input, int accept, int category);
+		void AppendEnd(int TerminalCount);
+		void Demo(FILE* fp) const;
+		size_t GetCount(void) const;
+		const char* GetWord(size_t site) const;
+		const result & operator[](const size_t target) const;
+
+		char GetChar(size_t site) const;
+	private:
+		size_t count;
+		//list<size_t> begin;
+		//list<size_t> length;
+		list<result> lex;
+		list<char> storage;
+	};
 	class lexicalPanel
 	{
 	public:
@@ -360,6 +384,7 @@ namespace hyperlex
 			RegTree* reg;
 			const char* name;
 			const char* attribute;
+			size_t group;
 			infor();
 			~infor();
 			void Demo(FILE* fp);
@@ -371,14 +396,38 @@ namespace hyperlex
 		~lexicalPanel();
 		
 		void build(void);
+		void build(FILE*fp);
+
+		void Cprint(FILE*fp, const char* name);
+
+
 		void SetGrammer(void);
 		void SetReg(void);
 		void SetRegS(void);
 		void append(infor* II);
+
 		void Demo(FILE*fp) const; 
-		
+
+		const char** GetName(void)const;
+		const char** GetAttribute(void)const;
+		//void append(const char* Name, const char* Attri, RegTree* Reg, size_t Priority);
+		//void expand(void);
 	private:
 		list<infor*> regular;
+		void SetAll(void);
+		//size_t AttributeCount;
+		list<const char*> attribute;
+		//size_t count;
+		//size_t capacity;
+		//RegTree** reg;
+		//const char**name;
+		//const char**attribute;
+		//size_t* priority;
+
+		NFA* nfa;
+		sheetDFA* DFAsheet;
+		DFA* DFAgraph;
+		void CppAccept(FILE* fp, const char* name, const DFA &dfa)const;
 	};
 	class DirectedGraph
 	{
@@ -518,9 +567,14 @@ namespace hyperlex
 		int action(int state)const;
 		void Demo(FILE* fp)const;
 		void Cprint(FILE* fp, const char* name)const;
+		void CprintAccept(FILE* fp, const char* name, const char** const category, const char** const accept)const;
+		
 		static void Cprint(FILE* fp, convert& CC);
 		static void Demo(FILE* fp, int L, int U);
 		static void Demo(FILE* fp, convert &CC);
+
+		size_t StateAmountGet(void) const;
+		int GraphStateGet(const size_t site) const;
 	private:
 		Dgraph<int, convert> graph;
 		size_t StateAmount;
@@ -541,6 +595,7 @@ namespace hyperlex
 		int build(FILE* fp);
 		int build(BufferChar& input);
 		void Demo(FILE* fp) const;
+		void Cprint(FILE* fp) const;
 		void Demo(FILE* fp, size_t rule, size_t dot) const;
 		const char* SymbolGet(long long int index) const;
 		const long long int* vector(size_t No)const;
@@ -573,11 +628,11 @@ namespace hyperlex
 		list<size_t> prefix;//has length of count
 		list<const char*> name;//has length of count
 		list<const char*> ternimal;
-		list<production> rules;//has length of count of all rules 
+		list<production> rules;//has length of count of all rules
 		list<long long int> all;//Production Rules
 
-		matlist<bool> first;//matrix of count * TerminalCount + 2
-		matlist<bool> follow;//matrix of count * TerminalCount + 2
+		matlist<bool> first;//matrix of count * (TerminalCount + 2)
+		matlist<bool> follow;//matrix of count * (TerminalCount + 2)
 	private:
 		void append(const char* input);
 		void Tappend(const char* input);
@@ -730,6 +785,7 @@ namespace hyperlex
 		int GetSymbol(size_t rules) const;
 		void Cprint(const char* name, FILE* fp)const;
 		void CppPrint(const char* name, FILE* fp)const;
+		void CppStructPrint(const char* name, FILE* fp)const;
 		static const char* TypeToChar(type TT);
 	private:
 		size_t StateCount;
@@ -1222,56 +1278,7 @@ namespace hyperlex
 		content = NULL;
 	}
 
-	template <class T> stack<T>::stack(void)
-	{
-		Top = 0;
-		Size = 0;
-		content = NULL;
-	}
-	template <class T> stack<T>::~stack(void)
-	{
-		Top = 0;
-		Size = 0;
-		free(content);
-		content = NULL;
-	}
-	template <class T> void stack<T>::clear(void)
-	{
-		Top = 0;
-	}
-	template <class T> void stack<T>::reshape(size_t NewSize)
-	{
-		content = (T*)realloc(content, NewSize * sizeof(T));
-		Size = NewSize;
-		Top = Top <= Size ? Top : Size;
-	}
-	template <class T> void stack<T>::push(const T& element)
-	{
-		content[Top] = element;
-		Top += 1;
-	}
-	template <class T> size_t stack<T>::pop(T& element)
-	{
-		if (Top != 0)
-		{
-			Top -= 1;
-			element = content[Top];
-			return Top + 1;
-		}
-		return Top;
-	}
-	template <class T> size_t stack<T>::size(void) const
-	{
-		return Size;
-	}
-	template <class T> size_t stack<T>::top(void) const
-	{
-		return Top;
-	}
-	template <class T> T& stack<T>::operator[](size_t target)
-	{
-		return content[target];
-	}
+
 }
 namespace hyperlex
 {
@@ -1943,6 +1950,78 @@ namespace hyperlex
 #undef CharSize
 
 #endif
+
+/*
+	template <class T> class stack
+	{
+	private:
+		size_t Top;
+		size_t Size;
+		T* content;
+	public:
+		stack();
+		~stack();
+		void clear(void);
+		void reshape(size_t NewSize);
+		void push(const T& element);
+		size_t pop(T& element);
+		size_t size(void) const;
+		size_t top(void) const;
+		T& operator[](size_t target);
+	};
+
+		template <class T> stack<T>::stack(void)
+	{
+		Top = 0;
+		Size = 0;
+		content = NULL;
+	}
+	template <class T> stack<T>::~stack(void)
+	{
+		Top = 0;
+		Size = 0;
+		free(content);
+		content = NULL;
+	}
+	template <class T> void stack<T>::clear(void)
+	{
+		Top = 0;
+	}
+	template <class T> void stack<T>::reshape(size_t NewSize)
+	{
+		content = (T*)realloc(content, NewSize * sizeof(T));
+		Size = NewSize;
+		Top = Top <= Size ? Top : Size;
+	}
+	template <class T> void stack<T>::push(const T& element)
+	{
+		content[Top] = element;
+		Top += 1;
+	}
+	template <class T> size_t stack<T>::pop(T& element)
+	{
+		if (Top != 0)
+		{
+			Top -= 1;
+			element = content[Top];
+			return Top + 1;
+		}
+		return Top;
+	}
+	template <class T> size_t stack<T>::size(void) const
+	{
+		return Size;
+	}
+	template <class T> size_t stack<T>::top(void) const
+	{
+		return Top;
+	}
+	template <class T> T& stack<T>::operator[](size_t target)
+	{
+		return content[target];
+	}
+
+*/
 
 /*
 template <class T> size_t Bitree<T>::append_t(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s, bool key)
