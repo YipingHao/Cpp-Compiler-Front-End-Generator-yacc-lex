@@ -935,6 +935,7 @@ static int test_13(const char* output_path, ParaFile& pf)
     LR0* lr;
     LR1* lr1;
     string file;
+    int infor;
     BufferChar temp;
     Gsheet Gsheet0, Gsheet1;
     lr1 = NULL;
@@ -954,8 +955,10 @@ static int test_13(const char* output_path, ParaFile& pf)
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
     //fp = CF.OpenRead("./data/if.txt");
-    G.build(input);
+    infor = G.build(input);
+    std::cout << "infor = G.build(input);" << infor << std::endl;
     fclose(fp);
+    if (infor != 0) return infor;
     G.Demo(stdout);
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     std::cout << "+++++++++++++lr = new LR(&G);++++++++++++++++" << std::endl;
@@ -1124,14 +1127,18 @@ static int test_16(const char* output_path, ParaFile& pf)
     delete lr1;
     return 0;
 }
+
+
 static int test_17(const char* output_path, ParaFile& pf)
 {
     lexicalPanel lP;
     NFA* nfa;
     sheetDFA* dfa;
     DFA* ddfa;
-    lP.SetReg();
     
+    
+    lP.SetReg();
+    //lP.Demo(stdout);
     if (0) 
     {
         nfa = new NFA(lP);
@@ -1162,12 +1169,13 @@ static int test_17(const char* output_path, ParaFile& pf)
     }
     else
     {
-        lP.build(stdout);
+        lP.BuildDemo(stdout);
         lP.Cprint(stdout, "Reg");
+        lP.CppPrint(stdout, "Reg");
         lP.Demo(stdout);
-        RegTree RTT;
-        RTT.build("([a-z]|[A-Z]|_)([a-z]|[A-Z]|_|[0-9])*");
+       
     }
+    //lP.Demo(stdout);
     return 0;
 }
 static int test_18(const char* output_path, ParaFile& pf)
@@ -1267,16 +1275,16 @@ static int test_19(const char* output_path, ParaFile& pf)
 
     struct aa2
     {
-        const size_t a = 11;
-        const size_t b = 12;
+        //const size_t a = 11;
+        //const size_t b = 12;
         int w[64];
     };
 
     struct aa3
     {
-        const size_t a = 11;
-        const size_t b = 12;
-        const int w[4] = {1, 2, 3, 4};
+        const size_t a;
+        const size_t b;
+        //const int w[4] = {1, 2, 3, 4};
     };
     
 
@@ -1289,7 +1297,7 @@ static int test_19(const char* output_path, ParaFile& pf)
     std::cout << "aa1.a: " << A.a << std::endl;
     A.value();
     std::cout << "aa1.w[2]: " << A.w[2] << std::endl;
-    
+    '/';
     //fdg.demo();
     //for (i = 0; i < Retree::StateCount; i++)
     //{
@@ -1305,6 +1313,33 @@ static int test_19(const char* output_path, ParaFile& pf)
 
     std::cout << "sizeof(aa2): " << sizeof(aa2) << std::endl;
     std::cout << "sizeof(aa3): " << sizeof(aa3) << std::endl;
+
+    RegTree RTTE, RTTF, RTTD;
+    RTTE.build("([a-z]|[A-Z]|_)([a-z]|[A-Z]|_|[0-9])*");
+    
+    RTTE.Demo(stdout);
+    std::cout << std::endl;
+    RTTD.build("('+'|'-')?([0-9])+");
+    RTTD.Demo(stdout);
+    std::cout << std::endl;
+    RTTF.build("('+'|'-')?([0-9])+'.'([0-9])+((e|E)('+'|'-')?([0-9])+)?");
+    RTTF.Demo(stdout);
+    std::cout << std::endl;
+
+    RTTE.build("'+'?[0-9]+");
+    RTTE.Demo(stdout);
+    std::cout << std::endl;
+    RTTE.build("lexical");
+    RTTE.Demo(stdout); 
+    std::cout << std::endl;
+
+    RTTE.build("\'/\'\'/\'([\'\\0\'-\'\\11\']|[\'\\13\'-\'\\177\'])*\'\\n\'");
+    RTTE.Demo(stdout);
+    std::cout << std::endl;
+    RTTE.build("\'/\'\'*\'((\'*\'([\'\\0\'-\'.\']|[\'0\'-\'\\177\']))|([\'\\0\'-\')\']|[\'+\'-\'\\177\']))*\'*\'\'/\'");
+    RTTE.Demo(stdout);
+    std::cout << std::endl;
+
     return 0;
 }
 

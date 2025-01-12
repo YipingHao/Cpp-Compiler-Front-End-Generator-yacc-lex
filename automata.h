@@ -192,6 +192,7 @@ namespace hyperlex
 		};
 		Bitree();
 		~Bitree();
+		void move(Bitree<T>& source);
 		void clear(void);
 		void SetHead(size_t head);
 		size_t NewNodeOffset(void);
@@ -367,12 +368,16 @@ namespace hyperlex
 		const result & operator[](const size_t target) const;
 
 		char GetChar(size_t site) const;
+
+		template<typename T> int Build(const char* reg);
+		
 	private:
 		size_t count;
 		//list<size_t> begin;
 		//list<size_t> length;
 		list<result> lex;
 		list<char> storage;
+		template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
 	};
 	class lexicalPanel
 	{
@@ -381,6 +386,8 @@ namespace hyperlex
 		{
 		public:
 			size_t priority;
+			//When two distinct regular expressions match simultaneously, 
+			//the regular expression with the higher priority number is accepted.
 			RegTree* reg;
 			const char* name;
 			const char* attribute;
@@ -396,10 +403,10 @@ namespace hyperlex
 		~lexicalPanel();
 		
 		void build(void);
-		void build(FILE*fp);
+		void BuildDemo(FILE*fp);
 
 		void Cprint(FILE*fp, const char* name);
-
+		void CppPrint(FILE* fp, const char* name);
 
 		void SetGrammer(void);
 		void SetReg(void);
@@ -427,7 +434,9 @@ namespace hyperlex
 		NFA* nfa;
 		sheetDFA* DFAsheet;
 		DFA* DFAgraph;
-		void CppAccept(FILE* fp, const char* name, const DFA &dfa)const;
+		void Cgroup(FILE* fp, const char* name)const;
+		void CppGroup(FILE* fp, const char* name)const;
+		void CppGroupCore(FILE* fp, const char* name)const;
 	};
 	class DirectedGraph
 	{
@@ -525,6 +534,7 @@ namespace hyperlex
 		Dgraph<int, Convert> graph;
 		size_t StateAmount;
 		size_t accepted;
+		list<size_t> priority;
 	private:
 		void build(const sNFA* const* multiple, size_t count);
 		//vec<bool> state;
@@ -567,8 +577,10 @@ namespace hyperlex
 		int action(int state)const;
 		void Demo(FILE* fp)const;
 		void Cprint(FILE* fp, const char* name)const;
+		void CppPrint(FILE* fp, const char* name)const;
 		void CprintAccept(FILE* fp, const char* name, const char** const category, const char** const accept)const;
-		
+		void CppPrintAccept(FILE* fp, const char* name, const char** const category, const char** const accept)const;
+
 		static void Cprint(FILE* fp, convert& CC);
 		static void Demo(FILE* fp, int L, int U);
 		static void Demo(FILE* fp, convert &CC);
@@ -579,7 +591,114 @@ namespace hyperlex
 		Dgraph<int, convert> graph;
 		size_t StateAmount;
 		size_t AcceptCount;
+		void CprintCore(FILE* fp, const char* name)const;
+		void CprintAcceptCore(FILE* fp, const char* name, const char** const category, const char** const accept)const;
 	};
+}
+namespace hyperlex
+{
+	template<typename T> int Morpheme::Build(const char* reg)
+	{
+		BufferChar input;
+		BufferChar result;
+		BufferChar intermediate;
+		int accept;
+		char now;
+		input = reg;
+		while (RunBuild<T>(accept, result, input, intermediate))
+		{
+			if (accept != 0) append(result, accept, T::GroupGet(accept));
+			else
+			{
+				input.dequeue(now);
+				result.append(now);
+				append(result, 0, T::GroupGet(0));
+			}
+		}
+		AppendEnd(0);
+	}
+	template<typename T> bool Morpheme::RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate)
+	{
+		/*
+	example:
+	1 aa
+	2 aaBB
+	3 Bcc
+	input: aaBcc
+	*/
+		char now;
+		//char cc;
+		int state, acc;
+		int action;
+		intermediate.refresh();
+		state = 0;
+		acc = 0;
+		action = 0;
+		accept = 0;
+		result.refresh();
+		while (input.dequeue(now))
+		{
+			/*state switch*/
+			/*change here to get a different automata*/
+			state = T::next(state, now);
+			acc = T::action(state);
+			/*change here to get a different automata*/
+			accept = acc != 0 ? acc : accept;
+			switch (action)
+			{
+			case 0://initial
+				if (state != 0 && acc == 0)
+				{
+					intermediate.append(now);
+					action = 1;
+				}
+				else if (state != 0 && acc != 0)
+				{
+					result.append(now);
+					action = 2;
+				}
+				else
+				{
+					input.backspace(now);
+					return true;
+				}
+				break;
+			case 1://run and waiting for accept
+				if (state == 0)
+				{
+					input.backspace(now);
+					input.backspace(intermediate);
+					return true;
+				}
+				else if (acc != 0)
+				{
+					result.append(intermediate);
+					result.append(now);
+					intermediate.refresh();
+					action = 2;
+				}
+				else intermediate.append(now);//continue 
+				break;
+			case 2://accept
+				if (state == 0)//accept
+				{
+					input.backspace(now);
+					//accept = last;
+					return true;
+				}
+				else if (acc == 0)
+				{
+					intermediate.append(now);
+					action = 1;
+				}
+				else result.append(now);
+				break;
+			}
+		}
+		if (action == 1)
+			input.backspace(intermediate);
+		return action != 0;
+	}
 }
 // grammer analysis
 namespace hyperlex
@@ -1691,6 +1810,20 @@ namespace hyperlex
 		Size = 0;
 		Head = SizeMax;
 		FirstEmpty = SizeMax;
+	}
+	template <class T> void Bitree<T>::move(Bitree<T>& source)
+	{
+		Nodes = source.Nodes;
+		Count = source.Count;
+		Size = source.Size;
+		Head = source.Head;
+		FirstEmpty = source.FirstEmpty;
+		
+		source.Nodes = NULL;
+		source.Count = 0;
+		source.Size = 0;
+		source.Head = SizeMax;
+		source.FirstEmpty = SizeMax;
 	}
 	template <class T> void Bitree<T>::clear(void)
 	{

@@ -325,8 +325,7 @@ int RegTree::next_Reg(int state, const char c)
 	case 14:
 		if (' ' <= c && c <= '!') return 12;
 		else if ('#' <= c && c <= '&') return 12;
-		else if ('(' <= c && c <= '.') return 12;
-		else if ('0' <= c && c <= '[') return 12;
+		else if ('(' <= c && c <= '[') return 12;
 		else if (c == '\\') return 13;
 		else if (']' <= c && c <= '~') return 12;
 		else return 0;
@@ -519,6 +518,7 @@ const int Retree::RulesLength[15] = { \
 
 
 
+
 void RegTree::build(const char* reg)
 {
 	BufferChar input;
@@ -543,6 +543,8 @@ void RegTree::build(BufferChar& input)
 	bool DoNext;
 	char now;
 	int GoFull, GoD, GoI;
+	bool demo_buttom;
+	demo_buttom = false;
 	tree.clear();
 	while (RunBuild(accept, result, input, intermediate))
 	{
@@ -554,8 +556,8 @@ void RegTree::build(BufferChar& input)
 			eme.append(result, 0, GroupGet_Reg(0));
 		}
 	}
-	eme.AppendEnd(Retree::TerminalCount);
-	eme.Demo(stdout);
+	eme.AppendEnd(Retree::TerminalCount + 1);
+	if (demo_buttom)  eme.Demo(stdout);
 	stack.append(0);
 	SrcTree.append(NULL);
 	head = 0;
@@ -567,10 +569,10 @@ void RegTree::build(BufferChar& input)
 		information = temp / 4;
 		type = (Retree::type) (temp % 4);
 		
-		fprintf(stdout, "\n\nT = %5d, top = %5d, information = %5d, type = %5d, ", eme[head].accept - 1, top, information, (int)type);
-		fprintf(stdout, "head = %5zu, lex = %s, ", head, eme.GetWord(head));
-		fprintf(stdout, "stack.count() = %5zu, top = %5zu\n//================================\n", stack.count(), SrcTree.count());
-		for (i = 0; i < stack.count(); i++)
+		if (demo_buttom)fprintf(stdout, "\n\nT = %5d, top = %5d, information = %5d, type = %5d, ", eme[head].accept - 1, top, information, (int)type);
+		if (demo_buttom)fprintf(stdout, "head = %5zu, lex = %s, ", head, eme.GetWord(head));
+		if (demo_buttom)fprintf(stdout, "stack.count() = %5zu, top = %5zu\n//================================\n", stack.count(), SrcTree.count());
+		for (i = 0; (i < stack.count()) && demo_buttom; i++)
 		{
 			fprintf(stdout, "%5d, ", stack[i]);
 			if (SrcTree[i] == NULL)
@@ -585,6 +587,9 @@ void RegTree::build(BufferChar& input)
 		switch (type)
 		{
 		case Retree::accept:
+			if (demo_buttom)SrcTree[SrcTree.count() - 1]->Demo(stdout);
+			tree.move(SrcTree[SrcTree.count() - 1]->tree);
+			for (i = 0; i < SrcTree.count(); i++) delete SrcTree[i];
 			DoNext = false;
 			break;
 		case Retree::error:
@@ -595,14 +600,14 @@ void RegTree::build(BufferChar& input)
 			M = new RegTree;
 			M->grow(eme.GetChar(head));
 			SrcTree.append(M);
-			fprintf(stdout, "\tchar = %c\n", eme.GetChar(head));
+			if (demo_buttom) fprintf(stdout, "\tchar = %c\n", eme.GetChar(head));
 			head += 1;
 			break;
 		case Retree::reduce:
 			symbol = Retree::RulesToSymbol[information];
 			length = Retree::RulesLength[information];
 			begin_ = SrcTree.count() - length;
-			fprintf(stdout, "\tsymbol = %5d, length = %5zu, begin_ = %5zu\n", symbol, length, begin_);
+			if (demo_buttom) fprintf(stdout, "\tsymbol = %5d, length = %5zu, begin_ = %5zu\n", symbol, length, begin_);
 			switch (information)
 			{
 				//No[0], case Ep: prefix: 0, degeneracy: 1
@@ -683,10 +688,11 @@ void RegTree::build(BufferChar& input)
 			GoI = GoFull % 4;
 			stack.append(GoD);
 			SrcTree.append(M);
-			fprintf(stdout, "\tGOTO[%5d][%5d] = (%5d, %5d)\n", stack.top(), symbol, GoD, GoI);
+			if (demo_buttom)fprintf(stdout, "\tGOTO[%5d][%5d] = (%5d, %5d)\n", stack.top(), symbol, GoD, GoI);
 			break;
 		}
 	} while (DoNext);
+
 	//for (i = 0; i < eme.GetCount(); i++)
 	//{
 	//	top;
@@ -997,10 +1003,10 @@ void RegTree::CommonChar(void)
 {
 	RegTree range1, range2, range3, range4, range5;
 	RegTree temp1, temp2, temp3;
-	range1.grow(' ', '!');//32, 33
-	range2.grow('#', '&');//35, 38
-	range3.grow('(', '.');//40, 46
-	range4.grow('0', '[');//48, 91
+	range1.grow(' ', '!');//32, 33 34:"
+	range2.grow('#', '&');//35, 38 39:'
+	range3.grow('(', '/');//40, 47
+	range4.grow('0', '[');//48, 91 92: '\\'
 	range5.grow(']', '~');//93, 126
 
 	temp1.grow(&range1, &range2, Alternation);
@@ -1156,15 +1162,15 @@ void RegTree::Demo(FILE* fp) const
 				L = tree[s.top().site].content.lower;
 				if (U != L)
 				{
-					if ((int)L < 32) fprintf(fp, "[\\%d-", (int)L);
-					else fprintf(fp, "[%c-", L);
-					if ((int)U < 32) fprintf(fp, "\\%d]", (int)U);
-					else fprintf(fp, "%c]", U);
+					if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\'\\%d\'-", (int)L);
+					else fprintf(fp, "[\'%c\'-", L);
+					if ((int)U < 32 || (int)U == 127) fprintf(fp, "\'\\%d\']", (int)U);
+					else fprintf(fp, "\'%c\']", U);
 				}
 				else
 				{
-					if ((int)L < 32) fprintf(fp, "[\\%d]", (int)L);
-					else fputc(L, fp);
+					if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\'\\%d\']", (int)L);
+					else fprintf(fp, "\'%c\'", L);
 				}
 					
 			}
@@ -1214,14 +1220,14 @@ void RegTree::Demo(FILE* fp, char L, char U)
 {
 	if (U != L)
 	{
-		if ((int)L < 32) fprintf(fp, "[\\%d-", (int)L);
+		if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\\%d-", (int)L);
 		else fprintf(fp, "[%c-", L);
-		if ((int)U < 32) fprintf(fp, "\\%d]", (int)U);
+		if ((int)U < 32 || (int)U == 127) fprintf(fp, "\\%d]", (int)U);
 		else fprintf(fp, "%c]", U);
 	}
 	else
 	{
-		if ((int)L < 32) fprintf(fp, "[\\%d]", (int)L);
+		if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\\%d]", (int)L);
 		else fputc(L, fp);
 	}
 }
@@ -1242,6 +1248,50 @@ static const char* Copy(const char* input)
 	for (i = 0; i < length; i++) nnnn[i] = input[i];
 	return nnnn;
 }
+
+struct Reg
+{
+	enum regular
+	{
+		_identifier_ = 1,
+		_integar_ = 2,
+		_lexical_ = 3,
+		_grammatical_ = 4,
+		_formula_ = 5,
+		_priority_ = 6,
+		_spaces_ = 7,
+		_enters_ = 8,
+		_semicolon_ = 9,
+		_colon_ = 10,
+		_dot_ = 11,
+		_braceL_ = 12,
+		_braceR_ = 13,
+		_left_ = 14,
+		_right_ = 15,
+		_begin_ = 16,
+		_end_ = 17,
+		_range_ = 18,
+		_star_ = 19,
+		_plus_ = 20,
+		_ZeroOrOne_ = 21,
+		_idchar_ = 22,
+		_CommonChar_ = 23
+	};
+	enum group
+	{
+		_Id_ = 1,
+		_number_ = 2,
+		_reserved_word_ = 3,
+		_division_ = 4,
+		_braket_ = 5,
+		_superscript_ = 6,
+		_char_ = 7,
+		_Or_ = 8
+	};
+	static int next(int state, const char c);
+	static int action(int state);
+	static int GroupGet(int state);
+};
 
 lexicalPanel::lexicalPanel()
 {
@@ -1365,7 +1415,7 @@ void lexicalPanel::build(void)
 
 	//ddfa->Demo(stdout);
 }
-void lexicalPanel::build(FILE* fp)
+void lexicalPanel::BuildDemo(FILE* fp)
 {
 	SetAll();
 	fprintf(fp, "================nfa = new NFA(*this);=================\n");
@@ -1380,6 +1430,13 @@ void lexicalPanel::build(FILE* fp)
 	fprintf(fp, "============DFAgraph = new DFA(DFAsheet);=============\n");
 	DFAgraph = new DFA(DFAsheet);
 	DFAgraph->Demo(stdout);
+	size_t i;
+	fprintf(fp, "%s", regular[0]->name);
+	for (i = 1; i < regular.count(); i++)
+	{
+		fprintf(fp, " | %s", regular[i]->name);
+	}
+	fprintf(fp, "\n");
 }
 
 void lexicalPanel::Cprint(FILE* fp, const char* name)
@@ -1391,10 +1448,46 @@ void lexicalPanel::Cprint(FILE* fp, const char* name)
 	DFAgraph->Cprint(fp, name);
 	DFAgraph->CprintAccept(fp, name, Atrribute__, Name__);
 
-	CppAccept(fp, name, *DFAgraph);
+	Cgroup(fp, name);
 	strfree(Atrribute__, regular.count());
 	strfree(Name__, regular.count());
 }
+void lexicalPanel::CppPrint(FILE* fp, const char* name)
+{
+	size_t i;
+	const char** Atrribute__;
+	const char** Name__;
+	Name__ = GetName();
+	Atrribute__ = GetAttribute();
+	fprintf(fp, "struct %s\n{\n", name);
+	fprintf(fp, "\tenum regular\n\t{\n");
+	//fprintf(fp, "\t\tnull = %zu,", 0);
+	fprintf(fp, "\t\t_%s_ = %zu", regular[0]->name, 1);
+	for (i = 1; i + 1 < regular.count(); i++)
+	{
+		fprintf(fp, ",\n\t\t_%s_ = %zu", regular[i]->name, i + 1);
+	}
+	fprintf(fp, "\n\t};\n");
+	fprintf(fp, "\tenum group\n\t{\n");
+	fprintf(fp, "\t\t_%s_ = %zu", attribute[0], 1);
+	for (i = 1; i < attribute.count(); i++)
+	{
+		fprintf(fp, ",\n\t\t_%s_ = %zu", attribute[i], i + 1);
+	}
+	fprintf(fp, "\n\t};\n");
+	fprintf(fp, "\tstatic int next(int state, const char c);\n");
+	fprintf(fp, "\tstatic int action(int state);\n");
+	fprintf(fp, "\tstatic int GroupGet(int state);\n");
+	fprintf(fp, "};\n");
+
+
+	DFAgraph->CppPrint(fp, name);
+	DFAgraph->CppPrintAccept(fp, name, Atrribute__, Name__);
+	CppGroup(fp, name);
+	strfree(Atrribute__, regular.count());
+	strfree(Name__, regular.count());
+}
+
 
 void lexicalPanel::SetGrammer(void)
 {
@@ -1507,7 +1600,8 @@ void lexicalPanel::SetReg(void)
 
 	II = new infor;
 	II->SetAttribute("char");
-	II->SetName("reserved");
+	II->SetName("idchar");
+	II->priority = 1;
 	II->reg = new RegTree();
 	II->reg->IdentifierInner();
 	regular.append(II);
@@ -1530,13 +1624,51 @@ void lexicalPanel::SetRegS(void)
 {
 	infor* II;
 
-	SetReg();
-
 	II = new infor;
 	II->SetAttribute("Id");
 	II->SetName("identifier");
 	II->reg = new RegTree();
 	II->reg->Identifier();
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("number");
+	II->SetName("integar");
+	II->reg = new RegTree();
+	II->reg->build("\'+\'?[0-9]+");
+	II->priority = 1;
+	regular.append(II);
+
+	II = new infor;
+	II->SetName("lexical");
+	II->SetAttribute("reserved_word");
+	II->reg = new RegTree();
+	II->reg->build("lexical");
+	II->priority = 1;
+	regular.append(II);
+
+	II = new infor;
+	II->SetName("grammatical");
+	II->SetAttribute("reserved_word");
+	II->reg = new RegTree();
+	II->reg->build("grammatical");
+	II->priority = 1;
+	regular.append(II);
+
+	II = new infor;
+	II->SetName("formula");
+	II->SetAttribute("reserved_word");
+	II->reg = new RegTree();
+	II->reg->build("formula");
+	II->priority = 1;
+	regular.append(II);
+
+	II = new infor;
+	II->SetName("priority");
+	II->SetAttribute("reserved_word");
+	II->reg = new RegTree();
+	II->reg->build("priority");
+	II->priority = 1;
 	regular.append(II);
 
 	II = new infor;
@@ -1573,16 +1705,58 @@ void lexicalPanel::SetRegS(void)
 	II->reg = new RegTree();
 	II->reg->Reserved(".");
 	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("braket");
+	II->SetName("braceL");
+	II->reg = new RegTree();
+	II->reg->Reserved("{");
+	regular.append(II);
+
+	II = new infor;
+	II->SetAttribute("braket");
+	II->SetName("braceR");
+	II->reg = new RegTree();
+	II->reg->Reserved("}");
+	regular.append(II);
+
+	//II = new infor;
+	//II->SetAttribute("annotation");
+	//II->SetName("anntationS");'\n'
+	//II->reg = new RegTree();
+	//II->reg->build("\'/\'\'/\'([\'\\0\'-\'\\12\']|[\'\\14\'-\'\\177\'])*\'\\n\'");
+	//regular.append(II);
+
+	//II = new infor;
+	//II->SetAttribute("annotation");
+	//II->SetName("anntationM");
+	//II->reg = new RegTree();
+	//II->reg->build("\'/\'\'*\'([-]|[-])*\'*\'\'/\'");/**///
+	//regular.append(II);
+
+	SetReg();
 }
 void lexicalPanel::append(lexicalPanel::infor* II)
 {
 	regular.append(II);
 }
-void lexicalPanel::CppAccept(FILE* fp, const char* name, const DFA& dfa)const
+void lexicalPanel::Cgroup(FILE* fp, const char* name)const
 {
-	size_t i, No;
 	fprintf(fp, "int GroupGet");
 	if (name != NULL) fprintf(fp, "_%s", name);
+	CppGroupCore(fp, name);
+	return;
+}
+void lexicalPanel::CppGroup(FILE* fp, const char* name)const
+{
+	if (name != NULL) fprintf(fp, "int %s::GroupGet", name);
+	else fprintf(fp, "int null::GroupGet");
+	CppGroupCore(fp, name);
+	return;
+}
+void lexicalPanel::CppGroupCore(FILE* fp, const char* name)const
+{
+	size_t i, No;
 	fprintf(fp, "(int accept)\n{\n");
 	fprintf(fp, "\tswitch (accept)\n\t{\n");
 	//for (i = 0; i < dfa.StateAmountGet(); i++)
@@ -1602,7 +1776,7 @@ void lexicalPanel::CppAccept(FILE* fp, const char* name, const DFA& dfa)const
 		fprintf(fp, "\n");
 	}
 	fprintf(fp, "\t}\n");
-	fprintf(fp, "\treturn -1;\n}\n");
+	fprintf(fp, "\treturn 0;\n}\n");
 }
 void lexicalPanel::Demo(FILE* fp) const
 {
@@ -1632,7 +1806,7 @@ void lexicalPanel::SetAll(void)
 			if (compare(regular[i]->attribute, attribute[j])) break;
 		if (j == attribute.count())
 			attribute.append(Copy(regular[i]->attribute));
-		regular[i]->group = j;
+		regular[i]->group = j + 1;
 	}
 }
 
@@ -2202,6 +2376,8 @@ NFA::NFA(const sNFA& single)
 	graph.vertice[single.accepted].content = 1;
 	accepted = 1;
 
+	priority.refresh(accepted + 1);
+	for (i = 0; i < 1 + 1; i++) priority[i] = i;
 	//stack.reshape(StateAmount);
 	//stack.refresh();
 }
@@ -2237,7 +2413,8 @@ void NFA::build(const sNFA* const* multiple, size_t count)
 		graph.append(0, prefix, CC);
 		prefix += multiple[i]->StateAmount;
 	}
-
+	priority.refresh(count + 1);
+	for (i = 0; i < count + 1; i++) priority[i] = i;
 	//stack.reshape(StateAmount);
 	//stack.refresh();
 }
@@ -2260,6 +2437,8 @@ NFA::NFA(const lexicalPanel& lP)
 	build(all.vector(), count);
 	for (i = 0; i < count; i++)
 		delete all[i];
+	for (i = 0; i < count; i++) priority[i + 1] = lP.regular[i]->priority + 1;
+	priority[0] = 0;
 	//stack.reshape(StateAmount);
 	//stack.refresh();
 }
@@ -2364,10 +2543,14 @@ size_t NFA::GetAccepted(const bool* state, bool* accept) const
 }
 size_t NFA::FirstAccepted(const bool* accept) const
 {
-	size_t i;
+	size_t i, result_;
+	result_ = 0;
 	for (i = 1; i < accepted + 1; i++)
-		if (accept[i]) return i;
-	return 0;
+		if (accept[i])
+		{
+			result_ = (priority[i] > priority[result_] ? i : result_);
+		}
+	return result_;
 }
 void NFA::Demo(FILE* fp) const
 {
@@ -2812,9 +2995,19 @@ void DFA::Demo(FILE* fp, convert& CC)
 }
 void DFA::Cprint(FILE* fp, const char* name) const
 {
-	size_t i, arc, No;
 	fprintf(fp, "int next");
 	if (name != NULL) fprintf(fp, "_%s", name);
+	CprintCore(fp, name);
+}
+void DFA::CppPrint(FILE* fp, const char* name)const
+{
+	if (name != NULL) fprintf(fp, "int %s::next", name);
+	else fprintf(fp, "int next");
+	CprintCore(fp, name);
+}
+void DFA::CprintCore(FILE* fp, const char* name)const
+{
+	size_t i, arc, No;
 	fprintf(fp, "(int state, const char c)\n{\n");
 	fprintf(fp, "\tswitch (state)\n\t{\n");
 	for (i = 0; i < StateAmount; i++)
@@ -2841,13 +3034,41 @@ void DFA::Cprint(FILE* fp, const char* name) const
 	}
 	fprintf(fp, "\t}\n");
 	fprintf(fp, "\treturn 0;\n}\n");
-	
 }
 void DFA::CprintAccept(FILE* fp, const char* name, const char** const category, const char** const accept)const
 {
 	size_t i, No;
 	fprintf(fp, "int action");
 	if (name != NULL) fprintf(fp, "_%s", name);
+	fprintf(fp, "(int state)\n{\n");
+	fprintf(fp, "\tswitch (state)\n\t{\n");
+	for (i = 0; i < StateAmount; i++)
+	{
+		No = (size_t)(graph.vertice[i].content);
+		if (No == 0) continue;
+		fprintf(fp, "\tcase %zu:\n", i);
+		fprintf(fp, "\t\treturn %zu;", No);
+		if (category != NULL || accept != NULL)
+			fprintf(fp, "//");
+		if (category != NULL)
+			fprintf(fp, "%s: ", category[No - 1]);
+		if (accept != NULL)
+			fprintf(fp, "%s", accept[No - 1]);
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\t}\n");
+	fprintf(fp, "\treturn 0;\n}\n");
+}
+void DFA::CppPrintAccept(FILE* fp, const char* name, const char** const category, const char** const accept)const
+{
+	if (name != NULL) fprintf(fp, "int %s::action", name);
+	else fprintf(fp, "int action");
+	CprintAcceptCore(fp, name, category, accept);
+}
+void DFA::CprintAcceptCore(FILE* fp, const char* name, const char** const category, const char** const accept)const
+{
+	size_t i, No;
+	
 	fprintf(fp, "(int state)\n{\n");
 	fprintf(fp, "\tswitch (state)\n\t{\n");
 	for (i = 0; i < StateAmount; i++)
@@ -3267,6 +3488,11 @@ int grammerS::build(BufferChar& input)
 	if (count != name.count())
 	{
 		ERROR = missingRulesOrWrongSymbol;
+		printf("count: %zu, name.count(): %zu\n", count, name.count());
+		for (i = 0; i < name.count(); i++)
+		{
+			printf("name[%zu]: %s\n", i, name[i]);
+		}
 		return (int)missingRulesOrWrongSymbol;
 	}
 	//count = name.count();
@@ -4359,11 +4585,18 @@ void Gsheet::Cprint(const char* name, FILE* fp)const
 	fprintf(fp, "int ACTION");
 	if (name != NULL) fprintf(fp, "_%s", name);
 	fprintf(fp, "(int* list)\n{\n");
-	for (i = 0; i < StateCount * (TerminalCount + 1); i++)
-	{
-		infor = 4 * ACTION[i].state;
-		infor += (int)ACTION[i].action;
-		fprintf(fp, "\tlist[%zu] = %d;\n", i, infor);
+	for (i = 0; i < StateCount; i++)
+	{//put END-EOF on the first column, the remaining symbols are shifted backward by one position.
+		infor = 4 * ACTION[i * (TerminalCount + 1) + TerminalCount].state;
+		infor += (int)ACTION[i * (TerminalCount + 1) + TerminalCount].action;
+		fprintf(fp, "\tlist[%zu] = %d;\n", i * (TerminalCount + 1), infor);
+		for (j = 0; j < (TerminalCount + 0); j++)
+		{
+			infor = 4 * ACTION[i * (TerminalCount + 1) + j].state;
+			infor += (int)ACTION[i * (TerminalCount + 1) + j].action;
+			fprintf(fp, "\tlist[%zu] = %d;\n", i * (TerminalCount + 1) + j + 1, infor);
+		}
+		
 	}
 	fprintf(fp, "}\n");
 	//====================================================
@@ -4422,6 +4655,14 @@ void Gsheet::CppStructPrint(const char* name, FILE* fp)const
 	//size_t No;
 	int infor;
 	fprintf(fp, "struct %s\n{\n", name);
+	
+	fprintf(fp, "\tenum type\n\t{\n");
+	fprintf(fp, "\t\taccept = %d;\n", (int)accept);
+	fprintf(fp, "\t\terror = %d;\n", (int)error);
+	fprintf(fp, "\t\tpush = %d;\n", (int)push);
+	fprintf(fp, "\t\treduce = %d;\n\t}\n", (int)reduce);
+
+	
 
 	fprintf(fp, "\tstatic const size_t StateCount;\n");
 	fprintf(fp, "\tstatic const size_t NonTerminalCount;\n");
@@ -4466,10 +4707,10 @@ void Gsheet::CppStructPrint(const char* name, FILE* fp)const
 	//fprintf(fp, "\tACTION = (int*)malloc(sizeof(int) * StateCount * (TerminalCount + 1));\n");
 	for (i = 0; i < StateCount; i++)
 	{
-		infor = 4 * ACTION[i * (TerminalCount + 1)].state;
-		infor += (int)ACTION[i * (TerminalCount + 1)].action;
+		infor = 4 * ACTION[i * (TerminalCount + 1) + TerminalCount].state;
+		infor += (int)ACTION[i * (TerminalCount + 1) + TerminalCount].action;
 		fprintf(fp, "{%d", infor);
-		for (j = 1; j < (TerminalCount + 1); j++)
+		for (j = 0; j < (TerminalCount + 0); j++)
 		{
 			infor = 4 * ACTION[i * (TerminalCount + 1) + j].state;
 			infor += (int)ACTION[i * (TerminalCount + 1) + j].action;
@@ -4477,9 +4718,6 @@ void Gsheet::CppStructPrint(const char* name, FILE* fp)const
 		}
 		if (i + 1 < StateCount) fprintf(fp, "}, \\\n");
 		else  fprintf(fp, "}};\n");
-		//fprintf(fp, "\tACTION[%zu] = %d;\n", i, infor);
-		//if ((i + 1) < (StateCount * (TerminalCount + 1))) fprintf(fp, "%d,\\\n", infor);
-		//else fprintf(fp, "%d};\n", infor);
 	}
 	fprintf(fp, "//==============================\n");//
 	//====================================================
@@ -4787,11 +5025,11 @@ char hyperlex::CharGet(int& error, const char* list, size_t end, size_t& head)
 	{
 		temp = SwitchOcta(c);
 		c1 = dequeue(list, end, head);
-		if (IfHexa(c1))
+		if ('0' <= c1 && c1 <= '8')
 		{
 			temp = 8 * temp + SwitchOcta(c1);
 			c2 = dequeue(list, end, head);
-			if ('0' <= c && c <= '8') temp = 8 * temp + SwitchOcta(c2);
+			if ('0' <= c2 && c2 <= '8') temp = 8 * temp + SwitchOcta(c2);
 		}
 	}
 	else
@@ -4802,6 +5040,571 @@ char hyperlex::CharGet(int& error, const char* list, size_t end, size_t& head)
 	result = temp;
 	return result;
 }
+
+
+
+
+
+int Reg::next(int state, const char c)
+{
+	switch (state)
+	{
+	case 0:
+		if (c == (char)10) return 8;
+		else if (c == (char)13) return 26;
+		else if (c == ' ') return 7;
+		else if (c == '\'') return 25;
+		else if (c == '(') return 14;
+		else if (c == ')') return 15;
+		else if (c == '*') return 19;
+		else if (c == '+') return 20;
+		else if (c == '-') return 18;
+		else if (c == '.') return 11;
+		else if ('0' <= c && c <= '9') return 2;
+		else if (c == ':') return 10;
+		else if (c == ';') return 9;
+		else if (c == '\?') return 21;
+		else if ('A' <= c && c <= 'Z') return 22;
+		else if (c == '[') return 16;
+		else if (c == ']') return 17;
+		else if (c == '_') return 22;
+		else if ('a' <= c && c <= 'e') return 22;
+		else if (c == 'f') return 48;
+		else if (c == 'g') return 49;
+		else if ('h' <= c && c <= 'k') return 22;
+		else if (c == 'l') return 47;
+		else if ('m' <= c && c <= 'o') return 22;
+		else if (c == 'p') return 56;
+		else if ('q' <= c && c <= 'z') return 22;
+		else if (c == '{') return 12;
+		else if (c == '|') return 24;
+		else if (c == '}') return 13;
+		else return 0;
+	case 1:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'z') return 1;
+		else return 0;
+	case 2:
+		if ('0' <= c && c <= '9') return 2;
+		else return 0;
+	case 3:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'z') return 1;
+		else return 0;
+	case 4:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'z') return 1;
+		else return 0;
+	case 5:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'z') return 1;
+		else return 0;
+	case 6:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'z') return 1;
+		else return 0;
+	case 7:
+		if (c == ' ') return 7;
+		else return 0;
+	case 8:
+		if (c == (char)10) return 8;
+		else if (c == (char)13) return 26;
+		else return 0;
+	case 9:
+		return 0;
+	case 10:
+		return 0;
+	case 11:
+		return 0;
+	case 12:
+		return 0;
+	case 13:
+		return 0;
+	case 14:
+		return 0;
+	case 15:
+		return 0;
+	case 16:
+		return 0;
+	case 17:
+		return 0;
+	case 18:
+		return 0;
+	case 19:
+		return 0;
+	case 20:
+		if ('0' <= c && c <= '9') return 2;
+		else return 0;
+	case 21:
+		return 0;
+	case 22:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'z') return 1;
+		else return 0;
+	case 23:
+		return 0;
+	case 24:
+		return 0;
+	case 25:
+		if (' ' <= c && c <= '!') return 51;
+		else if ('#' <= c && c <= '&') return 51;
+		else if ('(' <= c && c <= '.') return 51;
+		else if ('0' <= c && c <= '[') return 51;
+		else if (c == '\\') return 50;
+		else if (']' <= c && c <= '~') return 51;
+		else return 0;
+	case 26:
+		if (c == (char)10) return 8;
+		else return 0;
+	case 27:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if (c == 'a') return 5;
+		else if ('b' <= c && c <= 'z') return 1;
+		else return 0;
+	case 28:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'k') return 1;
+		else if (c == 'l') return 3;
+		else if ('m' <= c && c <= 'z') return 1;
+		else return 0;
+	case 29:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if (c == 'a') return 28;
+		else if ('b' <= c && c <= 'z') return 1;
+		else return 0;
+	case 30:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'b') return 1;
+		else if (c == 'c') return 29;
+		else if ('d' <= c && c <= 'z') return 1;
+		else return 0;
+	case 31:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'h') return 1;
+		else if (c == 'i') return 30;
+		else if ('j' <= c && c <= 'z') return 1;
+		else return 0;
+	case 32:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 's') return 1;
+		else if (c == 't') return 55;
+		else if ('u' <= c && c <= 'z') return 1;
+		else return 0;
+	case 33:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if (c == 'a') return 32;
+		else if ('b' <= c && c <= 'z') return 1;
+		else return 0;
+	case 34:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'l') return 1;
+		else if (c == 'm') return 33;
+		else if ('n' <= c && c <= 'z') return 1;
+		else return 0;
+	case 35:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'l') return 1;
+		else if (c == 'm') return 34;
+		else if ('n' <= c && c <= 'z') return 1;
+		else return 0;
+	case 36:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if (c == 'a') return 35;
+		else if ('b' <= c && c <= 'z') return 1;
+		else return 0;
+	case 37:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 't') return 1;
+		else if (c == 'u') return 59;
+		else if ('v' <= c && c <= 'z') return 1;
+		else return 0;
+	case 38:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'l') return 1;
+		else if (c == 'm') return 37;
+		else if ('n' <= c && c <= 'z') return 1;
+		else return 0;
+	case 39:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'q') return 1;
+		else if (c == 'r') return 38;
+		else if ('s' <= c && c <= 'z') return 1;
+		else return 0;
+	case 40:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'w') return 1;
+		else if (c == 'x') return 31;
+		else if ('y' <= c && c <= 'z') return 1;
+		else return 0;
+	case 41:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'x') return 1;
+		else if (c == 'y') return 6;
+		else if (c == 'z') return 1;
+		else return 0;
+	case 42:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 's') return 1;
+		else if (c == 't') return 41;
+		else if ('u' <= c && c <= 'z') return 1;
+		else return 0;
+	case 43:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'h') return 1;
+		else if (c == 'i') return 42;
+		else if ('j' <= c && c <= 'z') return 1;
+		else return 0;
+	case 44:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'q') return 1;
+		else if (c == 'r') return 43;
+		else if ('s' <= c && c <= 'z') return 1;
+		else return 0;
+	case 45:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'n') return 1;
+		else if (c == 'o') return 44;
+		else if ('p' <= c && c <= 'z') return 1;
+		else return 0;
+	case 46:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'h') return 1;
+		else if (c == 'i') return 45;
+		else if ('j' <= c && c <= 'z') return 1;
+		else return 0;
+	case 47:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'd') return 1;
+		else if (c == 'e') return 40;
+		else if ('f' <= c && c <= 'z') return 1;
+		else return 0;
+	case 48:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'n') return 1;
+		else if (c == 'o') return 39;
+		else if ('p' <= c && c <= 'z') return 1;
+		else return 0;
+	case 49:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'q') return 1;
+		else if (c == 'r') return 36;
+		else if ('s' <= c && c <= 'z') return 1;
+		else return 0;
+	case 50:
+		if (c == (char)0) return 51;
+		else if (c == '\"') return 51;
+		else if (c == '\'') return 51;
+		else if ('0' <= c && c <= '7') return 58;
+		else if (c == '\?') return 51;
+		else if (c == 'X') return 57;
+		else if (c == '\\') return 51;
+		else if ('a' <= c && c <= 'b') return 51;
+		else if (c == 'f') return 51;
+		else if (c == 'n') return 51;
+		else if (c == 'r') return 51;
+		else if (c == 't') return 51;
+		else if (c == 'v') return 51;
+		else if (c == 'x') return 57;
+		else return 0;
+	case 51:
+		if (c == '\'') return 23;
+		else return 0;
+	case 52:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'k') return 1;
+		else if (c == 'l') return 4;
+		else if ('m' <= c && c <= 'z') return 1;
+		else return 0;
+	case 53:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if (c == 'a') return 52;
+		else if ('b' <= c && c <= 'z') return 1;
+		else return 0;
+	case 54:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'b') return 1;
+		else if (c == 'c') return 53;
+		else if ('d' <= c && c <= 'z') return 1;
+		else return 0;
+	case 55:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'h') return 1;
+		else if (c == 'i') return 54;
+		else if ('j' <= c && c <= 'z') return 1;
+		else return 0;
+	case 56:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'q') return 1;
+		else if (c == 'r') return 46;
+		else if ('s' <= c && c <= 'z') return 1;
+		else return 0;
+	case 57:
+		if ('0' <= c && c <= '9') return 60;
+		else if ('A' <= c && c <= 'F') return 60;
+		else if ('a' <= c && c <= 'f') return 60;
+		else return 0;
+	case 58:
+		if (c == '\'') return 23;
+		else if ('0' <= c && c <= '7') return 61;
+		else return 0;
+	case 59:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'k') return 1;
+		else if (c == 'l') return 27;
+		else if ('m' <= c && c <= 'z') return 1;
+		else return 0;
+	case 60:
+		if (c == '\'') return 23;
+		else if ('0' <= c && c <= '9') return 51;
+		else if ('A' <= c && c <= 'F') return 51;
+		else if ('a' <= c && c <= 'f') return 51;
+		else return 0;
+	case 61:
+		if (c == '\'') return 23;
+		else if ('0' <= c && c <= '7') return 51;
+		else return 0;
+	}
+	return 0;
+}
+int Reg::action(int state)
+{
+	switch (state)
+	{
+	case 1:
+		return 1;//Id: identifier
+	case 2:
+		return 2;//number: integar
+	case 3:
+		return 3;//reserved_word: lexical
+	case 4:
+		return 4;//reserved_word: grammatical
+	case 5:
+		return 5;//reserved_word: formula
+	case 6:
+		return 6;//reserved_word: priority
+	case 7:
+		return 7;//division: spaces
+	case 8:
+		return 8;//division: enters
+	case 9:
+		return 9;//division: semicolon
+	case 10:
+		return 10;//division: colon
+	case 11:
+		return 11;//division: dot
+	case 12:
+		return 12;//braket: braceL
+	case 13:
+		return 13;//braket: braceR
+	case 14:
+		return 14;//braket: left
+	case 15:
+		return 15;//braket: right
+	case 16:
+		return 16;//braket: begin
+	case 17:
+		return 17;//braket: end
+	case 18:
+		return 18;//braket: range
+	case 19:
+		return 19;//superscript: star
+	case 20:
+		return 20;//superscript: plus
+	case 21:
+		return 21;//superscript: ZeroOrOne
+	case 22:
+		return 22;//char: idchar
+	case 23:
+		return 23;//char: CommonChar
+	case 24:
+		return 24;//Or: Or
+	case 27:
+		return 1;//Id: identifier
+	case 28:
+		return 1;//Id: identifier
+	case 29:
+		return 1;//Id: identifier
+	case 30:
+		return 1;//Id: identifier
+	case 31:
+		return 1;//Id: identifier
+	case 32:
+		return 1;//Id: identifier
+	case 33:
+		return 1;//Id: identifier
+	case 34:
+		return 1;//Id: identifier
+	case 35:
+		return 1;//Id: identifier
+	case 36:
+		return 1;//Id: identifier
+	case 37:
+		return 1;//Id: identifier
+	case 38:
+		return 1;//Id: identifier
+	case 39:
+		return 1;//Id: identifier
+	case 40:
+		return 1;//Id: identifier
+	case 41:
+		return 1;//Id: identifier
+	case 42:
+		return 1;//Id: identifier
+	case 43:
+		return 1;//Id: identifier
+	case 44:
+		return 1;//Id: identifier
+	case 45:
+		return 1;//Id: identifier
+	case 46:
+		return 1;//Id: identifier
+	case 47:
+		return 22;//char: idchar
+	case 48:
+		return 22;//char: idchar
+	case 49:
+		return 22;//char: idchar
+	case 52:
+		return 1;//Id: identifier
+	case 53:
+		return 1;//Id: identifier
+	case 54:
+		return 1;//Id: identifier
+	case 55:
+		return 1;//Id: identifier
+	case 56:
+		return 22;//char: idchar
+	case 59:
+		return 1;//Id: identifier
+	}
+	return 0;
+}
+int Reg::GroupGet(int accept)
+{
+	switch (accept)
+	{
+	case 1:
+		return 1;//Id: identifier
+	case 2:
+		return 2;//number: integar
+	case 3:
+		return 3;//reserved_word: lexical
+	case 4:
+		return 3;//reserved_word: grammatical
+	case 5:
+		return 3;//reserved_word: formula
+	case 6:
+		return 3;//reserved_word: priority
+	case 7:
+		return 4;//division: spaces
+	case 8:
+		return 4;//division: enters
+	case 9:
+		return 4;//division: semicolon
+	case 10:
+		return 4;//division: colon
+	case 11:
+		return 4;//division: dot
+	case 12:
+		return 5;//braket: braceL
+	case 13:
+		return 5;//braket: braceR
+	case 14:
+		return 5;//braket: left
+	case 15:
+		return 5;//braket: right
+	case 16:
+		return 5;//braket: begin
+	case 17:
+		return 5;//braket: end
+	case 18:
+		return 5;//braket: range
+	case 19:
+		return 6;//superscript: star
+	case 20:
+		return 6;//superscript: plus
+	case 21:
+		return 6;//superscript: ZeroOrOne
+	case 22:
+		return 7;//char: idchar
+	case 23:
+		return 7;//char: CommonChar
+	case 24:
+		return 8;//Or: Or
+	}
+	return 0;
+}
+
 
 
 
