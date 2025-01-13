@@ -1,0 +1,28 @@
+terminal->identifier | integar | lexical | grammatical | formula | priority | spaces | enters | semicolon | colon | dot | braceL | braceR | anntationS | anntationM | left | right | begin | end | range | star | plus | ZeroOrOne | idchar | CommonChar | Or;
+
+Ep->All;
+All->Lexical Grammer | Lexical;
+Lexical->lexical Begins LexicalBody Ends;
+Grammer->grammatical Begins GrammerBody Ends; 
+LexicalBody->RegGroup | LexicalBody RegGroup;
+RegGroup->identifier Begins RegBody Ends;
+RegBody->RegInfor | RegBody RegInfor;
+RegInfor->identifier Begins RegInfor Ends;
+RegAll->FormulaDef PrioDef | PrioDef FormulaDef;
+FormulaDef->formula colon Regs semicolon;
+PrioDef->priority colon integar semicolon;
+Regs->RegOr;
+RegOr->Reg | RegOr Or Reg;
+Reg->Complex | Reg Complex;
+Complex->Node | Complex plus | Complex star | Complex ZeroOrOne;
+Node->Range | left RegOr right;
+Range->Char | begin Char range Char end;
+Char->idchar | CommonChar;
+GrammerBody->NonTerminal | GrammerBody NonTerminal;
+NonTerminal->identifier Begins NTBody Ends;
+NTBody->GNameAndFormula | NTBody GNameAndFormula;
+GNameAndFormula->identifier colon GFormula semicolon;
+GFormula->identifier | GFormula identifier;
+Begins->colon braceL;
+Ends->braceR semicolon;
+

@@ -394,6 +394,7 @@ namespace hyperlex
 		size_t* ElemAmount;
 		ParaType* Type;
 		size_t* Next;
+        //bool option1;
 		void append(size_t No);
 		bool IfContent(int T);
 		ParaType SwitchType(int T);
@@ -929,12 +930,12 @@ static int test_12(const char* output_path, ParaFile& pf)
 static int test_13(const char* output_path, ParaFile& pf)
 {
     BufferChar input;
-    FILE* fp;
+    FILE* fp, *Out;
     CFile CF;
     grammerS G;
     LR0* lr;
     LR1* lr1;
-    string file;
+    std::string file, output;
     int infor;
     BufferChar temp;
     Gsheet Gsheet0, Gsheet1;
@@ -943,7 +944,7 @@ static int test_13(const char* output_path, ParaFile& pf)
 
     //file = pf.first_string("InputFileName", "./data/grammerT.txt");
     file = pf.GetString("InputFileName", "./data/grammerT.txt");
-
+    output = pf.GetString("OutputFileName", "./output/G.txt");
 
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     fp = CF.OpenRead(file.c_str());
@@ -951,7 +952,11 @@ static int test_13(const char* output_path, ParaFile& pf)
     input << fp;
     temp.append(input);
     std::cout << temp.vector() << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    Out = CF.OpenWritePlus(output.c_str());
+    std::cout << "OutputFileName: " << output << std::endl;
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
     //fp = CF.OpenRead("./data/if.txt");
@@ -968,6 +973,10 @@ static int test_13(const char* output_path, ParaFile& pf)
     Gsheet0.build(lr, &G);
     Gsheet0.Demo(stdout);
     Gsheet0.Cprint("Heihei", stdout);
+
+    Gsheet0.CppPrint("Panel", stdout);
+    Gsheet0.CppStructPrint("Panel", Out);
+
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     std::cout << "++++++++++++lr1 = new LR1(&G);+++++++++++++++" << std::endl;
     lr1 = new LR1(&G);
@@ -978,10 +987,11 @@ static int test_13(const char* output_path, ParaFile& pf)
     Gsheet1.Demo(stdout);
     Gsheet1.Cprint("Heihei", stdout);
 
-    Gsheet0.CppPrint("Retree", stdout);
-    Gsheet0.CppStructPrint("Retree", stdout);
+    Gsheet1.CppPrint("Panel", stdout);
+    Gsheet1.CppStructPrint("Panel", Out);
 
     G.Cprint(stdout);
+    fclose(Out);
     delete lr1;
     delete lr;
     return 0;
@@ -1136,8 +1146,8 @@ static int test_17(const char* output_path, ParaFile& pf)
     sheetDFA* dfa;
     DFA* ddfa;
     
-    
-    lP.SetReg();
+    //pf.SearchKey("option1");
+    lP.SetRegS();
     //lP.Demo(stdout);
     if (0) 
     {
@@ -1336,7 +1346,9 @@ static int test_19(const char* output_path, ParaFile& pf)
     RTTE.build("\'/\'\'/\'([\'\\0\'-\'\\11\']|[\'\\13\'-\'\\177\'])*\'\\n\'");
     RTTE.Demo(stdout);
     std::cout << std::endl;
-    RTTE.build("\'/\'\'*\'((\'*\'([\'\\0\'-\'.\']|[\'0\'-\'\\177\']))|([\'\\0\'-\')\']|[\'+\'-\'\\177\']))*\'*\'\'/\'");
+    //RTTE.build("\'/\'\'*\'((\'*\'([\'\\0\'-\'.\']|[\'0\'-\'\\177\']))|([\'\\0\'-\')\']|[\'+\'-\'\\177\']))*\'*\'+\'/\'");
+
+    RTTE.build("\'/\'\'*\'([\'\\0\'-\'\\177\'])*\'*\'+\'/\'");
     RTTE.Demo(stdout);
     std::cout << std::endl;
 
