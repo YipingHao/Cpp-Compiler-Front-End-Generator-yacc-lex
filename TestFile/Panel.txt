@@ -22,7 +22,8 @@ GrammerBody->NonTerminal | GrammerBody NonTerminal;
 NonTerminal->identifier Begins NTBody Ends;
 NTBody->GNameAndFormula | NTBody GNameAndFormula;
 GNameAndFormula->identifier colon GFormula semicolon;
-GFormula->identifier | GFormula identifier;
+GFormula->GFormulaUnit | GFormula GFormulaUnit;
+GFormulaUnit->identifier | null;
 Begins->colon braceL;
 Ends->braceR semicolon;
 

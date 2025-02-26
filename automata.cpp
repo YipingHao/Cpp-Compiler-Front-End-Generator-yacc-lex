@@ -31,20 +31,21 @@ void BufferChar::operator=(const char* input)
 {
 	size_t i;
 	Head = 0;
-	Site = 0;
+	Rear = 0;
 	for (i = 0; input[i] != '\0'; i++) append(input[i]);
 }
 char* BufferChar::vector(void)
 {
 	append('\0');
+	Rear -= 1;
 	return content + Head;
 }
 char* BufferChar::CopyVector(void) const
 {
 	char* Newchar;
 	size_t i;
-	Newchar = (char*)malloc(sizeof(char) * (Site - Head + 1));
-	for (i = 0; i < Site - Head; i++)
+	Newchar = (char*)malloc(sizeof(char) * (Rear - Head + 1));
+	for (i = 0; i < Rear - Head; i++)
 		Newchar[i] = content[i + Head];
 	Newchar[i] = '\0';
 	return Newchar;
@@ -53,9 +54,9 @@ size_t BufferChar::CopyVector(list<char>& storage, size_t& length) const
 {
 	size_t i;
 	size_t Newchar;
-	length = Site - Head;
+	length = Rear - Head;
 	Newchar = storage.count();
-	for (i = 0; i < Site - Head; i++)
+	for (i = 0; i < Rear - Head; i++)
 		storage.append(content[i + Head]);
 	return Newchar;
 }
@@ -143,6 +144,82 @@ char Morpheme::GetChar(size_t site) const
 	if (input[0] != '\'') return input[0];
 	else CharGet(error, input, lex[site].length, head);
 }
+void Morpheme::UnitMove(size_t from, size_t to)
+{
+	lex[to] = lex[from];
+}
+void Morpheme::CountReset(size_t NewCount)
+{
+	count = NewCount;
+}
+
+
+GrammarTree::GrammarTree()
+{
+	GT = NULL;
+}
+GrammarTree::~GrammarTree()
+{
+	clear();
+}
+void GrammarTree::Demo(FILE* fp, const Morpheme& input, const char* const* RulesName) const
+{
+	size_t site, i, LabelNow;
+	vector<tree<TreeInfor>* >stack;
+	tree<TreeInfor>* now;
+	GT->PostOrderTraversal(stack);
+	//stack.append(GT);
+	hyperlex::tree<GrammarTree::TreeInfor>* Tree;
+	hyperlex::tree<GrammarTree::TreeInfor>::PostIterator iterator;
+	LabelNow = 0;
+	iterator.initial(GT);
+	while (iterator.still())
+	{
+		now = iterator.target();
+		if (iterator.state() == 0)
+		{
+			now->root().label = LabelNow;
+			LabelNow += 1;
+		}
+		iterator.next();
+	}
+
+	iterator.initial(GT);
+	while (iterator.still())
+	{
+		now = iterator.target();
+		if (iterator.state() == 0)
+		{
+			site = now->root().site;
+			fprintf(fp, "Tree[%zu]: ", now->root().label);
+			if (now->root().rules)
+			{
+				fprintf(fp, "rules[%zu]: %s\n\t", site, RulesName[site]);
+				fprintf(fp, "childs[%zu]: ", now->ChildCount());
+				for (i = 1; i < now->ChildCount(); i++)
+					fprintf(fp, "%zu, ", now->child(i - 1)->root().label);
+				fprintf(fp, "%zu\n", now->child(now->ChildCount() - 1)->root().label);
+			}
+			else
+			{
+				fprintf(fp, "symbol: %zu: ", site);
+				fprintf(fp, "<%4d : %4d , %s>\n", input[site].category, input[site].accept, input.GetWord(site));
+			}
+			
+		}
+		iterator.next();
+	}
+}
+void GrammarTree::clear(void)
+{
+	if (GT != NULL)
+	{
+		GT->clear();
+		delete GT;
+	}
+	GT = NULL;
+}
+
 
 RegTree::RegTree()
 {
@@ -717,12 +794,12 @@ bool RegTree::RunBuild(int& accept, BufferChar& result, BufferChar& input, Buffe
 	//char cc;
 	int state, acc;
 	int action;
-	intermediate.refresh();
+	intermediate.clear();
 	state = 0;
 	acc = 0;
 	action = 0;
 	accept = 0;
-	result.refresh();
+	result.clear();
 	while (input.dequeue(now))
 	{
 		/*state switch*/
@@ -761,7 +838,7 @@ bool RegTree::RunBuild(int& accept, BufferChar& result, BufferChar& input, Buffe
 			{
 				result.append(intermediate);
 				result.append(now);
-				intermediate.refresh();
+				intermediate.clear();
 				action = 2;
 			}
 			else intermediate.append(now);//continue 
@@ -1121,7 +1198,6 @@ void RegTree::LineFeeds(void)
 }
 void RegTree::Demo(FILE* fp) const
 {
-	//buffer<size_t> output;
 	//tree.inorderTraversal(output);
 	list<traverse> s;
 	traverse temp;
@@ -1260,37 +1336,39 @@ struct Reg
 		_grammatical_ = 4,
 		_formula_ = 5,
 		_priority_ = 6,
-		_spaces_ = 7,
-		_enters_ = 8,
-		_semicolon_ = 9,
-		_colon_ = 10,
-		_dot_ = 11,
-		_braceL_ = 12,
-		_braceR_ = 13,
-		_anntationS_ = 14,
-		_anntationM_ = 15,
-		_left_ = 16,
-		_right_ = 17,
-		_begin_ = 18,
-		_end_ = 19,
-		_range_ = 20,
-		_star_ = 21,
-		_plus_ = 22,
-		_ZeroOrOne_ = 23,
-		_idchar_ = 24,
-		_CommonChar_ = 25
+		_void_ = 7,
+		_spaces_ = 8,
+		_enters_ = 9,
+		_semicolon_ = 10,
+		_colon_ = 11,
+		_dot_ = 12,
+		_braceL_ = 13,
+		_braceR_ = 14,
+		_anntationS_ = 15,
+		_anntationM_ = 16,
+		_left_ = 17,
+		_right_ = 18,
+		_begin_ = 19,
+		_end_ = 20,
+		_range_ = 21,
+		_star_ = 22,
+		_plus_ = 23,
+		_ZeroOrOne_ = 24,
+		_idchar_ = 25,
+		_CommonChar_ = 26,
+		_Or_ = 27
 	};
 	enum group
 	{
-		_Id_ = 1,
-		_number_ = 2,
-		_reserved_word_ = 3,
-		_division_ = 4,
-		_braket_ = 5,
-		_annotation_ = 6,
-		_superscript_ = 7,
-		_char_ = 8,
-		_Or_ = 9
+		__Id__ = 1,
+		__number__ = 2,
+		__reserved_word__ = 3,
+		__division__ = 4,
+		__braket__ = 5,
+		__annotation__ = 6,
+		__superscript__ = 7,
+		__char__ = 8,
+		__Or__ = 9
 	};
 	static int next(int state, const char c);
 	static int action(int state);
@@ -1309,12 +1387,160 @@ struct Panel
 	static const size_t NonTerminalCount;
 	static const size_t TerminalCount;
 	static const size_t RulesCount;
-	static const int GOTO[42][25];
-	static const int ACTION[42][27];
-	static const int RulesToSymbol[40];
-	static const int RulesLength[40];
+	static const int GOTO[44][26];
+	static const int ACTION[44][28];
+	static const int RulesToSymbol[42];
+	static const int RulesLength[42];
 };
+class InputPanel
+{
+public:
+	InputPanel();
+	~InputPanel();
+	int build(FILE* fp);
+	int build(const char* input);
+	struct Group
+	{
+		size_t group;
+		const char* name;
+		size_t count;
+		size_t offset;
+		Group();
+		~Group();
+		void SetName(const char* input);
+	};
+	struct RegContent
+	{
+		const char* name;
+		size_t priority;
+		//When two distinct regular expressions match simultaneously, 
+		//the regular expression with the higher priority number is accepted.
+		RegTree* reg;
+		RegContent();
+		~RegContent();
+		void SetName(const char* input);
+	};
+	struct Rules
+	{
+		const char* name;
+		list<long int> formula;
+		Rules();
+		~Rules();
+		void SetName(const char* input);
+	};
+private:
+	bool GrammarEnclosed;
+	list<Group*> RegG;
+	list<RegContent*> RegC;
+	
+	list<const char*> Terminal;
+	list<const char*> NonTernimal;
+	list<Group*> GrammerG;
+	list<Rules*> rules;
+	int buildGanalysis(const Morpheme& eme);
+	void NeglectNullToken(Morpheme& eme) const;
+};
+InputPanel::InputPanel()
+{
+	const char *s_temp;
+	GrammarEnclosed = false;
+	s_temp = Copy("null");
+	Terminal.append(s_temp);
+	return;
+}
+InputPanel::~InputPanel()
+{
+	size_t i;
+	for (i = 0; i < RegG.count(); i++) delete RegG[i];
+	for (i = 0; i < RegC.count(); i++) delete RegC[i];
 
+	for (i = 0; i < GrammerG.count(); i++) delete GrammerG[i];
+	for (i = 0; i < rules.count(); i++) delete rules[i];
+
+	for (i = 0; i < Terminal.count(); i++) free((void*)Terminal[i]);
+	for (i = 0; i < NonTernimal.count(); i++) free((void*)NonTernimal[i]);
+}
+InputPanel::RegContent::RegContent()
+{
+	reg = NULL;
+	name = NULL;
+}
+InputPanel::RegContent::~RegContent()
+{
+	delete reg;
+	free((void*)name);
+	name = NULL;
+	reg = NULL;
+}
+void InputPanel::RegContent::SetName(const char* input)
+{
+	name = Copy(input);
+}
+InputPanel::Group::Group()
+{
+	name = NULL;
+}
+InputPanel::Group::~Group()
+{
+	free((void*)name);
+}
+void InputPanel::Group::SetName(const char* input)
+{
+	name = Copy(input);
+}
+InputPanel::Rules::Rules()
+{
+	name = NULL;
+}
+InputPanel::Rules::~Rules()
+{
+	free((void*)name);
+	name = NULL;
+}
+void InputPanel::Rules::SetName(const char* input)
+{
+	name = Copy(input);
+}
+
+
+int InputPanel::build(FILE* fp)
+{
+	Morpheme eme;
+	eme.Build<Reg>(fp);
+	NeglectNullToken(eme);
+	return buildGanalysis(eme);
+}
+int InputPanel::build(const char* input)
+{
+	Morpheme eme;
+	eme.Build<Reg>(input);
+	NeglectNullToken(eme);
+	return buildGanalysis(eme);
+}
+int InputPanel::buildGanalysis(const Morpheme& eme)
+{
+	int error;
+	GrammarTree Tree;
+	error = Tree.build<Panel>(eme);
+	return error;
+}
+void InputPanel::NeglectNullToken(Morpheme& eme) const
+{
+	size_t i, site;
+	Reg::regular T;
+	site = 0;
+	for (i = 0; i < eme.GetCount(); i++)
+	{
+		T = (Reg::regular)(eme[i].accept);
+		if ((T != Reg::_spaces_) && (T != Reg::_enters_))
+		{
+			if (i != site) eme.UnitMove(i, site);
+			site += 1;
+		}
+	}
+	eme.CountReset(site);
+	return;
+}
 
 
 lexicalPanel::lexicalPanel()
@@ -1486,17 +1712,17 @@ void lexicalPanel::CppPrint(FILE* fp, const char* name)
 	fprintf(fp, "struct %s\n{\n", name);
 	fprintf(fp, "\tenum regular\n\t{\n");
 	//fprintf(fp, "\t\tnull = %zu,", 0);
-	fprintf(fp, "\t\t_%s_ = %zu", regular[0]->name, 1);
-	for (i = 1; i + 1 < regular.count(); i++)
+	fprintf(fp, "\t\t_%s_ = %zu", regular[0]->name, (size_t)1);
+	for (i = 1; i < regular.count(); i++)
 	{
 		fprintf(fp, ",\n\t\t_%s_ = %zu", regular[i]->name, i + 1);
 	}
 	fprintf(fp, "\n\t};\n");
 	fprintf(fp, "\tenum group\n\t{\n");
-	fprintf(fp, "\t\t_%s_ = %zu", attribute[0], 1);
+	fprintf(fp, "\t\t__%s__ = %zu", attribute[0], (size_t)1);
 	for (i = 1; i < attribute.count(); i++)
 	{
-		fprintf(fp, ",\n\t\t_%s_ = %zu", attribute[i], i + 1);
+		fprintf(fp, ",\n\t\t__%s__ = %zu", attribute[i], i + 1);
 	}
 	fprintf(fp, "\n\t};\n");
 	fprintf(fp, "\tstatic int next(int state, const char c);\n");
@@ -1696,6 +1922,14 @@ void lexicalPanel::SetRegS(void)
 	regular.append(II);
 
 	II = new infor;
+	II->SetName("void");
+	II->SetAttribute("reserved_word");
+	II->reg = new RegTree();
+	II->reg->build("void");
+	II->priority = 1;
+	regular.append(II);
+
+	II = new infor;
 	II->SetAttribute("division");
 	II->SetName("spaces");
 	II->reg = new RegTree();
@@ -1843,13 +2077,13 @@ DirectedGraph::~DirectedGraph()
 void DirectedGraph::refresh(void)
 {
 	vertice.refresh();
-	arcs.refresh();
+	arcs.clear();
 }
 void DirectedGraph::refresh(size_t newlength)
 {
 	size_t i;
 	vertice.refresh(newlength);
-	arcs.refresh();
+	arcs.clear();
 	for (i = 0; i < vertice.count(); i++)
 	{
 		vertice[i].first = SizeMax;
@@ -1887,7 +2121,7 @@ void DirectedGraph::append(DirectedGraph& right, size_t VerticeOffset, size_t Ar
 		temp = (right.vertice[i].rear == SizeMax ? SizeMax : right.vertice[i].rear + ArcsOffset);
 		vertice[i + VerticeOffset].rear = temp;
 	}
-	begin = arcs.site();
+	begin = arcs.rear();
 	arcs.append(right.arcs);
 	//arcs.expand(right.arcs.count());
 	length = right.arcs.count();
@@ -1987,7 +2221,7 @@ void sNFA::build(const RegTree* Reg, buffer<size_t> &output, list<size_t> &s, li
 	sNFA* now, *highest, *L, *R;
 	bool input[128];
 	refresh();
-	output.refresh();
+	output.clear();
 	s.refresh();
 	nfa.refresh();
 	Reg->tree.postorderTraversal(output, s);
@@ -3322,12 +3556,12 @@ bool grammerS::RunBuild(int& accept, BufferChar& result, BufferChar& input, Buff
 	//char cc;
 	int state, acc;
 	int action;
-	intermediate.refresh();
+	intermediate.clear();
 	state = 0;
 	acc = 0;
 	action = 0;
 	accept = 0;
-	result.refresh();
+	result.clear();
 	while (input.dequeue(now))
 	{
 		/*state switch*/
@@ -3364,7 +3598,7 @@ bool grammerS::RunBuild(int& accept, BufferChar& result, BufferChar& input, Buff
 			{
 				result.append(intermediate);
 				result.append(now);
-				intermediate.refresh();
+				intermediate.clear();
 				action = 2;
 			}
 			else intermediate.append(now);//continue 
@@ -3675,7 +3909,22 @@ void grammerS::Cprint(FILE* fp) const
 	fprintf(fp, "\t}\n");
 	//return;
 }
-
+void grammerS::Demo(FILE* fp, size_t rule) const
+{
+	production PP;
+	size_t i;
+	long long int index;
+	PP = rules[rule];
+	fprintf(fp, "%s->", name[PP.symbol]);
+	for (i = 0; i < PP.length; i++)
+	{
+		index = all[PP.begin + i];
+		if (index >= 0)
+			fprintf(fp, "%s ", name[index]);
+		else
+			fprintf(fp, "%s ", ternimal[-index - 1]);
+	}
+}
 void grammerS::Demo(FILE* fp, size_t rule, size_t dot) const
 {
 	production PP;
@@ -4673,7 +4922,7 @@ void Gsheet::CppPrint(const char* name, FILE* fp)const
 	}
 	fprintf(fp, "}\n");
 }
-void Gsheet::CppStructPrint(const char* name, FILE* fp)const
+void Gsheet::CppStructPrint(const char* name, FILE* fp, const grammerS* grammer)const
 {
 	size_t i, j;
 	//size_t No;
@@ -4697,6 +4946,7 @@ void Gsheet::CppStructPrint(const char* name, FILE* fp)const
 	fprintf(fp, "\tstatic const int ACTION[%zu][%zu];\n", StateCount, (TerminalCount + 1));
 	fprintf(fp, "\tstatic const int RulesToSymbol[%zu];\n", RulesCount);
 	fprintf(fp, "\tstatic const int RulesLength[%zu];\n", RulesCount);
+	fprintf(fp, "\tstatic const char* const RulesName[%zu];\n", RulesCount);
 
 	//fprintf(fp, "\t%s();\n", name);
 	fprintf(fp, "};\n");
@@ -4759,6 +5009,15 @@ void Gsheet::CppStructPrint(const char* name, FILE* fp)const
 		if (i + 1 < RulesCount) fprintf(fp, "%d,\\\n", RulesLength[i]);
 		else fprintf(fp, "%d};\n", RulesLength[i]);
 	}
+	fprintf(fp, "//==============================\n");//
+	fprintf(fp, "const char* const %s::RulesName[%zu] = { \\ \n\"", name, RulesCount);
+	for (i = 1; i < RulesCount; i++)
+	{
+		grammer->Demo(fp, i - 1);
+		fprintf(fp, "\",\\\n\"");
+	}
+	grammer->Demo(fp, RulesCount - 1);
+	fprintf(fp, "\"};\n");
 }
 
 static bool compare(const char* str1, const char* str2)
@@ -5067,99 +5326,105 @@ char hyperlex::CharGet(int& error, const char* list, size_t end, size_t& head)
 
 
 
-const size_t Panel::StateCount = 42;
-const size_t Panel::NonTerminalCount = 25;
-const size_t Panel::TerminalCount = 26;
-const size_t Panel::RulesCount = 40;
-const int Panel::GOTO[42][25] = { \
-{1, 6, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 94, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 18, 1}, \
-{1, 1, 1, 1, 30, 34, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 86, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 90}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 42, 1}, \
-{1, 1, 1, 1, 1, 1, 46, 50, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 78, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 82}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 58, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 62, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 66}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 102, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 106, 110, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 162, 1, 1, 1, 1, 166}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 118, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 122, 126, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 1, 158}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 138, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
+
+
+const size_t Panel::StateCount = 44;
+const size_t Panel::NonTerminalCount = 26;
+const size_t Panel::TerminalCount = 27;
+const size_t Panel::RulesCount = 42;
+const int Panel::GOTO[44][26] = { \
+{1, 6, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 94, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 18, 1}, \
+{1, 1, 1, 1, 30, 34, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 86, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 90}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 42, 1}, \
+{1, 1, 1, 1, 1, 1, 46, 50, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 78, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 82}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 58, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 62, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 66}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 102, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 106, 110, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 170, 1, 1, 1, 1, 1, 174}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 118, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 122, 126, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 162, 1, 1, 1, 166}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 138, 142, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
 //==============================
-const int Panel::ACTION[42][27] = { \
-{1, 1, 1, 14, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{11, 1, 1, 1, 98, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 38, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 26, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 155, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 38, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 43, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 74, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{159, 159, 1, 1, 159, 1, 1, 1, 1, 1, 1, 1, 1, 159, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 39, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{15, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{7, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 114, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 114, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 123, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 123, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 130, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 130, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 135, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 135, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 134, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 142, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 146, 1, 1, 1, 1, 1, 1, 1, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 147, 1, 1, 1, 1, 1, 1, 1, 147, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 151, 1, 1, 1, 1, 1, 1, 1, 151, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 143, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 143, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 139, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 139, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 131, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 131, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 127, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 127, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{19, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
+const int Panel::ACTION[44][28] = { \
+{1, 1, 1, 14, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{11, 1, 1, 1, 98, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 38, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 26, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 163, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 38, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 43, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 74, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{167, 167, 1, 1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 39, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{15, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{7, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 114, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 114, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 123, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 123, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 130, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 130, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 135, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 135, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 134, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 146, 1, 1, 1, 1, 1, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 146, 1, 1, 1, 1, 1, 150, 1, 1, 158, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 147, 1, 1, 1, 1, 1, 147, 1, 1, 147, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 155, 1, 1, 1, 1, 1, 155, 1, 1, 155, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 159, 1, 1, 1, 1, 1, 159, 1, 1, 159, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 151, 1, 1, 1, 1, 1, 151, 1, 1, 151, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 143, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 143, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 139, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 139, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 131, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 131, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 127, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 127, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{19, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
 //==============================
-const int Panel::RulesToSymbol[40] = { \
+const int Panel::RulesToSymbol[42] = { \
 0,\
 1,\
 1,\
@@ -5199,9 +5464,11 @@ const int Panel::RulesToSymbol[40] = { \
 22,\
 22,\
 23,\
-24 };
+23,\
+24,\
+25 };
 //==============================
-const int Panel::RulesLength[40] = { \
+const int Panel::RulesLength[42] = { \
 1,\
 2,\
 1,\
@@ -5240,8 +5507,11 @@ const int Panel::RulesLength[40] = { \
 4,\
 1,\
 2,\
+1,\
+1,\
 2,\
 2 };
+
 
 
 int Reg::next(int state, const char c)
@@ -5249,36 +5519,38 @@ int Reg::next(int state, const char c)
 	switch (state)
 	{
 	case 0:
-		if (c == (char)10) return 8;
-		else if (c == (char)13) return 28;
-		else if (c == ' ') return 7;
-		else if (c == '\'') return 27;
-		else if (c == '(') return 16;
-		else if (c == ')') return 17;
-		else if (c == '*') return 21;
-		else if (c == '+') return 22;
-		else if (c == '-') return 20;
-		else if (c == '.') return 11;
-		else if (c == '/') return 53;
+		if (c == (char)10) return 9;
+		else if (c == (char)13) return 29;
+		else if (c == ' ') return 8;
+		else if (c == '\'') return 28;
+		else if (c == '(') return 17;
+		else if (c == ')') return 18;
+		else if (c == '*') return 22;
+		else if (c == '+') return 23;
+		else if (c == '-') return 21;
+		else if (c == '.') return 12;
+		else if (c == '/') return 56;
 		else if ('0' <= c && c <= '9') return 2;
-		else if (c == ':') return 10;
-		else if (c == ';') return 9;
-		else if (c == '\?') return 23;
-		else if ('A' <= c && c <= 'Z') return 24;
-		else if (c == '[') return 18;
-		else if (c == ']') return 19;
-		else if (c == '_') return 24;
-		else if ('a' <= c && c <= 'e') return 24;
-		else if (c == 'f') return 50;
-		else if (c == 'g') return 51;
-		else if ('h' <= c && c <= 'k') return 24;
-		else if (c == 'l') return 49;
-		else if ('m' <= c && c <= 'o') return 24;
-		else if (c == 'p') return 58;
-		else if ('q' <= c && c <= 'z') return 24;
-		else if (c == '{') return 12;
-		else if (c == '|') return 26;
-		else if (c == '}') return 13;
+		else if (c == ':') return 11;
+		else if (c == ';') return 10;
+		else if (c == '\?') return 24;
+		else if ('A' <= c && c <= 'Z') return 25;
+		else if (c == '[') return 19;
+		else if (c == ']') return 20;
+		else if (c == '_') return 25;
+		else if ('a' <= c && c <= 'e') return 25;
+		else if (c == 'f') return 53;
+		else if (c == 'g') return 54;
+		else if ('h' <= c && c <= 'k') return 25;
+		else if (c == 'l') return 52;
+		else if ('m' <= c && c <= 'o') return 25;
+		else if (c == 'p') return 62;
+		else if ('q' <= c && c <= 'u') return 25;
+		else if (c == 'v') return 61;
+		else if ('w' <= c && c <= 'z') return 25;
+		else if (c == '{') return 13;
+		else if (c == '|') return 27;
+		else if (c == '}') return 14;
 		else return 0;
 	case 1:
 		if ('0' <= c && c <= '9') return 1;
@@ -5314,14 +5586,18 @@ int Reg::next(int state, const char c)
 		else if ('a' <= c && c <= 'z') return 1;
 		else return 0;
 	case 7:
-		if (c == ' ') return 7;
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'z') return 1;
 		else return 0;
 	case 8:
-		if (c == (char)10) return 8;
-		else if (c == (char)13) return 28;
+		if (c == ' ') return 8;
 		else return 0;
 	case 9:
-		return 0;
+		if (c == (char)10) return 9;
+		else if (c == (char)13) return 29;
+		else return 0;
 	case 10:
 		return 0;
 	case 11:
@@ -5333,12 +5609,12 @@ int Reg::next(int state, const char c)
 	case 14:
 		return 0;
 	case 15:
-		if ((char)0 <= c && c <= ')') return 52;
-		else if (c == '*') return 61;
-		else if ('+' <= c && c <= (char)127) return 52;
-		else return 0;
-	case 16:
 		return 0;
+	case 16:
+		if ((char)0 <= c && c <= ')') return 55;
+		else if (c == '*') return 65;
+		else if ('+' <= c && c <= (char)127) return 55;
+		else return 0;
 	case 17:
 		return 0;
 	case 18:
@@ -5350,38 +5626,56 @@ int Reg::next(int state, const char c)
 	case 21:
 		return 0;
 	case 22:
+		return 0;
+	case 23:
 		if ('0' <= c && c <= '9') return 2;
 		else return 0;
-	case 23:
-		return 0;
 	case 24:
+		return 0;
+	case 25:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
 		else if ('a' <= c && c <= 'z') return 1;
 		else return 0;
-	case 25:
-		return 0;
 	case 26:
 		return 0;
 	case 27:
-		if (' ' <= c && c <= '!') return 62;
-		else if ('#' <= c && c <= '&') return 62;
-		else if ('(' <= c && c <= '[') return 62;
-		else if (c == '\\') return 59;
-		else if (']' <= c && c <= '~') return 62;
-		else return 0;
+		return 0;
 	case 28:
-		if (c == (char)10) return 8;
+		if (' ' <= c && c <= '!') return 66;
+		else if ('#' <= c && c <= '&') return 66;
+		else if ('(' <= c && c <= '[') return 66;
+		else if (c == '\\') return 63;
+		else if (']' <= c && c <= '~') return 66;
 		else return 0;
 	case 29:
+		if (c == (char)10) return 9;
+		else return 0;
+	case 30:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
 		else if (c == 'a') return 5;
 		else if ('b' <= c && c <= 'z') return 1;
 		else return 0;
-	case 30:
+	case 31:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'c') return 1;
+		else if (c == 'd') return 7;
+		else if ('e' <= c && c <= 'z') return 1;
+		else return 0;
+	case 32:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'h') return 1;
+		else if (c == 'i') return 31;
+		else if ('j' <= c && c <= 'z') return 1;
+		else return 0;
+	case 33:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
@@ -5389,59 +5683,36 @@ int Reg::next(int state, const char c)
 		else if (c == 'l') return 3;
 		else if ('m' <= c && c <= 'z') return 1;
 		else return 0;
-	case 31:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if (c == 'a') return 30;
-		else if ('b' <= c && c <= 'z') return 1;
-		else return 0;
-	case 32:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'b') return 1;
-		else if (c == 'c') return 31;
-		else if ('d' <= c && c <= 'z') return 1;
-		else return 0;
-	case 33:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'h') return 1;
-		else if (c == 'i') return 32;
-		else if ('j' <= c && c <= 'z') return 1;
-		else return 0;
 	case 34:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 's') return 1;
-		else if (c == 't') return 57;
-		else if ('u' <= c && c <= 'z') return 1;
+		else if (c == 'a') return 33;
+		else if ('b' <= c && c <= 'z') return 1;
 		else return 0;
 	case 35:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if (c == 'a') return 34;
-		else if ('b' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 'b') return 1;
+		else if (c == 'c') return 34;
+		else if ('d' <= c && c <= 'z') return 1;
 		else return 0;
 	case 36:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'l') return 1;
-		else if (c == 'm') return 35;
-		else if ('n' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 'h') return 1;
+		else if (c == 'i') return 35;
+		else if ('j' <= c && c <= 'z') return 1;
 		else return 0;
 	case 37:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'l') return 1;
-		else if (c == 'm') return 36;
-		else if ('n' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 's') return 1;
+		else if (c == 't') return 60;
+		else if ('u' <= c && c <= 'z') return 1;
 		else return 0;
 	case 38:
 		if ('0' <= c && c <= '9') return 1;
@@ -5454,9 +5725,9 @@ int Reg::next(int state, const char c)
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 't') return 1;
-		else if (c == 'u') return 64;
-		else if ('v' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 'l') return 1;
+		else if (c == 'm') return 38;
+		else if ('n' <= c && c <= 'z') return 1;
 		else return 0;
 	case 40:
 		if ('0' <= c && c <= '9') return 1;
@@ -5470,19 +5741,42 @@ int Reg::next(int state, const char c)
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'q') return 1;
-		else if (c == 'r') return 40;
-		else if ('s' <= c && c <= 'z') return 1;
+		else if (c == 'a') return 40;
+		else if ('b' <= c && c <= 'z') return 1;
 		else return 0;
 	case 42:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'w') return 1;
-		else if (c == 'x') return 33;
-		else if ('y' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 't') return 1;
+		else if (c == 'u') return 68;
+		else if ('v' <= c && c <= 'z') return 1;
 		else return 0;
 	case 43:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'l') return 1;
+		else if (c == 'm') return 42;
+		else if ('n' <= c && c <= 'z') return 1;
+		else return 0;
+	case 44:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'q') return 1;
+		else if (c == 'r') return 43;
+		else if ('s' <= c && c <= 'z') return 1;
+		else return 0;
+	case 45:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'w') return 1;
+		else if (c == 'x') return 36;
+		else if ('y' <= c && c <= 'z') return 1;
+		else return 0;
+	case 46:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
@@ -5490,37 +5784,13 @@ int Reg::next(int state, const char c)
 		else if (c == 'y') return 6;
 		else if (c == 'z') return 1;
 		else return 0;
-	case 44:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 's') return 1;
-		else if (c == 't') return 43;
-		else if ('u' <= c && c <= 'z') return 1;
-		else return 0;
-	case 45:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'h') return 1;
-		else if (c == 'i') return 44;
-		else if ('j' <= c && c <= 'z') return 1;
-		else return 0;
-	case 46:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'q') return 1;
-		else if (c == 'r') return 45;
-		else if ('s' <= c && c <= 'z') return 1;
-		else return 0;
 	case 47:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'n') return 1;
-		else if (c == 'o') return 46;
-		else if ('p' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 's') return 1;
+		else if (c == 't') return 46;
+		else if ('u' <= c && c <= 'z') return 1;
 		else return 0;
 	case 48:
 		if ('0' <= c && c <= '9') return 1;
@@ -5534,36 +5804,60 @@ int Reg::next(int state, const char c)
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'd') return 1;
-		else if (c == 'e') return 42;
-		else if ('f' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 'q') return 1;
+		else if (c == 'r') return 48;
+		else if ('s' <= c && c <= 'z') return 1;
 		else return 0;
 	case 50:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
 		else if ('a' <= c && c <= 'n') return 1;
-		else if (c == 'o') return 41;
+		else if (c == 'o') return 49;
 		else if ('p' <= c && c <= 'z') return 1;
 		else return 0;
 	case 51:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'q') return 1;
-		else if (c == 'r') return 38;
-		else if ('s' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 'h') return 1;
+		else if (c == 'i') return 50;
+		else if ('j' <= c && c <= 'z') return 1;
 		else return 0;
 	case 52:
-		if ((char)0 <= c && c <= ')') return 52;
-		else if (c == '*') return 61;
-		else if ('+' <= c && c <= (char)127) return 52;
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'd') return 1;
+		else if (c == 'e') return 45;
+		else if ('f' <= c && c <= 'z') return 1;
 		else return 0;
 	case 53:
-		if (c == '*') return 52;
-		else if (c == '/') return 60;
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'n') return 1;
+		else if (c == 'o') return 44;
+		else if ('p' <= c && c <= 'z') return 1;
 		else return 0;
 	case 54:
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'q') return 1;
+		else if (c == 'r') return 41;
+		else if ('s' <= c && c <= 'z') return 1;
+		else return 0;
+	case 55:
+		if ((char)0 <= c && c <= ')') return 55;
+		else if (c == '*') return 65;
+		else if ('+' <= c && c <= (char)127) return 55;
+		else return 0;
+	case 56:
+		if (c == '*') return 55;
+		else if (c == '/') return 64;
+		else return 0;
+	case 57:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
@@ -5571,94 +5865,102 @@ int Reg::next(int state, const char c)
 		else if (c == 'l') return 4;
 		else if ('m' <= c && c <= 'z') return 1;
 		else return 0;
-	case 55:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if (c == 'a') return 54;
-		else if ('b' <= c && c <= 'z') return 1;
-		else return 0;
-	case 56:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'b') return 1;
-		else if (c == 'c') return 55;
-		else if ('d' <= c && c <= 'z') return 1;
-		else return 0;
-	case 57:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'h') return 1;
-		else if (c == 'i') return 56;
-		else if ('j' <= c && c <= 'z') return 1;
-		else return 0;
 	case 58:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'q') return 1;
-		else if (c == 'r') return 48;
-		else if ('s' <= c && c <= 'z') return 1;
+		else if (c == 'a') return 57;
+		else if ('b' <= c && c <= 'z') return 1;
 		else return 0;
 	case 59:
-		if (c == (char)0) return 62;
-		else if (c == '\"') return 62;
-		else if (c == '\'') return 62;
-		else if ('0' <= c && c <= '7') return 65;
-		else if (c == '\?') return 62;
-		else if (c == 'X') return 63;
-		else if (c == '\\') return 62;
-		else if ('a' <= c && c <= 'b') return 62;
-		else if (c == 'f') return 62;
-		else if (c == 'n') return 62;
-		else if (c == 'r') return 62;
-		else if (c == 't') return 62;
-		else if (c == 'v') return 62;
-		else if (c == 'x') return 63;
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'b') return 1;
+		else if (c == 'c') return 58;
+		else if ('d' <= c && c <= 'z') return 1;
 		else return 0;
 	case 60:
-		if ((char)0 <= c && c <= (char)9) return 60;
-		else if (c == (char)10) return 14;
-		else if ((char)11 <= c && c <= (char)127) return 60;
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'h') return 1;
+		else if (c == 'i') return 59;
+		else if ('j' <= c && c <= 'z') return 1;
 		else return 0;
 	case 61:
-		if ((char)0 <= c && c <= ')') return 52;
-		else if (c == '*') return 61;
-		else if ('+' <= c && c <= '.') return 52;
-		else if (c == '/') return 15;
-		else if ('0' <= c && c <= (char)127) return 52;
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'n') return 1;
+		else if (c == 'o') return 32;
+		else if ('p' <= c && c <= 'z') return 1;
 		else return 0;
 	case 62:
-		if (c == '\'') return 25;
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'q') return 1;
+		else if (c == 'r') return 51;
+		else if ('s' <= c && c <= 'z') return 1;
 		else return 0;
 	case 63:
-		if ('0' <= c && c <= '9') return 66;
-		else if ('A' <= c && c <= 'F') return 66;
-		else if ('a' <= c && c <= 'f') return 66;
+		if (c == (char)0) return 66;
+		else if (c == '\"') return 66;
+		else if (c == '\'') return 66;
+		else if ('0' <= c && c <= '7') return 69;
+		else if (c == '\?') return 66;
+		else if (c == 'X') return 67;
+		else if (c == '\\') return 66;
+		else if ('a' <= c && c <= 'b') return 66;
+		else if (c == 'f') return 66;
+		else if (c == 'n') return 66;
+		else if (c == 'r') return 66;
+		else if (c == 't') return 66;
+		else if (c == 'v') return 66;
+		else if (c == 'x') return 67;
 		else return 0;
 	case 64:
+		if ((char)0 <= c && c <= (char)9) return 64;
+		else if (c == (char)10) return 15;
+		else if ((char)11 <= c && c <= (char)127) return 64;
+		else return 0;
+	case 65:
+		if ((char)0 <= c && c <= ')') return 55;
+		else if (c == '*') return 65;
+		else if ('+' <= c && c <= '.') return 55;
+		else if (c == '/') return 16;
+		else if ('0' <= c && c <= (char)127) return 55;
+		else return 0;
+	case 66:
+		if (c == '\'') return 26;
+		else return 0;
+	case 67:
+		if ('0' <= c && c <= '9') return 70;
+		else if ('A' <= c && c <= 'F') return 70;
+		else if ('a' <= c && c <= 'f') return 70;
+		else return 0;
+	case 68:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
 		else if ('a' <= c && c <= 'k') return 1;
-		else if (c == 'l') return 29;
+		else if (c == 'l') return 30;
 		else if ('m' <= c && c <= 'z') return 1;
 		else return 0;
-	case 65:
-		if (c == '\'') return 25;
-		else if ('0' <= c && c <= '7') return 67;
+	case 69:
+		if (c == '\'') return 26;
+		else if ('0' <= c && c <= '7') return 71;
 		else return 0;
-	case 66:
-		if (c == '\'') return 25;
-		else if ('0' <= c && c <= '9') return 62;
-		else if ('A' <= c && c <= 'F') return 62;
-		else if ('a' <= c && c <= 'f') return 62;
+	case 70:
+		if (c == '\'') return 26;
+		else if ('0' <= c && c <= '9') return 66;
+		else if ('A' <= c && c <= 'F') return 66;
+		else if ('a' <= c && c <= 'f') return 66;
 		else return 0;
-	case 67:
-		if (c == '\'') return 25;
-		else if ('0' <= c && c <= '7') return 62;
+	case 71:
+		if (c == '\'') return 26;
+		else if ('0' <= c && c <= '7') return 66;
 		else return 0;
 	}
 	return 0;
@@ -5680,47 +5982,47 @@ int Reg::action(int state)
 	case 6:
 		return 6;//reserved_word: priority
 	case 7:
-		return 7;//division: spaces
+		return 7;//reserved_word: void
 	case 8:
-		return 8;//division: enters
+		return 8;//division: spaces
 	case 9:
-		return 9;//division: semicolon
+		return 9;//division: enters
 	case 10:
-		return 10;//division: colon
+		return 10;//division: semicolon
 	case 11:
-		return 11;//division: dot
+		return 11;//division: colon
 	case 12:
-		return 12;//braket: braceL
+		return 12;//division: dot
 	case 13:
-		return 13;//braket: braceR
+		return 13;//braket: braceL
 	case 14:
-		return 14;//annotation: anntationS
+		return 14;//braket: braceR
 	case 15:
-		return 15;//annotation: anntationM
+		return 15;//annotation: anntationS
 	case 16:
-		return 16;//braket: left
+		return 16;//annotation: anntationM
 	case 17:
-		return 17;//braket: right
+		return 17;//braket: left
 	case 18:
-		return 18;//braket: begin
+		return 18;//braket: right
 	case 19:
-		return 19;//braket: end
+		return 19;//braket: begin
 	case 20:
-		return 20;//braket: range
+		return 20;//braket: end
 	case 21:
-		return 21;//superscript: star
+		return 21;//braket: range
 	case 22:
-		return 22;//superscript: plus
+		return 22;//superscript: star
 	case 23:
-		return 23;//superscript: ZeroOrOne
+		return 23;//superscript: plus
 	case 24:
-		return 24;//char: idchar
+		return 24;//superscript: ZeroOrOne
 	case 25:
-		return 25;//char: CommonChar
+		return 25;//char: idchar
 	case 26:
-		return 26;//Or: Or
-	case 29:
-		return 1;//Id: identifier
+		return 26;//char: CommonChar
+	case 27:
+		return 27;//Or: Or
 	case 30:
 		return 1;//Id: identifier
 	case 31:
@@ -5760,22 +6062,30 @@ int Reg::action(int state)
 	case 48:
 		return 1;//Id: identifier
 	case 49:
-		return 24;//char: idchar
+		return 1;//Id: identifier
 	case 50:
-		return 24;//char: idchar
+		return 1;//Id: identifier
 	case 51:
-		return 24;//char: idchar
+		return 1;//Id: identifier
+	case 52:
+		return 25;//char: idchar
+	case 53:
+		return 25;//char: idchar
 	case 54:
-		return 1;//Id: identifier
-	case 55:
-		return 1;//Id: identifier
-	case 56:
-		return 1;//Id: identifier
+		return 25;//char: idchar
 	case 57:
 		return 1;//Id: identifier
 	case 58:
-		return 24;//char: idchar
-	case 64:
+		return 1;//Id: identifier
+	case 59:
+		return 1;//Id: identifier
+	case 60:
+		return 1;//Id: identifier
+	case 61:
+		return 25;//char: idchar
+	case 62:
+		return 25;//char: idchar
+	case 68:
 		return 1;//Id: identifier
 	}
 	return 0;
@@ -5797,48 +6107,51 @@ int Reg::GroupGet(int accept)
 	case 6:
 		return 3;//reserved_word: priority
 	case 7:
-		return 4;//division: spaces
+		return 3;//reserved_word: void
 	case 8:
-		return 4;//division: enters
+		return 4;//division: spaces
 	case 9:
-		return 4;//division: semicolon
+		return 4;//division: enters
 	case 10:
-		return 4;//division: colon
+		return 4;//division: semicolon
 	case 11:
-		return 4;//division: dot
+		return 4;//division: colon
 	case 12:
-		return 5;//braket: braceL
+		return 4;//division: dot
 	case 13:
-		return 5;//braket: braceR
+		return 5;//braket: braceL
 	case 14:
-		return 6;//annotation: anntationS
+		return 5;//braket: braceR
 	case 15:
-		return 6;//annotation: anntationM
+		return 6;//annotation: anntationS
 	case 16:
-		return 5;//braket: left
+		return 6;//annotation: anntationM
 	case 17:
-		return 5;//braket: right
+		return 5;//braket: left
 	case 18:
-		return 5;//braket: begin
+		return 5;//braket: right
 	case 19:
-		return 5;//braket: end
+		return 5;//braket: begin
 	case 20:
-		return 5;//braket: range
+		return 5;//braket: end
 	case 21:
-		return 7;//superscript: star
+		return 5;//braket: range
 	case 22:
-		return 7;//superscript: plus
+		return 7;//superscript: star
 	case 23:
-		return 7;//superscript: ZeroOrOne
+		return 7;//superscript: plus
 	case 24:
-		return 8;//char: idchar
+		return 7;//superscript: ZeroOrOne
 	case 25:
-		return 8;//char: CommonChar
+		return 8;//char: idchar
 	case 26:
+		return 8;//char: CommonChar
+	case 27:
 		return 9;//Or: Or
 	}
 	return 0;
 }
+
 
 
 

@@ -21,6 +21,7 @@ namespace hyperlex
 {
 	typedef long long int IntegerDefault;
 	class DFA00;
+    bool static true_false_judge(const char* c_t_f);
 
 	class CharBuffer;
 	class UnitBuffer;
@@ -120,7 +121,8 @@ namespace hyperlex
 		char* content;
 	};
 
-	
+    
+
 	IntegerDefault IntGet(const char* list, size_t end, size_t& head);
 	double RealGet(int& state, const char* list, size_t end, size_t& head);
 	char CharGet(const char* list, size_t end, size_t& head);
@@ -373,15 +375,16 @@ namespace hyperlex
 			MixString
 		};
 		void demo(FILE* Fp);
-		size_t Amount(void);
-		size_t Amount(size_t i);
-		size_t SearchKey(const char* Key);
-		size_t SearchKey(const char* Key, ParaType T);
+		size_t Amount(void)const;
+		size_t Amount(size_t i)const;
+		size_t SearchKey(const char* Key)const;
+		size_t SearchKey(const char* Key, ParaType T)const;
 		ParaType GetType(size_t i);
 		IntegerDefault FirstInt(size_t i);
 		double FirstReal(size_t i);
 		std::string FirstString(size_t i);
 		std::string GetString(const char* Key, const char* Default);
+        bool GetBool(const char* Key) const;
 		void IntList(IntegerDefault*& list, size_t& length, size_t i);
 		void CharList(char**& list, size_t& length, size_t i);
 	private:
@@ -399,7 +402,18 @@ namespace hyperlex
 		bool IfContent(int T);
 		ParaType SwitchType(int T);
 	};
-
+    inline int if_letter_judge(char c)
+    {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    }
+    bool static true_false_judge(const char* c_t_f)
+    {
+        int i;
+        for (i = 0; c_t_f[i] != '\0'; i++)
+            if (if_letter_judge(c_t_f[i]))
+                return c_t_f[i] == 'y' || c_t_f[i] == 'Y' || c_t_f[i] == 't' || c_t_f[i] == 'T';
+        return false;
+    }
 
 
 }
@@ -425,6 +439,7 @@ static int test_16(const char* output_path, ParaFile& pf);
 static int test_17(const char* output_path, ParaFile& pf);
 static int test_18(const char* output_path, ParaFile& pf);
 static int test_19(const char* output_path, ParaFile& pf);
+static int test_20(const char* output_path, ParaFile& pf);
 int test_entrance(const char* output_path)
 {
     int item;
@@ -432,6 +447,7 @@ int test_entrance(const char* output_path)
     ParaFile pf;
     size_t sitePF;
     pf.initial("./parameter/test_item.txt");
+    pf.demo(stdout);
     sitePF = pf.SearchKey("item", ParaFile::Int);
     if (sitePF != pf.Amount())
         item = pf.FirstInt(sitePF);
@@ -513,6 +529,10 @@ int test_entrance(const char* output_path)
     case 19:
         std::cout << "Test grammer 2; " << std::endl;
         info = test_19(output_path, pf);
+        break;
+    case 20:
+        std::cout << "Test Tree; " << std::endl;
+        info = test_20(output_path, pf);
         break;
     default:
         info = test_01(output_path, pf);
@@ -629,14 +649,14 @@ static int test_04(const char* output_path, ParaFile& pf)
     {
         std::cout << "No.[" << i << "].content = " << tree[output[i]].content << ";" << std::endl;
     }
-    output.refresh();
+    output.clear();
     std::cout << "tree.inorderTraversal(output); " << std::endl;
     tree.inorderTraversal(output);
     for (i = 0; i < output.count(); i++)
     {
         std::cout << "No.[" << i << "].content = " << tree[output[i]].content << ";" << std::endl;
     }
-    output.refresh();
+    output.clear();
     tree.SetHead(1);
     std::cout << "tree.SetHead(1); " << std::endl;
     std::cout << "tree.postorderTraversal(output); " << std::endl;
@@ -645,7 +665,7 @@ static int test_04(const char* output_path, ParaFile& pf)
     {
         std::cout << "No.[" << i << "].content = " << tree[output[i]].content << ";" << std::endl;
     }
-    output.refresh();
+    output.clear();
     std::cout << "tree.inorderTraversal(output); " << std::endl;
     tree.inorderTraversal(output);
     for (i = 0; i < output.count(); i++)
@@ -935,7 +955,7 @@ static int test_13(const char* output_path, ParaFile& pf)
     grammerS G;
     LR0* lr;
     LR1* lr1;
-    std::string file, output;
+    std::string file, output, OutputLabel;
     int infor;
     BufferChar temp;
     Gsheet Gsheet0, Gsheet1;
@@ -945,13 +965,15 @@ static int test_13(const char* output_path, ParaFile& pf)
     //file = pf.first_string("InputFileName", "./data/grammerT.txt");
     file = pf.GetString("InputFileName", "./data/grammerT.txt");
     output = pf.GetString("OutputFileName", "./output/G.txt");
-
+    OutputLabel = pf.GetString("OutputLabel", "casual");
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     fp = CF.OpenRead(file.c_str());
     std::cout << "InputFileName: " << file << std::endl;
     input << fp;
     temp.append(input);
+    std::cout << "/*" << std::endl;
     std::cout << temp.vector() << std::endl;
+    std::cout << "*/" << std::endl;
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
@@ -968,28 +990,28 @@ static int test_13(const char* output_path, ParaFile& pf)
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     std::cout << "+++++++++++++lr = new LR(&G);++++++++++++++++" << std::endl;
     lr = new LR0(&G);
-    lr->Demo(stdout, &G);
+    if (pf.GetBool("lr0demo"))lr->Demo(stdout, &G);
 
     Gsheet0.build(lr, &G);
-    Gsheet0.Demo(stdout);
-    Gsheet0.Cprint("Heihei", stdout);
+    if(pf.GetBool("lr0Gdemo"))Gsheet0.Demo(stdout);
+    if (pf.GetBool("lr0Cdemo"))Gsheet0.Cprint(OutputLabel.c_str(), stdout);
 
-    Gsheet0.CppPrint("Panel", stdout);
-    Gsheet0.CppStructPrint("Panel", Out);
-
+    if (pf.GetBool("lr0Cppdemo"))Gsheet0.CppPrint(OutputLabel.c_str(), stdout);
+    if (pf.GetBool("PrintToFile")) Gsheet0.CppStructPrint(OutputLabel.c_str(), Out, &G);
+    else Gsheet0.CppStructPrint(OutputLabel.c_str(), stdout, &G);
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     std::cout << "++++++++++++lr1 = new LR1(&G);+++++++++++++++" << std::endl;
     lr1 = new LR1(&G);
-    lr1->Demo(stdout, &G);
+    if (pf.GetBool("lr1demo"))lr1->Demo(stdout, &G);
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
     Gsheet1.build(lr1, &G);
-    Gsheet1.Demo(stdout);
-    Gsheet1.Cprint("Heihei", stdout);
+    if (pf.GetBool("lr1Gdemo")) Gsheet1.Demo(stdout);
+    if (pf.GetBool("lr1Cdemo")) Gsheet1.Cprint(OutputLabel.c_str(), stdout);
 
-    Gsheet1.CppPrint("Panel", stdout);
-    Gsheet1.CppStructPrint("Panel", Out);
-
+    if (pf.GetBool("lr1Cppdemo")) Gsheet1.CppPrint(OutputLabel.c_str(), stdout);
+    if (pf.GetBool("PrintToFile")) Gsheet1.CppStructPrint(OutputLabel.c_str(), Out, &G);
+    else Gsheet1.CppStructPrint(OutputLabel.c_str(), stdout, &G);
     G.Cprint(stdout);
     fclose(Out);
     delete lr1;
@@ -1145,9 +1167,12 @@ static int test_17(const char* output_path, ParaFile& pf)
     NFA* nfa;
     sheetDFA* dfa;
     DFA* ddfa;
-    
+    std::string file, output, OutputLabel;
+    output = pf.GetString("OutputFileName", "./output/G.txt");
+    OutputLabel = pf.GetString("OutputLabel", "casual");
     //pf.SearchKey("option1");
-    lP.SetRegS();
+    if (pf.GetBool("regs")) lP.SetRegS();
+    else lP.SetReg();
     //lP.Demo(stdout);
     if (0) 
     {
@@ -1180,8 +1205,8 @@ static int test_17(const char* output_path, ParaFile& pf)
     else
     {
         lP.BuildDemo(stdout);
-        lP.Cprint(stdout, "Reg");
-        lP.CppPrint(stdout, "Reg");
+        if (pf.GetBool("lr0Cdemo"))lP.Cprint(stdout, OutputLabel.c_str());
+        if (pf.GetBool("Cppdemo"))lP.CppPrint(stdout, OutputLabel.c_str());
         lP.Demo(stdout);
        
     }
@@ -1355,6 +1380,863 @@ static int test_19(const char* output_path, ParaFile& pf)
     return 0;
 }
 
+class RegularExp
+{
+public:
+    RegularExp();
+    ~RegularExp();
+    enum NodeType
+    {
+        Concatenation = 0,
+        Alternation = 1,
+        ZeroOrMore = 2,
+        OneOrMore = 3,
+        ZeroOrOne = 4,
+        Range = 5,
+    };
+    struct item
+    {
+        int lower;
+        int upper;
+        NodeType type;
+        void Demo(FILE* fp);
+    };
+
+    void Demo(FILE* fp) const;
+    static void Demo(FILE* fp, NodeType T);
+    static void Demo(FILE* fp, int L, int U);
+    void clear(void);
+    
+    int set(const char* input);
+
+    void set(int L, int U);
+    void set(int leaf);
+    void set(BiTree<item>* reg);
+    void set(BiTree<item>* reg, NodeType T);
+    void set(BiTree<item>* regL, BiTree<item>* regR, NodeType T);
+    void set(RegularExp* reg);
+    void set(RegularExp* reg, NodeType T);
+    void set(RegularExp* regL, RegularExp* regR, NodeType T);
+    void set(RegularExp* regL, RegularExp* regR);
+    void set(const Morpheme& eme, hyperlex::tree<GrammarTree::TreeInfor>* Tree);
+private:
+    BiTree<item>*tree;
+    void set(void);
+    int fastBuild(Morpheme& eme);
+    int standardBuild(Morpheme& eme);
+};
+
+RegularExp::RegularExp()
+{
+    tree = NULL;
+}
+RegularExp::~RegularExp()
+{
+    clear();
+}
+void RegularExp::item::Demo(FILE* fp)
+{
+    RegularExp::Demo(fp, lower, upper);
+    RegularExp::Demo(fp, type);
+}
+void RegularExp::Demo(FILE* fp, RegularExp::NodeType T)
+{
+    switch (T)
+    {
+    case hyperlex::RegTree::Concatenation:
+        fprintf(fp, "Concatenation\n");
+        break;
+    case hyperlex::RegTree::Alternation:
+        fprintf(fp, "Alternation\n");
+        break;
+    case hyperlex::RegTree::ZeroOrMore:
+        fprintf(fp, "ZeroOrMore\n");
+        break;
+    case hyperlex::RegTree::OneOrMore:
+        fprintf(fp, "OneOrMore\n");
+        break;
+    case hyperlex::RegTree::ZeroOrOne:
+        fprintf(fp, "ZeroOrOne\n");
+        break;
+    case hyperlex::RegTree::Range:
+        fprintf(fp, "Range\n");
+        break;
+    default:
+        fprintf(fp, "???????????\n");
+        break;
+    }
+}
+void RegularExp::Demo(FILE* fp, int L, int U)
+{
+    if (U != L)
+    {
+        if (L < 32 || L == 127) fprintf(fp, "[\\%d-", L);
+        else fprintf(fp, "[%c-", (char)L);
+        if (U < 32 || U == 127) fprintf(fp, "\\%d]", U);
+        else fprintf(fp, "%c]", (char)U);
+    }
+    else
+    {
+        if (L < 32 || L == 127) fprintf(fp, "[\\%d]", L);
+        else fputc((char)L, fp);
+    }
+}
+void RegularExp::Demo(FILE* fp) const
+{
+    //buffer<size_t> output;
+    //tree.inorderTraversal(output);
+    vector<BiTree<item>*> stack;
+    vector<int> state;
+    size_t i;
+    int SS;
+    NodeType TT;
+    BiTree<item>* now;
+    if (tree != NULL)
+    {
+        state.append(0);
+        stack.append(tree);
+    }
+    while (state.pop(SS) != 0)
+    {
+        now = stack.top();
+        TT = now->content().type;
+        //now->content().Demo(stdout);
+        //printf("%d\n", SS);
+        
+        if (SS == 0)
+        {
+            if ((TT == Alternation || TT == Concatenation) && state.count() != 0)
+                fputc('(', fp);
+            state.append(1);
+            if (now->left() != NULL)
+            {
+                state.append(0);
+                stack.append(now->left());
+            }
+        }
+        else if (SS == 1)
+        {
+            switch (TT)
+            {
+            case RegularExp::Concatenation:
+                break;
+            case RegularExp::Alternation:
+                fputc('|', fp);
+                break;
+            case RegularExp::ZeroOrMore:
+                fprintf(fp, "^{*}");
+                break;
+            case RegularExp::OneOrMore:
+                fprintf(fp, "^{+}");
+                break;
+            case RegularExp::ZeroOrOne:
+                fputc('?', fp);
+                break;
+            case RegularExp::Range:
+                Demo(fp, now->content().lower, now->content().upper);
+                break;
+            default:
+                break;
+            }
+            state.append(2);
+            if (now->right() != NULL)
+            {
+                state.append(0);
+                stack.append(now->right());
+            }
+        }
+        else
+        {
+            if ((TT == Alternation || TT == Concatenation) && state.count() != 0)
+                fputc(')', fp);
+            stack.pop();
+        }
+    }
+}
+
+void RegularExp::set(void)
+{
+    if (tree != NULL)
+    {
+        tree->clear();
+    }
+    else
+        tree = new BiTree<item>();
+
+}
+void RegularExp::clear(void) 
+{
+    if (tree != NULL)
+    {
+        tree->clear();
+        delete tree;
+    }
+    tree = NULL;
+}
+void RegularExp::set(int L, int U)
+{
+    set();
+    tree->content().type = Range;
+    tree->content().lower = L;
+    tree->content().upper = U;
+}
+void RegularExp::set(int leaf)
+{
+    set(leaf, leaf);
+}
+void RegularExp::set(BiTree<item>* reg)
+{
+    if (tree != NULL)
+    {
+        tree->clear();
+        delete tree;
+    }
+    tree = reg;
+    reg = NULL;
+}
+void RegularExp::set(BiTree<item>* reg, RegularExp::NodeType T)
+{
+    set();
+    tree->content().type = T;
+    tree->left() = reg;
+}
+void RegularExp::set(BiTree<item>* regL, BiTree<item>* regR, RegularExp::NodeType T)
+{
+    set();
+    tree->content().type = T;
+    tree->left() = regL;
+    tree->right() = regR;
+}
+void RegularExp::set(RegularExp* reg)
+{
+    if (tree != NULL)
+    {
+        tree->clear();
+        delete tree;
+    }
+    tree = reg->tree;
+    reg->tree = NULL;
+}
+void RegularExp::set(RegularExp* reg, NodeType T)
+{
+    set();
+    tree->content().type = T;
+    tree->left() = reg->tree;
+    reg->tree = NULL;
+}
+void RegularExp::set(RegularExp* regL, RegularExp* regR, NodeType T)
+{
+    set();
+    tree->content().type = T;
+    tree->left() = regL->tree;
+    tree->right() = regR->tree;
+    regL->tree = NULL;
+    regR->tree = NULL;
+}
+void RegularExp::set(RegularExp* regL, RegularExp* regR)
+{
+    set();
+    tree->content().type = Range;
+    tree->content().lower = regL->tree->content().lower;
+    tree->content().upper = regR->tree->content().upper;
+}
+
+struct RegExp
+{
+    enum regular
+    {
+        _left_ = 1,
+        _right_ = 2,
+        _begin_ = 3,
+        _end_ = 4,
+        _range_ = 5,
+        _star_ = 6,
+        _plus_ = 7,
+        _ZeroOrOne_ = 8,
+        _idchar_ = 9,
+        _CommonChar_ = 10,
+        _Or_ = 11
+    };
+    enum group
+    {
+        __braket__ = 1,
+        __superscript__ = 2,
+        __char__ = 3,
+        __Or__ = 4
+    };
+    static int next(int state, const char c);
+    static int action(int state);
+    static int GroupGet(int state);
+};
+int RegExp::next(int state, const char c)
+{
+    switch (state)
+    {
+    case 0:
+        if (c == '\'') return 14;
+        else if (c == '(') return 1;
+        else if (c == ')') return 2;
+        else if (c == '*') return 6;
+        else if (c == '+') return 7;
+        else if (c == '-') return 5;
+        else if ('0' <= c && c <= '9') return 9;
+        else if (c == '\?') return 8;
+        else if ('A' <= c && c <= 'Z') return 9;
+        else if (c == '[') return 3;
+        else if (c == ']') return 4;
+        else if (c == '_') return 9;
+        else if ('a' <= c && c <= 'z') return 9;
+        else if (c == '|') return 11;
+        else return 0;
+    case 1:
+        return 0;
+    case 2:
+        return 0;
+    case 3:
+        return 0;
+    case 4:
+        return 0;
+    case 5:
+        return 0;
+    case 6:
+        return 0;
+    case 7:
+        return 0;
+    case 8:
+        return 0;
+    case 9:
+        return 0;
+    case 10:
+        return 0;
+    case 11:
+        return 0;
+    case 12:
+        if (c == '\'') return 10;
+        else return 0;
+    case 13:
+        if (c == (char)0) return 12;
+        else if (c == '\"') return 12;
+        else if (c == '\'') return 12;
+        else if ('0' <= c && c <= '7') return 16;
+        else if (c == '\?') return 12;
+        else if (c == 'X') return 15;
+        else if (c == '\\') return 12;
+        else if ('a' <= c && c <= 'b') return 12;
+        else if (c == 'f') return 12;
+        else if (c == 'n') return 12;
+        else if (c == 'r') return 12;
+        else if (c == 't') return 12;
+        else if (c == 'v') return 12;
+        else if (c == 'x') return 15;
+        else return 0;
+    case 14:
+        if (' ' <= c && c <= '!') return 12;
+        else if ('#' <= c && c <= '&') return 12;
+        else if ('(' <= c && c <= '[') return 12;
+        else if (c == '\\') return 13;
+        else if (']' <= c && c <= '~') return 12;
+        else return 0;
+    case 15:
+        if ('0' <= c && c <= '9') return 17;
+        else if ('A' <= c && c <= 'F') return 17;
+        else if ('a' <= c && c <= 'f') return 17;
+        else return 0;
+    case 16:
+        if (c == '\'') return 10;
+        else if ('0' <= c && c <= '7') return 18;
+        else return 0;
+    case 17:
+        if (c == '\'') return 10;
+        else if ('0' <= c && c <= '9') return 12;
+        else if ('A' <= c && c <= 'F') return 12;
+        else if ('a' <= c && c <= 'f') return 12;
+        else return 0;
+    case 18:
+        if (c == '\'') return 10;
+        else if ('0' <= c && c <= '7') return 12;
+        else return 0;
+    }
+    return 0;
+}
+int RegExp::action(int state)
+{
+    switch (state)
+    {
+    case 1:
+        return 1;//braket: left
+    case 2:
+        return 2;//braket: right
+    case 3:
+        return 3;//braket: begin
+    case 4:
+        return 4;//braket: end
+    case 5:
+        return 5;//braket: range
+    case 6:
+        return 6;//superscript: star
+    case 7:
+        return 7;//superscript: plus
+    case 8:
+        return 8;//superscript: ZeroOrOne
+    case 9:
+        return 9;//char: idchar
+    case 10:
+        return 10;//char: CommonChar
+    case 11:
+        return 11;//Or: Or
+    }
+    return 0;
+}
+int RegExp::GroupGet(int accept)
+{
+    switch (accept)
+    {
+    case 1:
+        return 1;//braket: left
+    case 2:
+        return 1;//braket: right
+    case 3:
+        return 1;//braket: begin
+    case 4:
+        return 1;//braket: end
+    case 5:
+        return 1;//braket: range
+    case 6:
+        return 2;//superscript: star
+    case 7:
+        return 2;//superscript: plus
+    case 8:
+        return 2;//superscript: ZeroOrOne
+    case 9:
+        return 3;//char: idchar
+    case 10:
+        return 3;//char: CommonChar
+    case 11:
+        return 4;//Or: Or
+    }
+    return 0;
+}
+struct RegExpG
+{
+    enum type
+    {
+        accept = 0,
+        error = 1,
+        push = 2,
+        reduce = 3
+    };
+    static const size_t StateCount;
+    static const size_t NonTerminalCount;
+    static const size_t TerminalCount;
+    static const size_t RulesCount;
+    static const int GOTO[23][7];
+    static const int ACTION[23][12];
+    static const int RulesToSymbol[15];
+    static const int RulesLength[15];
+    static const char* const RulesName[15];
+};
+const size_t RegExpG::StateCount = 23;
+const size_t RegExpG::NonTerminalCount = 7;
+const size_t RegExpG::TerminalCount = 11;
+const size_t RegExpG::RulesCount = 15;
+const int RegExpG::GOTO[23][7] = { \
+{1, 6, 10, 14, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 78, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 62, 10, 14, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 46}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 54}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 74, 14, 18, 22, 26}, \
+{1, 1, 1, 78, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1} };
+//==============================
+const int RegExpG::ACTION[23][12] = { \
+{1, 30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70}, \
+{7, 30, 7, 34, 1, 1, 1, 1, 1, 38, 42, 7}, \
+{15, 15, 15, 15, 1, 1, 82, 86, 90, 15, 15, 15}, \
+{23, 23, 23, 23, 1, 1, 23, 23, 23, 23, 23, 23}, \
+{39, 39, 39, 39, 1, 1, 39, 39, 39, 39, 39, 39}, \
+{47, 47, 47, 47, 1, 1, 47, 47, 47, 47, 47, 47}, \
+{1, 30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55}, \
+{59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59}, \
+{1, 1, 1, 1, 1, 50, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{1, 1, 1, 1, 58, 1, 1, 1, 1, 1, 1, 1}, \
+{51, 51, 51, 51, 1, 1, 51, 51, 51, 51, 51, 51}, \
+{1, 1, 66, 1, 1, 1, 1, 1, 1, 1, 1, 70}, \
+{43, 43, 43, 43, 1, 1, 43, 43, 43, 43, 43, 43}, \
+{1, 30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{11, 30, 11, 34, 1, 1, 1, 1, 1, 38, 42, 11}, \
+{19, 19, 19, 19, 1, 1, 82, 86, 90, 19, 19, 19}, \
+{31, 31, 31, 31, 1, 1, 31, 31, 31, 31, 31, 31}, \
+{27, 27, 27, 27, 1, 1, 27, 27, 27, 27, 27, 27}, \
+{35, 35, 35, 35, 1, 1, 35, 35, 35, 35, 35, 35} };
+//==============================
+const int RegExpG::RulesToSymbol[15] = { \
+0,\
+1,\
+1,\
+2,\
+2,\
+3,\
+3,\
+3,\
+3,\
+4,\
+4,\
+5,\
+5,\
+6,\
+6 };
+//==============================
+const int RegExpG::RulesLength[15] = { \
+1,\
+1,\
+3,\
+1,\
+2,\
+1,\
+2,\
+2,\
+2,\
+1,\
+3,\
+1,\
+5,\
+1,\
+1 };
+//==============================
+const char* const RegExpG::RulesName[15] = { \
+"Ep->RegOr ",\
+"RegOr->Reg ",\
+"RegOr->RegOr Or Reg ",\
+"Reg->Complex ",\
+"Reg->Reg Complex ",\
+"Complex->Node ",\
+"Complex->Complex plus ",\
+"Complex->Complex star ",\
+"Complex->Complex ZeroOrOne ",\
+"Node->Range ",\
+"Node->left RegOr right ",\
+"Range->Char ",\
+"Range->begin Char range Char end ",\
+"Char->reserved ",\
+"Char->CommonChar " };
+
+
+
+int RegularExp::set(const char* input)
+{
+    int error;
+    Morpheme eme;
+    eme.Build<RegExp>(input);
+    //error = fastBuild(eme);
+    error = standardBuild(eme);
+    return error;
+}
+int RegularExp::fastBuild(Morpheme& input)
+{
+    /*
+terminal-> left | right | begin | end | range | star 
+| plus | ZeroOrOne | reserved | CommonChar | Or;
+
+Ep->RegOr;
+RegOr->Reg | RegOr Or Reg;
+Reg->Complex | Reg Complex;
+Complex->Node | Complex plus | Complex star | Complex ZeroOrOne;
+Node->Range | left RegOr right;
+Range->Char | begin Char range Char end;
+Char->reserved | CommonChar;
+*/
+
+    vector<int> stack;
+    vector<RegularExp*> TempTree;
+    RegularExp* TreeNow;
+    bool DoNext;
+    size_t length, head, i, begin_, inputCount_;
+    int symbol, top, temp, information;
+    int GoFull, GoD, GoI, error;
+    RegExpG::type type;
+    RegularExp::NodeType TypeTemp;
+    stack.append(0);
+    head = 0;
+    inputCount_ = input.GetCount();
+    DoNext = true;
+    do
+    {
+        if (head >= inputCount_)
+        {
+            error = -1;
+            break;
+        }
+        top = stack.top();
+        temp = RegExpG::ACTION[top][input[head].accept];
+        information = temp / 4;
+        type = (RegExpG::type)(temp % 4);
+        //printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
+        //printf("head = %5zu, lex = %s, \n", head, input.GetWord(head));
+        TypeTemp = ZeroOrOne;
+        switch (type)
+        {
+        case RegExpG::accept:
+            error = 0;
+            DoNext = false;
+            //TempTree.top()->Demo(stdout);
+            set(TempTree.top());
+            break;
+        case RegExpG::error:
+            error = information;
+            DoNext = false;
+            break;
+        case RegExpG::push:
+            //printf("<%8zu, %4d: %4d , %s>\n", head, input[head].category, input[head].accept, input.GetWord(head));
+            stack.append(information);
+            TreeNow = new RegularExp;
+            TreeNow->set(input.GetChar(head));
+            TempTree.append(TreeNow);
+            head += 1;
+            break;
+        case RegExpG::reduce:
+            symbol = RegExpG::RulesToSymbol[information];
+            length = RegExpG::RulesLength[information];
+            begin_ = TempTree.count() - length;
+            switch (information)
+            {
+                //No[0], case Ep: prefix: 0, degeneracy: 1
+            case 0: //0: Ep, No[0] production rules: Ep->RegOr 
+            //No[1], case RegOr: prefix: 1, degeneracy: 2
+            case 1: //1: RegOr, No[0] production rules: RegOr->Reg
+                TreeNow = TempTree[begin_];
+                TempTree[begin_] = NULL;
+                break;
+            case 2: //1: RegOr, No[1] production rules: RegOr->RegOr Or Reg
+                TreeNow = new RegularExp;
+                TreeNow->set(TempTree[begin_], TempTree[begin_ + 2], RegularExp::Alternation);
+                break;
+            //No[2], case Reg: prefix: 3, degeneracy: 2
+            case 3: //2: Reg, No[0] production rules: Reg->Complex
+                TreeNow = TempTree[begin_];
+                TempTree[begin_] = NULL;
+                break;
+            case 4: //2: Reg, No[1] production rules: Reg->Reg Complex
+                TreeNow = new RegularExp;
+                TreeNow->set(TempTree[begin_], TempTree[begin_ + 1], RegularExp::Concatenation);
+                break;
+            //No[3], case Complex: prefix: 5, degeneracy: 4
+            case 5: //3: Complex, No[0] production rules: Complex->Node
+                TreeNow = TempTree[begin_];
+                TempTree[begin_] = NULL;
+                break;
+            case 6: //3: Complex, No[1] production rules: Complex->Complex plus
+                TreeNow = new RegularExp;
+                TreeNow->set(TempTree[begin_], RegularExp::OneOrMore);
+                break;
+            case 7: //3: Complex, No[2] production rules: Complex->Complex star
+                TypeTemp = RegularExp::ZeroOrMore;
+            case 8: //3: Complex, No[3] production rules: Complex->Complex ZeroOrOne
+                TreeNow = new RegularExp;
+                TreeNow->set(TempTree[begin_], TypeTemp);
+                break;
+            //No[4], case Node: prefix: 9, degeneracy: 2
+            case 9: //4: Node, No[0] production rules: Node->Range
+                TreeNow = TempTree[begin_];
+                TempTree[begin_] = NULL;
+                break;
+            case 10: //4: Node, No[1] production rules: Node->left RegOr right
+                TreeNow = TempTree[begin_ + 1];
+                TempTree[begin_ + 1] = NULL;
+                break;
+            //No[5], case Range: prefix: 11, degeneracy: 2
+            case 11: //5: Range, No[0] production rules: Range->Char
+                TreeNow = TempTree[begin_];
+                TempTree[begin_] = NULL;
+                break;
+            case 12: //5: Range, No[1] production rules: Range->begin Char range Char end
+                TreeNow = new RegularExp;
+                TreeNow->set(TempTree[begin_ + 1], TempTree[begin_ + 3]);
+                break;
+            //No[6], case Char: prefix: 13, degeneracy: 2
+            case 13: //6: Char, No[0] production rules: Char->reserved
+            case 14: //6: Char, No[1] production rules: Char->CommonChar
+                TreeNow = TempTree[begin_];
+                TempTree[begin_] = NULL;
+                break;
+            }
+            for (i = 0; i < length; i++)
+            {
+                stack.pop();
+                delete TempTree[begin_ + i];
+            }
+            TempTree.recount(begin_);
+            GoFull = RegExpG::GOTO[stack.top()][symbol];
+            GoD = GoFull / 4;
+            GoI = GoFull % 4;
+            stack.append(GoD);
+            TempTree.append(TreeNow);
+            //TreeNow->Demo(stdout);
+            break;
+        }
+
+    } while (DoNext);
+    for (i = 0; i < TempTree.count(); i++) delete TempTree[i];
+    return error;
+}
+int RegularExp::standardBuild(Morpheme& eme)
+{
+    GrammarTree Tree;
+    int error;
+    //eme.Demo(stdout);
+    error = Tree.build<RegExpG>(eme);
+    Tree.Demo(stdout, eme, RegExpG::RulesName);
+    set(eme, Tree.GT);
+    return error;
+}
+void RegularExp::set(const Morpheme& eme, hyperlex::tree<GrammarTree::TreeInfor>* Tree)
+{
+    RegularExp* TreeNow;
+    RegularExp* Ltemp, * Rtemp;
+    size_t site_;
+    hyperlex::tree<GrammarTree::TreeInfor>* GT;
+    hyperlex::tree<GrammarTree::TreeInfor>::PostIterator iterator;
+    iterator.initial(Tree);
+    while (iterator.still())
+    {
+        GT = iterator.target();
+        if (iterator.state() != 0)
+        {
+            //TreeNow = (RegularExp*);
+            site_ = GT->root().site;
+            if ((RegularExp*)GT->root().rules)
+            {
+                switch (site_)
+                {
+                    //No[0], case Ep: prefix: 0, degeneracy: 1
+                case 0: //0: Ep, No[0] production rules: Ep->RegOr 
+                    //No[1], case RegOr: prefix: 1, degeneracy: 2
+                case 1: //1: RegOr, No[0] production rules: RegOr->Reg
+                    TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+                    GT->child(0)->root().infor = NULL;
+                    break;
+                case 2: //1: RegOr, No[1] production rules: RegOr->RegOr Or Reg
+                    TreeNow = new RegularExp;
+                    Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+                    Rtemp = (RegularExp*)(GT->child(2)->root().infor);
+                    TreeNow->set(Ltemp, Rtemp, RegularExp::Alternation);
+                    break;
+                    //No[2], case Reg: prefix: 3, degeneracy: 2
+                case 3: //2: Reg, No[0] production rules: Reg->Complex
+                    TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+                    GT->child(0)->root().infor = NULL;
+                    break;
+                case 4: //2: Reg, No[1] production rules: Reg->Reg Complex
+                    TreeNow = new RegularExp;
+                    Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+                    Rtemp = (RegularExp*)(GT->child(1)->root().infor);
+                    TreeNow->set(Ltemp, Rtemp, RegularExp::Concatenation);
+                    break;
+                    //No[3], case Complex: prefix: 5, degeneracy: 4
+                case 5: //3: Complex, No[0] production rules: Complex->Node
+                    TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+                    GT->child(0)->root().infor = NULL;
+                    break;
+                case 6: //3: Complex, No[1] production rules: Complex->Complex plus
+                    TreeNow = new RegularExp;
+                    Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+                    TreeNow->set(Ltemp, RegularExp::OneOrMore);
+                    break;
+                case 7: //3: Complex, No[2] production rules: Complex->Complex star
+                    TreeNow = new RegularExp;
+                    Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+                    TreeNow->set(Ltemp, RegularExp::ZeroOrMore);
+                    break;
+                case 8: //3: Complex, No[3] production rules: Complex->Complex ZeroOrOne
+                    TreeNow = new RegularExp;
+                    Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+                    TreeNow->set(Ltemp, RegularExp::ZeroOrOne);
+                    break;
+                    //No[4], case Node: prefix: 9, degeneracy: 2
+                case 9: //4: Node, No[0] production rules: Node->Range
+                    TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+                    GT->child(0)->root().infor = NULL;
+                    break;
+                case 10: //4: Node, No[1] production rules: Node->left RegOr right
+                    TreeNow = (RegularExp*)(GT->child(1)->root().infor);
+                    GT->child(1)->root().infor = NULL;
+                    break;
+                    //No[5], case Range: prefix: 11, degeneracy: 2
+                case 11: //5: Range, No[0] production rules: Range->Char
+                    TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+                    GT->child(0)->root().infor = NULL;
+                    break;
+                case 12: //5: Range, No[1] production rules: Range->begin Char range Char end
+                    TreeNow = new RegularExp;
+                    Ltemp = (RegularExp*)(GT->child(1)->root().infor);
+                    Rtemp = (RegularExp*)(GT->child(3)->root().infor);
+                    TreeNow->set(Ltemp, Rtemp);
+                    break;
+                    //No[6], case Char: prefix: 13, degeneracy: 2
+                case 13: //6: Char, No[0] production rules: Char->reserved
+                case 14: //6: Char, No[1] production rules: Char->CommonChar
+                    TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+                    GT->child(0)->root().infor = NULL;
+                    break;
+                }
+            }
+            else
+            {
+                TreeNow = new RegularExp;
+                TreeNow->set(eme.GetChar(site_));
+                
+            }
+            GT->root().infor = TreeNow;
+        }
+        iterator.next();
+    }
+    TreeNow = (RegularExp*)(Tree->root().infor);
+    set(TreeNow);
+}
+
+
+static int test_20(const char* output_path, ParaFile& pf)
+{
+    RegularExp ee;
+    ee.set(44, 55);
+    ee.Demo(stdout);
+    printf("\n");
+    ee.set("([a-z]|[A-Z]|_)([a-z]|[A-Z]|_|[0-9])*");
+    ee.Demo(stdout);
+    printf("\n");
+    ee.set("('+'|'-')?[0-9]+");
+    ee.Demo(stdout);
+    printf("\n");
+    ee.set("(0x|0X)([0-9]|[a-f]|[A-F])+");
+    ee.Demo(stdout);
+    printf("\n");
+
+    ee.set("('+'|'-')?[0-9]+'.'[0-9]*((e|E)('+'|'-')?[0-9]+)?");
+    ee.Demo(stdout);
+    printf("\n");
+    ee.set("PikaPikachu");
+    ee.Demo(stdout);
+    printf("\n");
+}
 
 
 
@@ -4546,16 +5428,16 @@ void ParaFile::demo(FILE* fp)
     for (i = 0; i < site; i++)
         fprintf(fp, "Next[%llu] = %llu\n", i, Next[i]);
 }
-size_t ParaFile::Amount(void)
+size_t ParaFile::Amount(void)const
 {
     return KeyAmount;
 }
-size_t ParaFile::Amount(size_t i)
+size_t ParaFile::Amount(size_t i)const
 {
     return i < KeyAmount ? ElemAmount[i] : 0;
 }
 #include <string.h>
-size_t ParaFile::SearchKey(const char* Key)
+size_t ParaFile::SearchKey(const char* Key) const
 {
     const char* targat;
     size_t i;
@@ -4567,7 +5449,7 @@ size_t ParaFile::SearchKey(const char* Key)
     }
     return KeyAmount;
 }
-size_t ParaFile::SearchKey(const char* Key, ParaFile::ParaType T)
+size_t ParaFile::SearchKey(const char* Key, ParaFile::ParaType T)const
 {
     const char* targat;
     size_t i;
@@ -4622,6 +5504,23 @@ std::string ParaFile::GetString(const char* Key, const char* Default)
             temp = content[FirstElem[site]].C.S;
     }
     return temp;
+}
+bool ParaFile::GetBool(const char* Key) const
+{
+    std::string temp;
+    size_t site;
+    ParaType T;
+    site = SearchKey(Key);
+    if (site == Amount()) return false;
+    else
+    {
+        T = Type[site];
+        if (T != String && T != Id && T != MixString)
+            temp = "F";
+        else
+            temp = content[FirstElem[site]].C.S;
+    }
+    return true_false_judge(temp.c_str());
 }
 
 void ParaFile::IntList(IntegerDefault*& list, size_t& length, size_t i)

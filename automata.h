@@ -26,31 +26,149 @@ class Gsheet;
 //namespace hyperlex 5: template
 namespace hyperlex
 {
+	template <class T> class vector
+	{
+	protected:
+		size_t Count;
+		size_t Capacity;
+		T* content;
+	public:
+		vector();
+		~vector();
+		void clear(void);
+		void copy(const vector<T>& source);
+		void append(const vector<T>& source);
+		size_t capacity(void) const;
+		size_t count(void) const;
+		void recapacity(size_t NewSize);
+		void recount(size_t NewCount);
+		void append(const T& element);
+		size_t SearchAppend(const T& element);
+		size_t pop(T& element);
+		size_t top(T& element);
+		void pop(void);
+		size_t append(void);
+		void swap(vector<T>& other);
+		const T* ptr(void) const;
+		T* ptr(void);
+		const T* ptr(size_t offset)const;
+		T* ptr(size_t offset);
+		const T& operator[](size_t target) const;
+		T& operator[](size_t target);
+		void value(const T& element);
+		const T& top(void) const;
+		T& top(void);
+	};
+	template <class T> class array
+	{
+	protected:
+		size_t Length;
+		T* content;
+	public:
+		array();
+		~array();
+		size_t length(void) const;
+		T* ptr(void);
+		T* ptr(size_t offset);
+		const T* ptr(size_t offset) const;
+		T& operator[](size_t target);
+		T& operator[](const size_t target) const;
+		void value(const T& element);
+		void Malloc(size_t NewSize);
+		void Realloc(size_t NewSize);
+		void Free(void);
+	};
+	template <class T> class tree
+	{
+	public:
+		tree();
+		~tree();
+		void clear(void);
+		void build(vector<tree<T>*>& input);
+		void build(vector<tree<T>*>& input, size_t offset);
+		void PostOrderTraversal(vector<tree<T>*>& output);
+		T& root(void);
+		const T& root(void) const;
+		size_t ChildCount(void) const;
+		tree<T>* child(size_t No) const;
+		struct Iterator
+		{
+			tree<T>* target;
+			int state;
+		};
+		class PostIterator
+		{
+		public:
+			PostIterator() {}
+			~PostIterator() {}
+			void initial(tree<T>* root);
+			int& state(void);
+			tree<T>*& target(void);
+			void next(void);
+			bool still(void);
+		protected:
+			vector<Iterator> stack;
+			
+		};
+	private:
+		array<tree<T>*> childs;
+		T content;
+		tree<T>* parent;
+		size_t No;
+	};
+	template <class T> class BiTree
+	{
+	public:
+		BiTree();
+		~BiTree();
+		void clear(void);
+		void build(BiTree<T>* left, BiTree<T>* right);
+		void PreOrderTraversal(vector<BiTree<T>*>& output);
+		void PreOrderTraversal(vector<BiTree<T>*>& output, vector<BiTree<T>*>& stack);
+		void InOrderTraversal(vector<BiTree<T>*>& output);
+		void InOrderTraversal(vector<BiTree<T>*>& output, vector<BiTree<T>*>& stack);
+		void PostOrderTraversal(vector<BiTree<T>*>& output);
+		void PostOrderTraversal(vector<BiTree<T>*>& output, vector<BiTree<T>*>& stack);
+
+		T& content(void);
+		const T& content(void) const;
+		BiTree<T>*& left(void);
+		BiTree<T>*& right(void);
+	private:
+		BiTree<T>* Left;
+		BiTree<T>* Right;
+		T Content;
+	};
+
 	template <class T> class buffer
 	{
 	protected:
-		size_t Site;
-		size_t Size;
+		size_t Rear;
+		size_t Capacity;
 		size_t Head;
 		T* content;
 	public:
 		buffer();
 		~buffer();
-		void refresh(void);
+		void clear(void);
 		void append(const buffer<T>& other);
-		size_t append(const T & element);
+		size_t append(const T& element);
 		size_t expand(void);
 		void expand(const size_t L);
 		bool dequeue(T& out);
 		bool backspace(T& in);
 		bool backspace(buffer<T>& in);
-		T* vector(void);
+		T* ptr(void);
 		size_t count(void) const;
-		size_t site(void) const;
-		size_t size(void) const;
+		size_t rear(void) const;
+		size_t capacity(void) const;
 		size_t head(void) const;
 		T& operator[](size_t target) const;
 	};
+}
+namespace hyperlex
+{
+	
 	template <class T> class list
 	{
 	private:
@@ -82,6 +200,7 @@ namespace hyperlex
 		const T& top(void) const;
 		T& top(void);
 	};
+
 	template <class T> class matlist
 	{
 		/*
@@ -129,6 +248,9 @@ namespace hyperlex
 		void Realloc(size_t NewSize);
 		void Free(void);
 	};
+
+
+
 	template <class Cg, class Ca> class Dgraph
 	{
 	public:
@@ -240,6 +362,52 @@ namespace hyperlex
 	private:
 		
 	};
+
+
+
+
+	template <class T> class StaticTree
+	{
+	public:
+		struct node
+		{
+			size_t offset;
+			size_t degree;
+			T content;
+		};
+		StaticTree();
+		~StaticTree();
+		void clear(void);
+		void build(tree<T>* input);
+	private:
+		size_t Head;
+		list<node> Nodes;
+		list<size_t> next;
+	};
+	template <class T> class Tree
+	{
+	public:
+		struct node
+		{
+			vec<node*> childs;
+			T content;
+			node() {}
+			~node() {}
+			void build(list<Tree>& input);
+		};
+		Tree();
+		~Tree();
+		void move(Tree<T>& source);
+		void clear(void);
+		void build(list<Tree>&input);
+		void PostOrderTraversal(list<node*>& output) const;
+		T& head(void);
+		const T& head(void) const;
+	private:
+		node* Head;
+		void RuinSelf(void);
+	};
+	
 }
 
 
@@ -362,6 +530,8 @@ namespace hyperlex
 		char* Copy(size_t site) const;
 		void append(const BufferChar& input, int accept, int category);
 		void AppendEnd(int TerminalCount);
+		void UnitMove(size_t from, size_t to);
+		void CountReset(size_t count);
 		void Demo(FILE* fp) const;
 		size_t GetCount(void) const;
 		const char* GetWord(size_t site) const;
@@ -370,7 +540,7 @@ namespace hyperlex
 		char GetChar(size_t site) const;
 
 		template<typename T> int Build(const char* reg);
-		
+		template<typename T> int Build(FILE* fp);
 	private:
 		size_t count;
 		//list<size_t> begin;
@@ -379,6 +549,34 @@ namespace hyperlex
 		list<char> storage;
 		template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
 	};
+	class GrammarTree
+	{
+	public:
+		GrammarTree();
+		~GrammarTree();
+		struct TreeInfor
+		{
+			bool rules;
+			size_t site;
+			size_t label;
+			void* infor;
+			// rules:false, this is a leaf node, and its a node corresponding to
+			// a lexical terminal symbol then site is a location of the lexical unit 
+			// in the lexical sheet
+			// rules: true, this may be not a leaf node, 
+			// site is the corresponding production rules
+		};
+		//template<typename T> int build(const char* reg);
+		void Demo(FILE* fp, const Morpheme& input, const char* const* RulesName) const;
+		void clear(void);
+		template<typename T> int build(const Morpheme & input);
+	
+		tree<TreeInfor>* GT;
+	private:
+	};
+
+
+
 	class lexicalPanel
 	{
 	public:
@@ -597,6 +795,26 @@ namespace hyperlex
 }
 namespace hyperlex
 {
+	template<typename T> int Morpheme::Build(FILE* fp)
+	{
+		BufferChar input;
+		BufferChar result;
+		BufferChar intermediate;
+		int accept;
+		char now;
+		input << fp;
+		while (RunBuild<T>(accept, result, input, intermediate))
+		{
+			if (accept != 0) append(result, accept, T::GroupGet(accept));
+			else
+			{
+				input.dequeue(now);
+				result.append(now);
+				append(result, 0, T::GroupGet(0));
+			}
+		}
+		AppendEnd(0);
+	}
 	template<typename T> int Morpheme::Build(const char* reg)
 	{
 		BufferChar input;
@@ -630,12 +848,12 @@ namespace hyperlex
 		//char cc;
 		int state, acc;
 		int action;
-		intermediate.refresh();
+		intermediate.clear();
 		state = 0;
 		acc = 0;
 		action = 0;
 		accept = 0;
-		result.refresh();
+		result.clear();
 		while (input.dequeue(now))
 		{
 			/*state switch*/
@@ -674,7 +892,7 @@ namespace hyperlex
 				{
 					result.append(intermediate);
 					result.append(now);
-					intermediate.refresh();
+					intermediate.clear();
 					action = 2;
 				}
 				else intermediate.append(now);//continue 
@@ -699,6 +917,97 @@ namespace hyperlex
 			input.backspace(intermediate);
 		return action != 0;
 	}
+	template<typename T> int GrammarTree::build(const Morpheme& input)
+	{
+		vector<int> stack;
+		vector<tree<TreeInfor>*> TempTree;
+		tree<TreeInfor>* TreeNow;
+		bool DoNext;
+		size_t length, head, i, begin_, inputCount_;
+		int symbol, top, temp, information;
+		int GoFull, GoD, GoI, error;
+		typename T::type type;
+		stack.append(0);
+		head = 0;
+		inputCount_ = input.GetCount();
+		DoNext = true;
+		do
+		{
+			if (head >= inputCount_)
+			{
+				error = -1;
+				break;
+			}
+			top = stack.top();
+			temp = T::ACTION[top][input[head].accept];
+			information = temp / 4;
+			type = (typename T::type)(temp % 4);
+			//printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
+			//printf("head = %5zu, lex = %s, \n", head, input.GetWord(head));
+			switch (type)
+			{
+			case T::accept:
+				error = 0;
+				DoNext = false;
+				clear();
+				TempTree.pop(GT);
+				break;
+			case T::error:
+				error = information;
+				DoNext = false;
+				break;
+			case T::push:
+				
+				//printf("<%8zu, %4d: %4d , %s>\n", head, input[head].category, input[head].accept, input.GetWord(head));
+				stack.append(information);
+				TreeNow = new tree<TreeInfor>;
+				TreeNow->root().rules = false;
+				TreeNow->root().site = head;
+				TreeNow->root().infor = NULL;
+				TempTree.append(TreeNow);		
+				head += 1;
+				
+				break;
+			case T::reduce:
+				symbol = T::RulesToSymbol[information];
+				length = T::RulesLength[information];
+				begin_ = TempTree.count() - length;
+
+				TreeNow = new tree<TreeInfor>;
+				TreeNow->root().rules = true;
+				TreeNow->root().site = information;
+				TreeNow->root().infor = NULL;
+				TreeNow->build(TempTree, begin_);
+				
+				for (i = 0; i < length; i++)
+				{
+					stack.pop();
+					TempTree[begin_ + i] = NULL;
+				}
+				TempTree.recount(begin_);
+				GoFull = T::GOTO[stack.top()][symbol];
+				GoD = GoFull / 4;
+				GoI = GoFull % 4;
+				stack.append(GoD);
+				TempTree.append(TreeNow);
+				break;
+			}
+
+		} while (DoNext);
+
+		for (i = 0; i < TempTree.count(); i++)
+		{
+			//printf("<%8zu>\n", i);
+			if (TempTree[i] != NULL)
+			{
+				//printf("####\n");
+				TempTree[i]->clear();
+				delete TempTree[i];
+			}
+		}
+		return error;
+	}
+	
 }
 // grammer analysis
 namespace hyperlex
@@ -715,6 +1024,7 @@ namespace hyperlex
 		int build(BufferChar& input);
 		void Demo(FILE* fp) const;
 		void Cprint(FILE* fp) const;
+		void Demo(FILE* fp, size_t rule) const;
 		void Demo(FILE* fp, size_t rule, size_t dot) const;
 		const char* SymbolGet(long long int index) const;
 		const long long int* vector(size_t No)const;
@@ -743,8 +1053,10 @@ namespace hyperlex
 		//erminalCount + count + 1: END-EOF
 		long long int epsilon;
 		long long int end;
-		list<size_t> degeneracy;//has length of count
+		list<size_t> degeneracy;//has length of count.
+		//degeneracy[i]: rules' count of non-terminal[i]
 		list<size_t> prefix;//has length of count
+		//prefix[i]: rules' begining index of non-terminal[i]
 		list<const char*> name;//has length of count
 		list<const char*> ternimal;
 		list<production> rules;//has length of count of all rules
@@ -904,7 +1216,8 @@ namespace hyperlex
 		int GetSymbol(size_t rules) const;
 		void Cprint(const char* name, FILE* fp)const;
 		void CppPrint(const char* name, FILE* fp)const;
-		void CppStructPrint(const char* name, FILE* fp)const;
+		void CppStructPrint(const char* name, FILE* fp, const grammerS * grammer)const;
+		// now site 0 is END-EOF, site 1-N Are N terminal symbol
 		static const char* TypeToChar(type TT);
 	private:
 		size_t StateCount;
@@ -936,17 +1249,507 @@ namespace hyperlex
 #include<stdlib.h>
 namespace hyperlex
 {
+	template <class T> vector<T>::vector()
+	{
+		Count = 0;
+		Capacity = 0;
+		content = NULL;
+	}
+	template <class T> vector<T>::~vector()
+	{
+		Count = 0;
+		Capacity = 0;
+		free(content);
+		content = NULL;
+	}
+	template <class T> void vector<T>::copy(const vector<T>& source)
+	{
+		size_t i;
+		Count = source.Count;
+		Capacity = Count;
+		content = (T*)realloc(content, Capacity * sizeof(T));
+		for (i = 0; i < Count; i++)
+			content[i] = source.content[i];
+	}
+	template <class T> void vector<T>::append(const vector<T>& source)
+	{
+		size_t i, NewCount;
+		NewCount = Count + source.Count;
+		if (NewCount > Capacity)
+		{
+			content = (T*)realloc(content, NewCount * sizeof(T));
+			Capacity = NewCount;
+		}
+		for (i = 0; i < source.Count; i++)
+			content[i + Count] = source.content[i];
+		Count = NewCount;
+	}
+	template <class T> void vector<T>::append(const T& element)
+	{
+		size_t should;
+		should = append();
+		content[should] = element;
+	}
+
+	template <class T> size_t vector<T>::SearchAppend(const T& element)
+	{
+		size_t i, j;
+		const T* temp;
+		for (i = 0; i < Count; i++)
+		{
+			if (content[i] == element) return i;
+		}
+		append(element);
+		return Count - 1;
+	}
+	template <class T> void vector<T>::clear(void)
+	{
+		Count = 0;
+	}
+	template <class T> void vector<T>::recount(size_t NewCount)
+	{
+		if (NewCount > Capacity)
+		{
+			//std::cout <<"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"<< std::endl;
+			//std::cout << "NewCount: " << NewCount << "Capacity: " << Capacity << std::endl;
+			//std::cout << "old content: " << content << std::endl;
+			content = (T*)realloc(content, NewCount * sizeof(T));
+			//std::cout << "new content: " << content << std::endl;
+			Capacity = NewCount;
+		}
+		Count = NewCount;
+	}
+	template <class T> void vector<T>::recapacity(size_t NewSize)
+	{
+		if (NewSize <= Count) Count = NewSize;
+		content = (T*)realloc(content, NewSize * sizeof(T));
+		Capacity = NewSize;
+	}
+	template <class T> size_t vector<T>::pop(T& element)
+	{
+		if (Count != 0)
+		{
+			Count -= 1;
+			element = content[Count];
+			return Count + 1;
+		}
+		return Count;
+	}
+	template <class T> size_t vector<T>::top(T& element)
+	{
+		if (Count != 0)
+		{
+			element = content[Count - 1];
+		}
+		return Count;
+	}
+	template <class T> void vector<T>::pop(void)
+	{
+		if (Count != 0) Count -= 1;
+	}
+	template <class T> size_t vector<T>::append(void)
+	{
+		size_t should, new_size;
+		if (Count >= Capacity)
+		{
+			new_size = (Capacity + Capacity / 4 + 8);
+			content = (T*)realloc(content, new_size * sizeof(T));
+			Capacity = new_size;
+		}
+		should = Count;
+		Count += 1;
+		return should;
+	}
+	template <class T> size_t vector<T>::count(void) const
+	{
+		return Count;
+	}
+	template <class T> size_t vector<T>::capacity(void) const
+	{
+		return Capacity;
+	}
+	template <class T> void vector<T>::swap(vector<T>& other)
+	{
+		T* middle;
+		middle = other.content;
+		other.content = content;
+		content = middle;
+
+		size_t MM;
+
+		MM = other.Count;
+		other.Count = Count;
+		Count = MM;
+
+		MM = other.Capacity;
+		other.Capacity = Capacity;
+		Capacity = MM;
+	}
+	template <class T> const T* vector<T>::ptr(void) const
+	{
+		return content;
+	}
+	template <class T> T* vector<T>::ptr(void)
+	{
+		return content;
+	}
+	template <class T> const T* vector<T>::ptr(size_t offset)const
+	{
+		return content + offset;
+	}
+	template <class T> T* vector<T>::ptr(size_t offset)
+	{
+		return content + offset;
+	}
+	template <class T> const T& vector<T>::operator[](size_t target) const
+	{
+		return content[target];
+	}
+	template <class T> T& vector<T>::operator[](size_t target)
+	{
+		return content[target];
+	}
+	template <class T> void vector<T>::value(const T& element)
+	{
+		size_t i;
+		for (i = 0; i < Count; i++)
+			content[i] = element;
+	}
+	template <class T> const T& vector<T>::top(void) const
+	{
+		size_t target;
+		target = Count != 0 ? Count - 1 : 0;
+		return content[target];
+	}
+	template <class T> T& vector<T>::top(void)
+	{
+		size_t target;
+		target = Count != 0 ? Count - 1 : 0;
+		return content[target];
+	}
+
+
+
+	template <class T> array<T>::array()
+	{
+		Length = 0;
+		content = NULL;
+	}
+	template <class T> array<T>::~array()
+	{
+		Length = 0;
+		free(content);
+		content = NULL;
+	}
+	template <class T> size_t array<T>::length(void) const
+	{
+		return Length;
+	}
+	template <class T> T* array<T>::ptr(void)
+	{
+		return content;
+	}
+	template <class T> T* array<T>::ptr(size_t offset)
+	{
+		return content + offset;
+	}
+	template <class T> const T* array<T>::ptr(size_t offset) const
+	{
+		return content + offset;
+	}
+	template <class T> T& array<T>::operator[](size_t target)
+	{
+		return content[target];
+	}
+	template <class T> T& array<T>::operator[](const size_t target) const
+	{
+		return content[target];
+	}
+	template <class T> void array<T>::Malloc(size_t NewSize)
+	{
+		Length = NewSize;
+		content = (T*)malloc(NewSize * sizeof(T));
+	}
+	template <class T> void array<T>::Realloc(size_t NewSize)
+	{
+		content = (T*)realloc(content, NewSize * sizeof(T));
+		Length = NewSize;
+	}
+	template <class T> void array<T>::Free(void)
+	{
+		Length = 0;
+		free(content);
+		content = NULL;
+	}
+	template <class T> void array<T>::value(const T& element)
+	{
+		size_t i;
+		for (i = 0; i < Length; i++)
+			content[i] = element;
+	}
+
+	template <class T> tree<T>::tree()
+	{
+		parent = NULL;
+		No = 0;
+	}
+	template <class T> tree<T>::~tree()
+	{
+	}
+	template <class T> void tree<T>::clear(void)
+	{
+		vector<tree<T>*> deleted;
+		size_t i;
+		PostOrderTraversal(deleted);
+		for (i = 1; i < deleted.count(); i++)
+			delete deleted[i - 1];
+		childs.Free();
+	}
+	template <class T> void tree<T>::PostOrderTraversal(vector<tree<T>*>& output)
+	{
+		vector<bool> StackState;
+		vector<tree<T>*> StackSite;
+		tree<T>* here;
+		bool label;
+		size_t i;
+		for (i = childs.length(); i != 0; i--)
+		{
+			StackSite.append(childs[i - 1]);
+			StackState.append(false);
+		}
+		while (StackState.pop(label) != 0)
+		{
+			StackSite.pop(here);
+			if (here == NULL) continue;
+			if (label) output.append(here);
+			else
+			{
+				StackSite.append(here);
+				StackState.append(true);
+
+				for (i = here->childs.length(); i != 0; i--)
+				{
+					StackSite.append(here->childs[i - 1]);
+					StackState.append(false);
+				}
+			}
+		}
+		output.append((tree<T>*)this);
+	}
+	template <class T> void tree<T>::build(vector<tree<T>*>& input)
+	{
+		size_t i;
+		childs.Realloc(input.count());
+		for (i = 0; i < input.count(); i++)
+		{
+			childs[i] = input[i];
+			childs[i]->parent = this;
+			childs[i]->No = i;
+		}
+	}
+	template <class T> void tree<T>::build(vector<tree<T>*>& input, size_t offset)
+	{
+		size_t i;
+		if (input.count() <= offset)
+		{
+			childs.Realloc(0);
+			return;
+		}
+		childs.Realloc(input.count() - offset);
+		for (i = 0; i < input.count() - offset; i++)
+		{
+			childs[i] = input[i + offset];
+			childs[i]->parent = this;
+			childs[i]->No = i;
+		}
+	}
+	template <class T> T& tree<T>::root(void)
+	{
+		return content;
+	}
+	template <class T> const T& tree<T>::root(void) const
+	{
+		return content;
+	}
+	template <class T> size_t tree<T>::ChildCount(void) const
+	{
+		return childs.length();
+	}
+	template <class T> tree<T>* tree<T>::child(size_t No) const
+	{
+		return childs[No];
+	}
+	template <class T> int& tree<T>::PostIterator::state(void)
+	{
+		return stack.top().state;
+	}
+	template <class T> tree<T>*& tree<T>::PostIterator::target(void)
+	{
+		return stack.top().target;
+	}
+	template <class T> void tree<T>::PostIterator::initial(tree<T>* root)
+	{
+		Iterator now;
+		stack.clear();
+		if (root != NULL)
+		{
+			now.state = 0;
+			now.target = root;
+			stack.append(now);
+		}
+	}
+	template <class T> void tree<T>::PostIterator::next(void)
+	{
+		size_t i; 
+		Iterator now, parent;
+		tree<T>* here;
+		if (stack.pop(parent) != 0)
+		{
+			if (parent.state == 0)
+			{
+				parent.state = 1;
+				stack.append(parent);
+				here = parent.target;
+				now.state = 0;
+				for (i = here->childs.length(); i != 0; i--)
+				{
+					now.target = here->childs[i - 1];
+					stack.append(now);
+				}
+			}
+		}
+		
+	}
+	template <class T> bool tree<T>::PostIterator::still(void)
+	{
+		return stack.count() != 0;
+	}
+
+
+	template <class T> BiTree<T>::BiTree()
+	{
+		Left = NULL;
+		Right = NULL;
+	}
+	template <class T> BiTree<T>::~BiTree()
+	{
+		Left = NULL;
+		Right = NULL;
+	}
+	template <class T> void BiTree<T>::clear(void)
+	{
+		vector<BiTree<T>*> output;
+		size_t i;
+		PostOrderTraversal(output);
+		for (i = 1; i < output.count(); i++) delete output[i - 1];
+		Left = NULL;
+		Right = NULL;
+	}
+	template <class T> void BiTree<T>::build(BiTree<T>* left_, BiTree<T>* right_)
+	{
+		Left = left_;
+		Right = right_;
+	}
+	template <class T> T& BiTree<T>::content(void)
+	{
+		return Content;
+	}
+	template <class T> const T& BiTree<T>::content(void) const
+	{
+		return Content;
+	}
+	template <class T> BiTree<T>*& BiTree<T>::left(void)
+	{
+		return Left;
+	}
+	template <class T> BiTree<T>*& BiTree<T>::right(void)
+	{
+		return Right;
+	}
+	template <class T> void BiTree<T>::PreOrderTraversal(vector<BiTree<T>*>& output)
+	{
+		vector<BiTree<T>*> stack;
+		PreOrderTraversal(output, stack);
+	}
+	template <class T> void BiTree<T>::PreOrderTraversal(vector<BiTree<T>*>& output, vector<BiTree<T>*>& stack)
+	{
+		BiTree<T>* now;
+		stack.clear();
+		stack.append(this);
+		while (stack.pop(now) != 0)
+		{
+			if (now != NULL)
+			{
+				output.append(now);
+				stack.append(now->Right);
+				stack.append(now->Left);
+			}
+		}
+	}
+	template <class T> void BiTree<T>::InOrderTraversal(vector<BiTree<T>*>& output)
+	{
+		vector<BiTree<T>*> stack;
+		InOrderTraversal(output, stack);
+	}
+	template <class T> void BiTree<T>::InOrderTraversal(vector<BiTree<T>*>& output, vector<BiTree<T>*>& stack)
+	{
+		BiTree<T>* now;
+		stack.clear();
+		now = this;
+		while (now != NULL || stack.count() != 0)
+		{
+			while (now != NULL)
+			{
+				stack.append(now);
+				now = now->Left;
+			}
+			stack.pop(now);
+			output.append(now);
+			now = now->Right;
+		}
+	}
+	template <class T> void BiTree<T>::PostOrderTraversal(vector<BiTree<T>*>& output)
+	{
+		vector<BiTree<T>*> stack;
+		PostOrderTraversal(output, stack);
+	}
+	template <class T> void BiTree<T>::PostOrderTraversal(vector<BiTree<T>*>& output, vector<BiTree<T>*>& stack)
+	{
+		BiTree<T>* now;
+		BiTree<T>* LeftMost, * LastOutput;
+		stack.clear();
+		now = this;
+		LastOutput = NULL;
+		while (now != NULL || stack.count() != 0)
+		{
+			while (now != NULL)
+			{
+				stack.append(now);
+				now = now->Left;
+			}
+			LeftMost = stack.top();
+			if (LeftMost->Right == NULL || LeftMost->Right == LastOutput)
+			{
+				output.append(LeftMost);
+				LastOutput = LeftMost;
+				stack.pop();
+			}
+			else
+				now = LeftMost->Right;
+		}
+	}
+
 	template <class T> buffer<T>::buffer()
 	{
-		Site = 0;
-		Size = 0;
+		Rear = 0;
+		Capacity = 0;
 		Head = 0;
 		content = NULL;
 	}
 	template <class T> buffer<T>::~buffer()
 	{
-		Site = 0;
-		Size = 0;
+		Rear = 0;
+		Capacity = 0;
 		Head = 0;
 		free(content);
 		content = NULL;
@@ -955,13 +1758,13 @@ namespace hyperlex
 	{
 		size_t L, i;
 		L = other.count();
-		if (Site + L > Size)
+		if (Rear + L > Capacity)
 		{
-			content = (T*)realloc(content, (Size + L + 4) * sizeof(T));
-			Size = Size + L + 4;
+			content = (T*)realloc(content, (Capacity + L + 4) * sizeof(T));
+			Capacity = Capacity + L + 4;
 		}
-		for (i = 0; i < L; i++) content[i + Site] = other.content[i + other.Head];
-		Site += L;
+		for (i = 0; i < L; i++) content[i + Rear] = other.content[i + other.Head];
+		Rear += L;
 		return;
 	}
 	template <class T> size_t buffer<T>::append(const T& element)
@@ -971,36 +1774,36 @@ namespace hyperlex
 		content[should] = element;
 		return should;
 	}
-	template <class T> void buffer<T>::refresh(void)
+	template <class T> void buffer<T>::clear(void)
 	{
 		Head = 0;
-		Site = 0;
+		Rear = 0;
 	}
 	template <class T> size_t buffer<T>::expand(void)
 	{
 		size_t should, new_size;
-		if (Site >= Size)
+		if (Rear >= Capacity)
 		{
-			new_size = (Size + Size / 4 + 8);
+			new_size = (Capacity + Capacity / 4 + 8);
 			content = (T*)realloc(content, new_size * sizeof(T));
-			Size = new_size;
+			Capacity = new_size;
 		}
-		should = Site;
-		Site += 1;
+		should = Rear;
+		Rear += 1;
 		return should;
 	}
 	template <class T> void buffer<T>::expand(size_t L)
 	{
-		if (Site + L > Size)
+		if (Rear + L > Capacity)
 		{
-			content = (T*)realloc(content, (Size + L + 4) * sizeof(T));
-			Size = Size + L + 4;
+			content = (T*)realloc(content, (Capacity + L + 4) * sizeof(T));
+			Capacity = Capacity + L + 4;
 		}
 		return;
 	}
 	template <class T> bool buffer<T>::dequeue(T& out)
 	{
-		if (Head < Site)
+		if (Head < Rear)
 		{
 			out = content[Head];
 			Head += 1;
@@ -1021,7 +1824,7 @@ namespace hyperlex
 	template <class T> bool buffer<T>::backspace(buffer<T>& in)
 	{
 		size_t i, LL;
-		LL = in.Site - in.Head;
+		LL = in.Rear - in.Head;
 		if (LL <= Head)
 		{
 			Head -= LL;
@@ -1029,27 +1832,27 @@ namespace hyperlex
 			{
 				content[Head + i] = in[in.Head + i];
 			}
-			in.refresh();
+			in.clear();
 			return true;
 		}
 		return false;
 	}
-	template <class T> T* buffer<T>::vector(void)
+	template <class T> T* buffer<T>::ptr(void)
 	{
 		//append('\0');
 		return content + Head;
 	}
 	template <class T> size_t buffer<T>::count(void) const
 	{
-		return (size_t)(Site - Head);
+		return (size_t)(Rear - Head);
 	}
-	template <class T> size_t buffer<T>::site(void) const
+	template <class T> size_t buffer<T>::rear(void) const
 	{
-		return Site;
+		return Rear;
 	}
-	template <class T> size_t buffer<T>::size(void) const
+	template <class T> size_t buffer<T>::capacity(void) const
 	{
-		return Size;
+		return Capacity;
 	}
 	template <class T> size_t buffer<T>::head(void) const
 	{
@@ -1059,8 +1862,9 @@ namespace hyperlex
 	{
 		return content[target];
 	}
-
-
+}
+namespace hyperlex
+{
 	template <class T> list<T>::list()
 	{
 		Count = 0;
@@ -1416,13 +2220,13 @@ namespace hyperlex
 	template <class Cg, class Ca> void Dgraph<Cg, Ca>::refresh(void)
 	{
 		vertice.refresh();
-		arcs.refresh();
+		arcs.clear();
 	}
 	template <class Cg, class Ca> void Dgraph<Cg, Ca>::refresh(size_t newlength)
 	{
 		size_t i;
 		vertice.refresh(newlength);
-		arcs.refresh();
+		arcs.clear();
 		for (i = 0; i < vertice.count(); i++)
 		{
 			vertice[i].first = SizeMax;
@@ -1477,7 +2281,7 @@ namespace hyperlex
 	{
 		size_t ArcsOffset;
 		size_t i, length, temp;
-		ArcsOffset = arcs.site();
+		ArcsOffset = arcs.rear();
 		length = right.vertice.count();
 		for (i = 0; i < length; i++)
 		{
@@ -1531,7 +2335,7 @@ namespace hyperlex
 	{
 		size_t i;
 		vertice.refresh(newlength);
-		arcs.refresh();
+		arcs.clear();
 		for (i = 0; i < vertice.count(); i++)
 		{
 			vertice[i].first = SizeMax;
@@ -1980,7 +2784,7 @@ namespace hyperlex
 		if (site == SizeMax) return;
 		size_t now;
 		s.refresh();
-		output.refresh();
+		output.clear();
 		inorderTraversal(output, s);
 		while (output.dequeue(now))
 		{
@@ -1995,7 +2799,7 @@ namespace hyperlex
 		//size_t newHead;
 		size_t now, new_node, temp;
 		s.refresh();
-		output.refresh();
+		output.clear();
 		new_node = SizeMax;
 		source.postorderTraversal(output, s);
 		s.refresh();
@@ -2066,8 +2870,121 @@ namespace hyperlex
 		//std::cout << "(Nodes + parent)->right: " << (Nodes + parent)->right << std::endl;
 	}
 
-
 	
+	template <class T> StaticTree<T>::StaticTree()
+	{
+
+	}
+	template <class T> StaticTree<T>::~StaticTree()
+	{
+
+	}
+	template <class T> void StaticTree<T>::clear(void)
+	{
+
+	}
+	template <class T> void StaticTree<T>::build(tree<T>* input)
+	{
+
+	}
+
+	template <class T> Tree<T>::Tree()
+	{
+		Head = NULL;
+	}
+	template <class T> Tree<T>::~Tree()
+	{
+		RuinSelf();
+	}
+	template <class T> void Tree<T>::RuinSelf(void)
+	{
+		list<node*> deleted;
+		size_t i;
+		if (Head == NULL) return;
+		PostOrderTraversal(deleted);
+		for (i = 0; i < deleted.count(); i++)
+			delete deleted[i];
+		Head = NULL;
+	}
+	template <class T> void Tree<T>::move(Tree<T>& source)
+	{
+		Head = source.Head;
+		source.Head = NULL;
+	}
+	template <class T> void Tree<T>::clear(void)
+	{
+		RuinSelf();
+	}
+	template <class T> void Tree<T>::PostOrderTraversal(list<node*>& output) const
+	{
+		/*struct infor
+		{
+			node* site;
+			bool state;
+		};
+		list<infor> stack;
+		infor now;
+		node* here;
+		size_t i;
+		now.site = Head;
+		now.state = false;
+		stack.append(now);
+		while (stack.pop(now) != 0)
+		{
+			here = now.site;
+			if (here == NULL) continue;
+			if (now.state) output.append(here);
+			else
+			{
+				now.state = true;
+				stack.append(now);
+				now.state = false;
+				for (i = 0; i < here->childs.size(); i++)
+				{
+					now.site = here->childs[i];
+					stack.append(now);
+				}
+			}
+		}
+	*/
+	}
+	template <class T> void Tree<T>::build(list<Tree>& input)
+	{
+		size_t i;
+		clear();
+		Head = new node();
+		Head->childs.Realloc(input.count());
+		for (i = 0; i < input.count(); i++)
+		{
+			Head->childs[i] = input[i].Head;
+			input[i].Head = NULL;
+		}
+	}
+	template <class T> void Tree<T>::node::build(list<Tree>& input)
+	{
+		size_t i;
+		node* now;
+		Tree<T> temp;
+		for (i = 0; i < childs.size(); i++)
+		{
+			temp.Head = childs[i];
+			temp.clear();
+		}
+		childs.Realloc(input.count());
+		for (i = 0; i < input.count(); i++)
+		{
+			childs[i] = input[i].Head;
+			input[i].Head = NULL;
+		}
+	}
+	template <class T> T& Tree<T>::head(void)
+	{
+		return Head->content;
+	}
+	template <class T> const T& Tree<T>::head(void) const
+	{
+		return Head->content;
+	}
 }
 namespace hyperlex
 {
