@@ -58,6 +58,7 @@ namespace hyperlex
 		void value(const T& element);
 		const T& top(void) const;
 		T& top(void);
+		//friend bool operator<(size_t i, const vector<T>& right);
 	};
 	template <class T> class array
 	{
@@ -134,9 +135,11 @@ namespace hyperlex
 		const T& content(void) const;
 		BiTree<T>*& left(void);
 		BiTree<T>*& right(void);
+		BiTree<T>* copy(void);
 	private:
 		BiTree<T>* Left;
 		BiTree<T>* Right;
+		void* tempLabel;
 		T Content;
 	};
 
@@ -164,6 +167,21 @@ namespace hyperlex
 		size_t capacity(void) const;
 		size_t head(void) const;
 		T& operator[](size_t target) const;
+	};
+	class BufferChar : public buffer<char>
+	{
+	public:
+		BufferChar();
+		~BufferChar();
+		void operator<<(FILE* fp);
+		char* ptr(void);
+		char* CopyVector(void) const;
+		size_t CopyVector(vector<char>& storage, size_t& length) const;
+		void operator=(const char* input);
+		long int DequeueInt(void);
+
+	private:
+
 	};
 }
 namespace hyperlex
@@ -200,7 +218,6 @@ namespace hyperlex
 		const T& top(void) const;
 		T& top(void);
 	};
-
 	template <class T> class matlist
 	{
 		/*
@@ -349,19 +366,7 @@ namespace hyperlex
 		size_t FirstEmpty;
 		node* Nodes;
 	};
-	class BufferChar : public buffer<char>
-	{
-	public:
-		BufferChar();
-		~BufferChar();
-		void operator<<(FILE* fp);
-		char* vector(void);
-		char* CopyVector(void) const;
-		size_t CopyVector(list<char> & storage, size_t & length) const;
-		void operator=(const char* input);
-	private:
-		
-	};
+	
 
 
 
@@ -410,7 +415,230 @@ namespace hyperlex
 	
 }
 
+// input analysis and lexical analysis.
+namespace hyperlex
+{
+	class Morpheme
+	{
+		/**
+		* Structure storing lexical analysis results
+		* @struct result
+		* @member accept   the lexical unit is identified as
+		* @member category Lexical category identifier
+		* @member length   Length of matched lexical unit
+		* @member begin    Starting position in input stream
+		*/
+	public:
+		struct result
+		{
+			int accept;
+			int category;
+			size_t length;
+			size_t begin;
+		};
+		Morpheme();
+		~Morpheme();
+		char* Copy(size_t site) const;
+		void append(const BufferChar& input, int accept, int category);
+		void AppendEnd(int TerminalCount);
+		void UnitMove(size_t from, size_t to);
+		void CountReset(size_t count);
+		void Demo(FILE* fp) const;
+		size_t GetCount(void) const;
+		const char* GetWord(size_t site) const;
+		const result& operator[](const size_t target) const;
 
+		char GetChar(size_t site) const;
+
+		template<typename T> int Build(const char* reg);
+		template<typename T> int Build(FILE* fp);
+	private:
+		size_t count;
+		//list<size_t> begin;
+		//list<size_t> length;
+		vector<result> lex;
+		vector<char> storage;
+		template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
+	};
+	class GrammarTree
+	{
+	public:
+		GrammarTree();
+		~GrammarTree();
+		struct TreeInfor
+		{
+			bool rules;
+			size_t site;
+			size_t label;
+			void* infor;
+			// rules:false, this is a leaf node, and its a node corresponding to
+			// a lexical terminal symbol then site is a location of the lexical unit 
+			// in the lexical sheet
+			// rules: true, this may be not a leaf node, 
+			// site is the corresponding production rules
+		};
+		//template<typename T> int build(const char* reg);
+		void Demo(FILE* fp, const Morpheme& input, const char* const* RulesName) const;
+		void clear(void);
+		template<typename T> int build(const Morpheme& input);
+
+		tree<TreeInfor>* GT;
+	private:
+	};
+	class RegularExp
+	{
+	public:
+		RegularExp();
+		~RegularExp();
+		enum NodeType
+		{
+			Concatenation = 0,
+			Alternation = 1,
+			ZeroOrMore = 2,
+			OneOrMore = 3,
+			ZeroOrOne = 4,
+			Range = 5,
+		};
+		struct item
+		{
+			int lower;
+			int upper;
+			NodeType type;
+			void Demo(FILE* fp);
+			void copy(const item& source);
+		};
+
+		void Demo(FILE* fp) const;
+		static void Demo(FILE* fp, NodeType T);
+		static void Demo(FILE* fp, int L, int U);
+		void clear(void);
+
+		int set(const char* input);
+
+		void copy(RegularExp& source);
+		void set(int L, int U);
+		void set(int leaf);
+		void set(BiTree<item>* reg);
+		void set(BiTree<item>* reg, NodeType T);
+		void set(BiTree<item>* regL, BiTree<item>* regR, NodeType T);
+		void set(RegularExp* reg);
+		void set(RegularExp* reg, NodeType T);
+		void set(RegularExp* regL, RegularExp* regR, NodeType T);
+		void set(RegularExp* regL, RegularExp* regR);
+		void set(const Morpheme& eme, hyperlex::tree<GrammarTree::TreeInfor>* Tree);
+	private:
+		BiTree<item>* tree;
+		void set(void);
+		int fastBuild(Morpheme& eme);
+		int standardBuild(Morpheme& eme);
+	};
+	class InputPanel
+	{
+	public:
+		typedef const vector<const char*> cvccp;
+		InputPanel();
+		~InputPanel();
+		int build(FILE* fp);
+		int build(const char* input);
+		void demo(FILE* fp);
+		void ErrorDemo(FILE* fp);
+
+		struct RegContent
+		{
+			const char* name;
+			int priority;
+			//When two distinct regular expressions match simultaneously, 
+			//the regular expression with the higher priority number is accepted.
+			RegularExp* reg;
+			RegContent();
+			~RegContent();
+			void SetName(const char* input);
+		};
+		struct RegGroup
+		{
+			const char* name;
+			int priority;
+			vector<RegContent*> regs;
+			size_t prefix;
+			RegGroup();
+			~RegGroup();
+			void SetName(const char* input);
+		};
+		struct Rules
+		{
+			const char* name;
+			vector<long int> formula;
+			Rules();
+			~Rules();
+			void SetName(const char* input);
+			void demo(FILE* fp, cvccp& N, cvccp& T);
+		};
+		struct Group
+		{
+			size_t group;
+			const char* name;
+			vector<Rules*> rules;
+			size_t count;
+			size_t offset;
+			Group();
+			~Group();
+			void SetName(const char* input);
+
+		};
+		enum errorType
+		{
+			NoError = 0,
+			ConflictRegGroupName = 1,
+			repeatRegName = 2,
+			missingId = 3,
+			repeatGGroupName = 4,
+			repeatGName = 5,
+			ErrorNonTernimal
+		};
+	private:
+		typedef hyperlex::tree<GrammarTree::TreeInfor> GLTree;
+		typedef hyperlex::tree<GrammarTree::TreeInfor>::PostIterator GTIter;
+		bool GrammarEnclosed;
+		vector<RegGroup*> RegG;
+		//list<RegContent*> RegC;
+		vector<Group*> GrammarG;
+
+		vector<const char*> Terminal;
+		vector<const char*> NonTernimal;
+		char* RootName;
+
+		vector<Rules*> rules;
+
+		errorType errorCode;
+		size_t errorInfor1;
+		size_t errorInfor2;
+		const char* errorInfor3;
+
+		void demoL(FILE* fp);
+		void demoG(FILE* fp);
+
+		int buildGanalysis(const Morpheme& eme);
+		int buildAll(const Morpheme& eme, GrammarTree& Tree);
+
+		int buildL(const Morpheme& eme, GLTree* Tree);
+		void addVoidGroup(void);
+		int RegGroupName(size_t& siteReturn, const Morpheme& eme, GLTree* Tree);
+		int RegName(size_t& siteReturn, size_t group, const Morpheme& eme, GLTree* Tree);
+		bool RegSearch(size_t& group, size_t& site, const char* name);
+		int RegBuild(size_t siteReturn, size_t group, const Morpheme& eme, GLTree* Tree);
+		void NeglectNullToken(Morpheme& eme) const;
+
+		int buildG(const Morpheme& eme, GLTree* Tree);
+		int buildRules(const Morpheme& eme, GLTree* Tree);
+		void addAllGroup(void);
+		void addAllGroup02(void);
+		int GrammarGroup(size_t& GroupSite, const Morpheme& eme, GLTree* Tree);
+		int RulesAppend(size_t GroupSite, GLTree* Name, const Morpheme& eme, GLTree* Tree);
+		void addTerminal(void);
+		long int SymbolAdd(const char* symbol);
+		int NonTerminalSort(void);
+	};
+}
 namespace hyperlex
 {
 	class NFA;
@@ -423,6 +651,7 @@ namespace hyperlex
 	class Gsheet;
 }
 // lexical analysis
+
 namespace hyperlex
 {
 	class ShrinkList
@@ -463,7 +692,7 @@ namespace hyperlex
 			char upper;
 			char lower;
 			NodeType type;
-			void Demo(FILE* fp);
+			void Demo(FILE* fp)const;
 		};
 
 		static int next_Reg(int state, const char c);
@@ -515,65 +744,6 @@ namespace hyperlex
 		void link(size_t site, size_t L, size_t R, NodeType T);
 		void link(size_t site, size_t L, NodeType T);
 	};
-	class Morpheme
-	{
-	public:
-		struct result
-		{
-			int accept;
-			int category;
-			size_t length;
-			size_t begin;
-		};
-		Morpheme();
-		~Morpheme();
-		char* Copy(size_t site) const;
-		void append(const BufferChar& input, int accept, int category);
-		void AppendEnd(int TerminalCount);
-		void UnitMove(size_t from, size_t to);
-		void CountReset(size_t count);
-		void Demo(FILE* fp) const;
-		size_t GetCount(void) const;
-		const char* GetWord(size_t site) const;
-		const result & operator[](const size_t target) const;
-
-		char GetChar(size_t site) const;
-
-		template<typename T> int Build(const char* reg);
-		template<typename T> int Build(FILE* fp);
-	private:
-		size_t count;
-		//list<size_t> begin;
-		//list<size_t> length;
-		list<result> lex;
-		list<char> storage;
-		template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
-	};
-	class GrammarTree
-	{
-	public:
-		GrammarTree();
-		~GrammarTree();
-		struct TreeInfor
-		{
-			bool rules;
-			size_t site;
-			size_t label;
-			void* infor;
-			// rules:false, this is a leaf node, and its a node corresponding to
-			// a lexical terminal symbol then site is a location of the lexical unit 
-			// in the lexical sheet
-			// rules: true, this may be not a leaf node, 
-			// site is the corresponding production rules
-		};
-		//template<typename T> int build(const char* reg);
-		void Demo(FILE* fp, const Morpheme& input, const char* const* RulesName) const;
-		void clear(void);
-		template<typename T> int build(const Morpheme & input);
-	
-		tree<TreeInfor>* GT;
-	private:
-	};
 
 
 
@@ -609,6 +779,7 @@ namespace hyperlex
 		void SetGrammer(void);
 		void SetReg(void);
 		void SetRegS(void);
+		void SetRegFinal(void);
 		void append(infor* II);
 
 		void Demo(FILE*fp) const; 
@@ -814,6 +985,7 @@ namespace hyperlex
 			}
 		}
 		AppendEnd(0);
+		return 0;
 	}
 	template<typename T> int Morpheme::Build(const char* reg)
 	{
@@ -834,6 +1006,7 @@ namespace hyperlex
 			}
 		}
 		AppendEnd(0);
+		return 0;
 	}
 	template<typename T> bool Morpheme::RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate)
 	{
@@ -942,8 +1115,8 @@ namespace hyperlex
 			temp = T::ACTION[top][input[head].accept];
 			information = temp / 4;
 			type = (typename T::type)(temp % 4);
-			//printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
-			//printf("head = %5zu, lex = %s, \n", head, input.GetWord(head));
+			printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
+			printf("head = %5zu, lex = %s, \n", head, input.GetWord(head));
 			switch (type)
 			{
 			case T::accept:
@@ -953,7 +1126,7 @@ namespace hyperlex
 				TempTree.pop(GT);
 				break;
 			case T::error:
-				error = information;
+				error = temp;
 				DoNext = false;
 				break;
 			case T::push:
@@ -1050,7 +1223,7 @@ namespace hyperlex
 		//[0,count-1] non-terminal
 		//[count,TerminalCount + count -1]; terminal
 		//TerminalCount + count: epsilon
-		//erminalCount + count + 1: END-EOF
+		//TerminalCount + count + 1: END-EOF
 		long long int epsilon;
 		long long int end;
 		list<size_t> degeneracy;//has length of count.
@@ -1427,7 +1600,10 @@ namespace hyperlex
 		target = Count != 0 ? Count - 1 : 0;
 		return content[target];
 	}
-
+	//template <class T> bool operator<(size_t i, const vector<T>& right)
+	//{
+	//	return i < right.Count;
+	//}
 
 
 	template <class T> array<T>::array()
@@ -1571,6 +1747,7 @@ namespace hyperlex
 	{
 		return content;
 	}
+
 	template <class T> size_t tree<T>::ChildCount(void) const
 	{
 		return childs.length();
@@ -1630,6 +1807,7 @@ namespace hyperlex
 	{
 		Left = NULL;
 		Right = NULL;
+		tempLabel = NULL;
 	}
 	template <class T> BiTree<T>::~BiTree()
 	{
@@ -1644,6 +1822,33 @@ namespace hyperlex
 		for (i = 1; i < output.count(); i++) delete output[i - 1];
 		Left = NULL;
 		Right = NULL;
+	}
+	template <class T> BiTree<T>* BiTree<T>::copy(void)
+	{
+		vector<BiTree<T>*> output;
+		size_t i;
+		BiTree<T>* now, *temp;
+		PostOrderTraversal(output);
+		for (i = 0; i < output.count(); i++)
+		{
+			now = output[i];
+			temp = new BiTree<T>;
+			temp->Content.copy(now->Content);
+			if (now->Left != NULL)
+			{
+				temp->Left = (BiTree<T>*)now->Left->tempLabel;
+				now->Left->tempLabel = NULL;
+			}
+			if (now->Right != NULL)
+			{
+				temp->Right = (BiTree<T>*)now->Right->tempLabel;
+				now->Right->tempLabel = NULL;
+			}
+			now->tempLabel = (void*)temp;
+		}
+		now = (BiTree<T>*)tempLabel;
+		tempLabel = NULL;
+		return now;
 	}
 	template <class T> void BiTree<T>::build(BiTree<T>* left_, BiTree<T>* right_)
 	{
@@ -2508,7 +2713,7 @@ namespace hyperlex
 				{
 					//std::cout << "Scount: " << Scount << ", symbol = " << symbol << std::endl;
 					old = Dstates.row();
-					sheet[now][(size_t)ele] = Dstates.SearchAdd(to.vector());
+					sheet[now][(size_t)ele] = (int)(Dstates.SearchAdd(to.vector()));
 					if (old != Dstates.row())
 					{
 						sheet.append();

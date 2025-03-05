@@ -16,6 +16,31 @@ static void strfree(const char** strs, size_t length);
 static void inverse(list<size_t>& out, const list<size_t>& in);
 static int PostfixSwitch_small(char c);
 
+long int static IntGet(const char* list, size_t end, size_t& head)
+{
+	char c, state;
+	long int number;
+	long int Sign = 1;
+	number = 0;
+	state = 0;
+	do
+	{
+		c = dequeue(list, end, head);
+		switch (state)
+		{
+		case 0:
+			if (c >= '0' && c <= '9') number = c - '0';
+			else if (c == '-') Sign = -1;
+			state = 1;
+			break;
+		case 1:
+			if (c >= '0' && c <= '9') number = number * 10 + c - '0';
+			else state = 2;
+			break;
+		}
+	} while (state != 2);
+	return number * Sign;
+}
 BufferChar::BufferChar()
 {
 }
@@ -33,8 +58,10 @@ void BufferChar::operator=(const char* input)
 	Head = 0;
 	Rear = 0;
 	for (i = 0; input[i] != '\0'; i++) append(input[i]);
+	append('\0');
+	Rear -= 1;
 }
-char* BufferChar::vector(void)
+char* BufferChar::ptr(void)
 {
 	append('\0');
 	Rear -= 1;
@@ -50,7 +77,7 @@ char* BufferChar::CopyVector(void) const
 	Newchar[i] = '\0';
 	return Newchar;
 }
-size_t BufferChar::CopyVector(list<char>& storage, size_t& length) const
+size_t BufferChar::CopyVector(vector<char>& storage, size_t& length) const
 {
 	size_t i;
 	size_t Newchar;
@@ -60,6 +87,12 @@ size_t BufferChar::CopyVector(list<char>& storage, size_t& length) const
 		storage.append(content[i + Head]);
 	return Newchar;
 }
+
+long int BufferChar::DequeueInt(void)
+{
+	return IntGet(content, Rear, Head);
+}
+
 
 
 Morpheme::Morpheme()
@@ -89,7 +122,7 @@ size_t Morpheme::GetCount(void) const
 }
 const char* Morpheme::GetWord(size_t site) const
 {
-	return storage.vector(lex[site].begin);
+	return storage.ptr(lex[site].begin);
 }
 void Morpheme::append(const BufferChar& input, int accept, int category)
 {
@@ -127,7 +160,7 @@ void Morpheme::Demo(FILE* fp)const
 	fprintf(fp, "count = %zu\n", count);
 	for (i = 0; i < count; i++)
 	{
-		fprintf(fp, "<%4d : %4d , %s>\n", lex[i].category, lex[i].accept, storage.vector(lex[i].begin));
+		fprintf(fp, "<%4d : %4d , %s>\n", lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
 	}
 }
 const Morpheme::result& Morpheme::operator[](const size_t target)const
@@ -139,7 +172,7 @@ char Morpheme::GetChar(size_t site) const
 	size_t head;
 	const char* input;
 	int error;
-	input = storage.vector(lex[site].begin);
+	input = storage.ptr(lex[site].begin);
 	head = 1;
 	if (input[0] != '\'') return input[0];
 	else CharGet(error, input, lex[site].length, head);
@@ -165,14 +198,15 @@ GrammarTree::~GrammarTree()
 void GrammarTree::Demo(FILE* fp, const Morpheme& input, const char* const* RulesName) const
 {
 	size_t site, i, LabelNow;
-	vector<tree<TreeInfor>* >stack;
+	//vector<tree<TreeInfor>* >stack;
 	tree<TreeInfor>* now;
-	GT->PostOrderTraversal(stack);
+	//GT->PostOrderTraversal(stack);
 	//stack.append(GT);
 	hyperlex::tree<GrammarTree::TreeInfor>* Tree;
 	hyperlex::tree<GrammarTree::TreeInfor>::PostIterator iterator;
 	LabelNow = 0;
 	iterator.initial(GT);
+	//fprintf(fp, "Here: %zu\n", (size_t)GT);
 	while (iterator.still())
 	{
 		now = iterator.target();
@@ -181,6 +215,8 @@ void GrammarTree::Demo(FILE* fp, const Morpheme& input, const char* const* Rules
 			now->root().label = LabelNow;
 			LabelNow += 1;
 		}
+		//fprintf(fp, "Tree[%zu](%d): ", now->root().site, now->root().rules);
+		//fprintf(fp, "childs[%zu]: \n", now->ChildCount());
 		iterator.next();
 	}
 
@@ -221,30 +257,273 @@ void GrammarTree::clear(void)
 }
 
 
-RegTree::RegTree()
+
+RegularExp::RegularExp()
 {
+	tree = NULL;
 }
-RegTree::~RegTree()
+RegularExp::~RegularExp()
 {
+	clear();
+}
+void RegularExp::item::Demo(FILE* fp)
+{
+	RegularExp::Demo(fp, lower, upper);
+	RegularExp::Demo(fp, type);
+}
+void RegularExp::item::copy(const item& source)
+{
+	lower = source.lower;
+	upper = source.upper;
+	type = source.type;
+}
+void RegularExp::Demo(FILE* fp, RegularExp::NodeType T)
+{
+	switch (T)
+	{
+	case hyperlex::RegTree::Concatenation:
+		fprintf(fp, "Concatenation\n");
+		break;
+	case hyperlex::RegTree::Alternation:
+		fprintf(fp, "Alternation\n");
+		break;
+	case hyperlex::RegTree::ZeroOrMore:
+		fprintf(fp, "ZeroOrMore\n");
+		break;
+	case hyperlex::RegTree::OneOrMore:
+		fprintf(fp, "OneOrMore\n");
+		break;
+	case hyperlex::RegTree::ZeroOrOne:
+		fprintf(fp, "ZeroOrOne\n");
+		break;
+	case hyperlex::RegTree::Range:
+		fprintf(fp, "Range\n");
+		break;
+	default:
+		fprintf(fp, "???????????\n");
+		break;
+	}
+}
+void RegularExp::Demo(FILE* fp, int L, int U)
+{
+	if (U != L)
+	{
+		if (L < 32 || L == 127) fprintf(fp, "[\\%d-", L);
+		else fprintf(fp, "[%c-", (char)L);
+		if (U < 32 || U == 127) fprintf(fp, "\\%d]", U);
+		else fprintf(fp, "%c]", (char)U);
+	}
+	else
+	{
+		if (L < 32 || L == 127) fprintf(fp, "[\\%d]", L);
+		else fputc((char)L, fp);
+	}
+}
+void RegularExp::Demo(FILE* fp) const
+{
+	//buffer<size_t> output;
+	//tree.inorderTraversal(output);
+	vector<BiTree<item>*> stack;
+	vector<int> state;
+	size_t i;
+	int SS;
+	NodeType TT;
+	BiTree<item>* now;
+	if (tree != NULL)
+	{
+		state.append(0);
+		stack.append(tree);
+	}
+	while (state.pop(SS) != 0)
+	{
+		now = stack.top();
+		TT = now->content().type;
+		//now->content().Demo(stdout);
+		//printf("%d\n", SS);
+
+		if (SS == 0)
+		{
+			if ((TT == Alternation || TT == Concatenation) && state.count() != 0)
+				fputc('(', fp);
+			state.append(1);
+			if (now->left() != NULL)
+			{
+				state.append(0);
+				stack.append(now->left());
+			}
+		}
+		else if (SS == 1)
+		{
+			switch (TT)
+			{
+			case RegularExp::Concatenation:
+				break;
+			case RegularExp::Alternation:
+				fputc('|', fp);
+				break;
+			case RegularExp::ZeroOrMore:
+				fprintf(fp, "^{*}");
+				break;
+			case RegularExp::OneOrMore:
+				fprintf(fp, "^{+}");
+				break;
+			case RegularExp::ZeroOrOne:
+				fputc('?', fp);
+				break;
+			case RegularExp::Range:
+				Demo(fp, now->content().lower, now->content().upper);
+				break;
+			default:
+				break;
+			}
+			state.append(2);
+			if (now->right() != NULL)
+			{
+				state.append(0);
+				stack.append(now->right());
+			}
+		}
+		else
+		{
+			if ((TT == Alternation || TT == Concatenation) && state.count() != 0)
+				fputc(')', fp);
+			stack.pop();
+		}
+	}
 }
 
-/*int RegTree::next_Reg(int state, const char c)
+void RegularExp::set(void)
+{
+	if (tree != NULL)
+	{
+		tree->clear();
+	}
+	else
+		tree = new BiTree<item>();
+
+}
+void RegularExp::clear(void)
+{
+	if (tree != NULL)
+	{
+		tree->clear();
+		delete tree;
+	}
+	tree = NULL;
+}
+void RegularExp::set(int L, int U)
+{
+	set();
+	tree->content().type = Range;
+	tree->content().lower = L;
+	tree->content().upper = U;
+}
+void RegularExp::set(int leaf)
+{
+	set(leaf, leaf);
+}
+void RegularExp::set(BiTree<item>* reg)
+{
+	if (tree != NULL)
+	{
+		tree->clear();
+		delete tree;
+	}
+	tree = reg;
+	reg = NULL;
+}
+void RegularExp::set(BiTree<item>* reg, RegularExp::NodeType T)
+{
+	set();
+	tree->content().type = T;
+	tree->left() = reg;
+}
+void RegularExp::set(BiTree<item>* regL, BiTree<item>* regR, RegularExp::NodeType T)
+{
+	set();
+	tree->content().type = T;
+	tree->left() = regL;
+	tree->right() = regR;
+}
+void RegularExp::set(RegularExp* reg)
+{
+	if (tree != NULL)
+	{
+		tree->clear();
+		delete tree;
+	}
+	tree = reg->tree;
+	reg->tree = NULL;
+}
+void RegularExp::set(RegularExp* reg, NodeType T)
+{
+	set();
+	tree->content().type = T;
+	tree->left() = reg->tree;
+	reg->tree = NULL;
+}
+void RegularExp::set(RegularExp* regL, RegularExp* regR, NodeType T)
+{
+	set();
+	tree->content().type = T;
+	tree->left() = regL->tree;
+	tree->right() = regR->tree;
+	regL->tree = NULL;
+	regR->tree = NULL;
+}
+void RegularExp::set(RegularExp* regL, RegularExp* regR)
+{
+	set();
+	tree->content().type = Range;
+	tree->content().lower = regL->tree->content().lower;
+	tree->content().upper = regR->tree->content().upper;
+}
+struct RegExp
+{
+	enum regular
+	{
+		_left_ = 1,
+		_right_ = 2,
+		_begin_ = 3,
+		_end_ = 4,
+		_range_ = 5,
+		_star_ = 6,
+		_plus_ = 7,
+		_ZeroOrOne_ = 8,
+		_idchar_ = 9,
+		_CommonChar_ = 10,
+		_Or_ = 11
+	};
+	enum group
+	{
+		__braket__ = 1,
+		__superscript__ = 2,
+		__char__ = 3,
+		__Or__ = 4
+	};
+	static int next(int state, const char c);
+	static int action(int state);
+	static int GroupGet(int state);
+};
+int RegExp::next(int state, const char c)
 {
 	switch (state)
 	{
 	case 0:
-		if (c == '\'') return 12;
+		if (c == '\'') return 14;
 		else if (c == '(') return 1;
 		else if (c == ')') return 2;
 		else if (c == '*') return 6;
 		else if (c == '+') return 7;
 		else if (c == '-') return 5;
-		else if ('0' <= c && c <= '9') return 8;
-		else if ('A' <= c && c <= 'Z') return 8;
+		else if ('0' <= c && c <= '9') return 9;
+		else if (c == '\?') return 8;
+		else if ('A' <= c && c <= 'Z') return 9;
 		else if (c == '[') return 3;
 		else if (c == ']') return 4;
-		else if (c == '_') return 8;
-		else if ('a' <= c && c <= 'z') return 8;
+		else if (c == '_') return 9;
+		else if ('a' <= c && c <= 'z') return 9;
+		else if (c == '|') return 11;
 		else return 0;
 	case 1:
 		return 0;
@@ -265,79 +544,1457 @@ RegTree::~RegTree()
 	case 9:
 		return 0;
 	case 10:
-		if (c == '\'') return 9;
-		else return 0;
+		return 0;
 	case 11:
-		if (c == (char)0) return 10;
-		else if (c == '"') return 10;
-		else if (c == '\'') return 10;
-		else if ('0' <= c && c <= '7') return 14;
-		else if (c == '?') return 10;
-		else if (c == 'X') return 13;
-		else if (c == '\\') return 10;
-		else if ('a' <= c && c <= 'b') return 10;
-		else if (c == 'f') return 10;
-		else if (c == 'n') return 10;
-		else if (c == 'r') return 10;
-		else if (c == 't') return 10;
-		else if (c == 'v') return 10;
-		else if (c == 'x') return 13;
-		else return 0;
+		return 0;
 	case 12:
-		if (' ' <= c && c <= '!') return 10;
-		else if ('#' <= c && c <= '&') return 10;
-		else if ('(' <= c && c <= '.') return 10;
-		else if ('0' <= c && c <= '[') return 10;
-		else if (c == '\\') return 11;
-		else if (']' <= c && c <= '~') return 10;
+		if (c == '\'') return 10;
 		else return 0;
 	case 13:
-		if ('0' <= c && c <= '9') return 15;
-		else if ('A' <= c && c <= 'F') return 15;
-		else if ('a' <= c && c <= 'f') return 15;
+		if (c == (char)0) return 12;
+		else if (c == '\"') return 12;
+		else if (c == '\'') return 12;
+		else if ('0' <= c && c <= '7') return 16;
+		else if (c == '\?') return 12;
+		else if (c == 'X') return 15;
+		else if (c == '\\') return 12;
+		else if ('a' <= c && c <= 'b') return 12;
+		else if (c == 'f') return 12;
+		else if (c == 'n') return 12;
+		else if (c == 'r') return 12;
+		else if (c == 't') return 12;
+		else if (c == 'v') return 12;
+		else if (c == 'x') return 15;
 		else return 0;
 	case 14:
-		if (c == '\'') return 9;
-		else if ('0' <= c && c <= '7') return 16;
+		if (' ' <= c && c <= '!') return 12;
+		else if ('#' <= c && c <= '&') return 12;
+		else if ('(' <= c && c <= '[') return 12;
+		else if (c == '\\') return 13;
+		else if (']' <= c && c <= '~') return 12;
 		else return 0;
 	case 15:
-		if (c == '\'') return 9;
-		else if ('0' <= c && c <= '9') return 10;
-		else if ('A' <= c && c <= 'F') return 10;
-		else if ('a' <= c && c <= 'f') return 10;
+		if ('0' <= c && c <= '9') return 17;
+		else if ('A' <= c && c <= 'F') return 17;
+		else if ('a' <= c && c <= 'f') return 17;
 		else return 0;
 	case 16:
-		if (c == '\'') return 9;
-		else if ('0' <= c && c <= '7') return 10;
+		if (c == '\'') return 10;
+		else if ('0' <= c && c <= '7') return 18;
+		else return 0;
+	case 17:
+		if (c == '\'') return 10;
+		else if ('0' <= c && c <= '9') return 12;
+		else if ('A' <= c && c <= 'F') return 12;
+		else if ('a' <= c && c <= 'f') return 12;
+		else return 0;
+	case 18:
+		if (c == '\'') return 10;
+		else if ('0' <= c && c <= '7') return 12;
 		else return 0;
 	}
 	return 0;
-	int RegTree::action_Reg(int state)
+}
+int RegExp::action(int state)
 {
 	switch (state)
 	{
 	case 1:
-		return 1;
+		return 1;//braket: left
 	case 2:
-		return 2;
+		return 2;//braket: right
 	case 3:
-		return 3;
+		return 3;//braket: begin
 	case 4:
-		return 4;
+		return 4;//braket: end
 	case 5:
-		return 5;
+		return 5;//braket: range
 	case 6:
-		return 6;
+		return 6;//superscript: star
 	case 7:
-		return 7;
+		return 7;//superscript: plus
 	case 8:
-		return 8;
+		return 8;//superscript: ZeroOrOne
 	case 9:
-		return 9;
+		return 9;//char: idchar
+	case 10:
+		return 10;//char: CommonChar
+	case 11:
+		return 11;//Or: Or
 	}
 	return 0;
 }
-}*/
+int RegExp::GroupGet(int accept)
+{
+	switch (accept)
+	{
+	case 1:
+		return 1;//braket: left
+	case 2:
+		return 1;//braket: right
+	case 3:
+		return 1;//braket: begin
+	case 4:
+		return 1;//braket: end
+	case 5:
+		return 1;//braket: range
+	case 6:
+		return 2;//superscript: star
+	case 7:
+		return 2;//superscript: plus
+	case 8:
+		return 2;//superscript: ZeroOrOne
+	case 9:
+		return 3;//char: idchar
+	case 10:
+		return 3;//char: CommonChar
+	case 11:
+		return 4;//Or: Or
+	}
+	return 0;
+}
+struct RegExpG
+{
+	enum type
+	{
+		accept = 0,
+		error = 1,
+		push = 2,
+		reduce = 3
+	};
+	static const size_t StateCount;
+	static const size_t NonTerminalCount;
+	static const size_t TerminalCount;
+	static const size_t RulesCount;
+	static const int GOTO[23][7];
+	static const int ACTION[23][12];
+	static const int RulesToSymbol[15];
+	static const int RulesLength[15];
+	static const char* const RulesName[15];
+};
+const size_t RegExpG::StateCount = 23;
+const size_t RegExpG::NonTerminalCount = 7;
+const size_t RegExpG::TerminalCount = 11;
+const size_t RegExpG::RulesCount = 15;
+const int RegExpG::GOTO[23][7] = { \
+{1, 6, 10, 14, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 78, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 62, 10, 14, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 46}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 54}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 74, 14, 18, 22, 26}, \
+{1, 1, 1, 78, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1} };
+//==============================
+const int RegExpG::ACTION[23][12] = { \
+{1, 30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70}, \
+{7, 30, 7, 34, 1, 1, 1, 1, 1, 38, 42, 7}, \
+{15, 15, 15, 15, 1, 1, 82, 86, 90, 15, 15, 15}, \
+{23, 23, 23, 23, 1, 1, 23, 23, 23, 23, 23, 23}, \
+{39, 39, 39, 39, 1, 1, 39, 39, 39, 39, 39, 39}, \
+{47, 47, 47, 47, 1, 1, 47, 47, 47, 47, 47, 47}, \
+{1, 30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55}, \
+{59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59}, \
+{1, 1, 1, 1, 1, 50, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{1, 1, 1, 1, 58, 1, 1, 1, 1, 1, 1, 1}, \
+{51, 51, 51, 51, 1, 1, 51, 51, 51, 51, 51, 51}, \
+{1, 1, 66, 1, 1, 1, 1, 1, 1, 1, 1, 70}, \
+{43, 43, 43, 43, 1, 1, 43, 43, 43, 43, 43, 43}, \
+{1, 30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1}, \
+{11, 30, 11, 34, 1, 1, 1, 1, 1, 38, 42, 11}, \
+{19, 19, 19, 19, 1, 1, 82, 86, 90, 19, 19, 19}, \
+{31, 31, 31, 31, 1, 1, 31, 31, 31, 31, 31, 31}, \
+{27, 27, 27, 27, 1, 1, 27, 27, 27, 27, 27, 27}, \
+{35, 35, 35, 35, 1, 1, 35, 35, 35, 35, 35, 35} };
+//==============================
+const int RegExpG::RulesToSymbol[15] = { \
+0,\
+1,\
+1,\
+2,\
+2,\
+3,\
+3,\
+3,\
+3,\
+4,\
+4,\
+5,\
+5,\
+6,\
+6 };
+//==============================
+const int RegExpG::RulesLength[15] = { \
+1,\
+1,\
+3,\
+1,\
+2,\
+1,\
+2,\
+2,\
+2,\
+1,\
+3,\
+1,\
+5,\
+1,\
+1 };
+//==============================
+const char* const RegExpG::RulesName[15] = { \
+"Ep->RegOr ",\
+"RegOr->Reg ",\
+"RegOr->RegOr Or Reg ",\
+"Reg->Complex ",\
+"Reg->Reg Complex ",\
+"Complex->Node ",\
+"Complex->Complex plus ",\
+"Complex->Complex star ",\
+"Complex->Complex ZeroOrOne ",\
+"Node->Range ",\
+"Node->left RegOr right ",\
+"Range->Char ",\
+"Range->begin Char range Char end ",\
+"Char->reserved ",\
+"Char->CommonChar " };
+int RegularExp::set(const char* input)
+{
+	int error;
+	Morpheme eme;
+	eme.Build<RegExp>(input);
+	//error = fastBuild(eme);
+	error = standardBuild(eme);
+	return error;
+}
+void RegularExp::copy(RegularExp& source)
+{
+	clear();
+	tree = source.tree->copy();
+}
+int RegularExp::fastBuild(Morpheme& input)
+{
+	/*
+terminal-> left | right | begin | end | range | star
+| plus | ZeroOrOne | reserved | CommonChar | Or;
+
+Ep->RegOr;
+RegOr->Reg | RegOr Or Reg;
+Reg->Complex | Reg Complex;
+Complex->Node | Complex plus | Complex star | Complex ZeroOrOne;
+Node->Range | left RegOr right;
+Range->Char | begin Char range Char end;
+Char->reserved | CommonChar;
+*/
+
+	vector<int> stack;
+	vector<RegularExp*> TempTree;
+	RegularExp* TreeNow;
+	bool DoNext;
+	size_t length, head, i, begin_, inputCount_;
+	int symbol, top, temp, information;
+	int GoFull, GoD, GoI, error;
+	RegExpG::type type;
+	RegularExp::NodeType TypeTemp;
+	stack.append(0);
+	head = 0;
+	inputCount_ = input.GetCount();
+	DoNext = true;
+	do
+	{
+		if (head >= inputCount_)
+		{
+			error = -1;
+			break;
+		}
+		top = stack.top();
+		temp = RegExpG::ACTION[top][input[head].accept];
+		information = temp / 4;
+		type = (RegExpG::type)(temp % 4);
+		//printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
+		//printf("head = %5zu, lex = %s, \n", head, input.GetWord(head));
+		TypeTemp = ZeroOrOne;
+		switch (type)
+		{
+		case RegExpG::accept:
+			error = 0;
+			DoNext = false;
+			//TempTree.top()->Demo(stdout);
+			set(TempTree.top());
+			break;
+		case RegExpG::error:
+			error = information;
+			DoNext = false;
+			break;
+		case RegExpG::push:
+			//printf("<%8zu, %4d: %4d , %s>\n", head, input[head].category, input[head].accept, input.GetWord(head));
+			stack.append(information);
+			TreeNow = new RegularExp;
+			TreeNow->set(input.GetChar(head));
+			TempTree.append(TreeNow);
+			head += 1;
+			break;
+		case RegExpG::reduce:
+			symbol = RegExpG::RulesToSymbol[information];
+			length = RegExpG::RulesLength[information];
+			begin_ = TempTree.count() - length;
+			switch (information)
+			{
+				//No[0], case Ep: prefix: 0, degeneracy: 1
+			case 0: //0: Ep, No[0] production rules: Ep->RegOr 
+				//No[1], case RegOr: prefix: 1, degeneracy: 2
+			case 1: //1: RegOr, No[0] production rules: RegOr->Reg
+				TreeNow = TempTree[begin_];
+				TempTree[begin_] = NULL;
+				break;
+			case 2: //1: RegOr, No[1] production rules: RegOr->RegOr Or Reg
+				TreeNow = new RegularExp;
+				TreeNow->set(TempTree[begin_], TempTree[begin_ + 2], RegularExp::Alternation);
+				break;
+				//No[2], case Reg: prefix: 3, degeneracy: 2
+			case 3: //2: Reg, No[0] production rules: Reg->Complex
+				TreeNow = TempTree[begin_];
+				TempTree[begin_] = NULL;
+				break;
+			case 4: //2: Reg, No[1] production rules: Reg->Reg Complex
+				TreeNow = new RegularExp;
+				TreeNow->set(TempTree[begin_], TempTree[begin_ + 1], RegularExp::Concatenation);
+				break;
+				//No[3], case Complex: prefix: 5, degeneracy: 4
+			case 5: //3: Complex, No[0] production rules: Complex->Node
+				TreeNow = TempTree[begin_];
+				TempTree[begin_] = NULL;
+				break;
+			case 6: //3: Complex, No[1] production rules: Complex->Complex plus
+				TreeNow = new RegularExp;
+				TreeNow->set(TempTree[begin_], RegularExp::OneOrMore);
+				break;
+			case 7: //3: Complex, No[2] production rules: Complex->Complex star
+				TypeTemp = RegularExp::ZeroOrMore;
+			case 8: //3: Complex, No[3] production rules: Complex->Complex ZeroOrOne
+				TreeNow = new RegularExp;
+				TreeNow->set(TempTree[begin_], TypeTemp);
+				break;
+				//No[4], case Node: prefix: 9, degeneracy: 2
+			case 9: //4: Node, No[0] production rules: Node->Range
+				TreeNow = TempTree[begin_];
+				TempTree[begin_] = NULL;
+				break;
+			case 10: //4: Node, No[1] production rules: Node->left RegOr right
+				TreeNow = TempTree[begin_ + 1];
+				TempTree[begin_ + 1] = NULL;
+				break;
+				//No[5], case Range: prefix: 11, degeneracy: 2
+			case 11: //5: Range, No[0] production rules: Range->Char
+				TreeNow = TempTree[begin_];
+				TempTree[begin_] = NULL;
+				break;
+			case 12: //5: Range, No[1] production rules: Range->begin Char range Char end
+				TreeNow = new RegularExp;
+				TreeNow->set(TempTree[begin_ + 1], TempTree[begin_ + 3]);
+				break;
+				//No[6], case Char: prefix: 13, degeneracy: 2
+			case 13: //6: Char, No[0] production rules: Char->reserved
+			case 14: //6: Char, No[1] production rules: Char->CommonChar
+				TreeNow = TempTree[begin_];
+				TempTree[begin_] = NULL;
+				break;
+			}
+			for (i = 0; i < length; i++)
+			{
+				stack.pop();
+				delete TempTree[begin_ + i];
+			}
+			TempTree.recount(begin_);
+			GoFull = RegExpG::GOTO[stack.top()][symbol];
+			GoD = GoFull / 4;
+			GoI = GoFull % 4;
+			stack.append(GoD);
+			TempTree.append(TreeNow);
+			//TreeNow->Demo(stdout);
+			break;
+		}
+
+	} while (DoNext);
+	for (i = 0; i < TempTree.count(); i++) delete TempTree[i];
+	return error;
+}
+int RegularExp::standardBuild(Morpheme& eme)
+{
+	GrammarTree Tree;
+	int error;
+	//eme.Demo(stdout);
+	error = Tree.build<RegExpG>(eme);
+	//Tree.Demo(stdout, eme, RegExpG::RulesName);
+	set(eme, Tree.GT);
+	return error;
+}
+void RegularExp::set(const Morpheme& eme, hyperlex::tree<GrammarTree::TreeInfor>* Tree)
+{
+	RegularExp* TreeNow;
+	RegularExp* Ltemp, * Rtemp;
+	size_t site_;
+	hyperlex::tree<GrammarTree::TreeInfor>* GT;
+	hyperlex::tree<GrammarTree::TreeInfor>::PostIterator iterator;
+	iterator.initial(Tree);
+	TreeNow = NULL;
+	while (iterator.still())
+	{
+		GT = iterator.target();
+		if (iterator.state() != 0)
+		{
+			//TreeNow = (RegularExp*);
+			site_ = GT->root().site;
+			if ((RegularExp*)GT->root().rules)
+			{
+				switch (site_)
+				{
+					//No[0], case Ep: prefix: 0, degeneracy: 1
+				case 0: //0: Ep, No[0] production rules: Ep->RegOr 
+					//No[1], case RegOr: prefix: 1, degeneracy: 2
+				case 1: //1: RegOr, No[0] production rules: RegOr->Reg
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 2: //1: RegOr, No[1] production rules: RegOr->RegOr Or Reg
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					Rtemp = (RegularExp*)(GT->child(2)->root().infor);
+					TreeNow->set(Ltemp, Rtemp, RegularExp::Alternation);
+					break;
+					//No[2], case Reg: prefix: 3, degeneracy: 2
+				case 3: //2: Reg, No[0] production rules: Reg->Complex
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 4: //2: Reg, No[1] production rules: Reg->Reg Complex
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					Rtemp = (RegularExp*)(GT->child(1)->root().infor);
+					TreeNow->set(Ltemp, Rtemp, RegularExp::Concatenation);
+					break;
+					//No[3], case Complex: prefix: 5, degeneracy: 4
+				case 5: //3: Complex, No[0] production rules: Complex->Node
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 6: //3: Complex, No[1] production rules: Complex->Complex plus
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					TreeNow->set(Ltemp, RegularExp::OneOrMore);
+					break;
+				case 7: //3: Complex, No[2] production rules: Complex->Complex star
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					TreeNow->set(Ltemp, RegularExp::ZeroOrMore);
+					break;
+				case 8: //3: Complex, No[3] production rules: Complex->Complex ZeroOrOne
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					TreeNow->set(Ltemp, RegularExp::ZeroOrOne);
+					break;
+					//No[4], case Node: prefix: 9, degeneracy: 2
+				case 9: //4: Node, No[0] production rules: Node->Range
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 10: //4: Node, No[1] production rules: Node->left RegOr right
+					TreeNow = (RegularExp*)(GT->child(1)->root().infor);
+					GT->child(1)->root().infor = NULL;
+					break;
+					//No[5], case Range: prefix: 11, degeneracy: 2
+				case 11: //5: Range, No[0] production rules: Range->Char
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 12: //5: Range, No[1] production rules: Range->begin Char range Char end
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(1)->root().infor);
+					Rtemp = (RegularExp*)(GT->child(3)->root().infor);
+					TreeNow->set(Ltemp, Rtemp);
+					delete Ltemp;
+					delete Rtemp;
+					Ltemp = NULL;
+					Rtemp = NULL;
+					break;
+					//No[6], case Char: prefix: 13, degeneracy: 2
+				case 13: //6: Char, No[0] production rules: Char->reserved
+				case 14: //6: Char, No[1] production rules: Char->CommonChar
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				}
+			}
+			else
+			{
+				TreeNow = new RegularExp;
+				TreeNow->set(eme.GetChar(site_));
+			}
+			GT->root().infor = TreeNow;
+		}
+		iterator.next();
+	}
+	TreeNow = (RegularExp*)(Tree->root().infor);
+	set(TreeNow);
+}
+
+
+
+static const char* Copy(const char* input)
+{
+	char* nnnn;
+	size_t length, i;
+	for (length = 0; input[length] != '\0'; length++);
+	length += 1;
+	nnnn = (char*)malloc(sizeof(char) * length);
+	for (i = 0; i < length; i++) nnnn[i] = input[i];
+	return nnnn;
+}
+
+
+struct Reg
+{
+	enum regular
+	{
+		_identifier_ = 1,
+		_integer_ = 2,
+		_CommonChar_ = 3,
+		_idChar_ = 4,
+		_lexical_ = 5,
+		_grammar_ = 6,
+		_void_ = 7,
+		_all_ = 8,
+		_spaces_ = 9,
+		_enters_ = 10,
+		_tab_ = 11,
+		_semicolon_ = 12,
+		_colon_ = 13,
+		_dot_ = 14,
+		_braceL_ = 15,
+		_braceR_ = 16,
+		_left_ = 17,
+		_right_ = 18,
+		_squareL_ = 19,
+		_squareR_ = 20,
+		_angleL_ = 21,
+		_angleR_ = 22,
+		_anntationS_ = 23,
+		_anntationM_ = 24,
+		_range_ = 25,
+		_star_ = 26,
+		_plus_ = 27,
+		_question_ = 28,
+		_or_ = 29
+	};
+	enum group
+	{
+		_identifier___ = 1,
+		_const___ = 2,
+		_reserved___ = 3,
+		_format___ = 4,
+		_division___ = 5,
+		_braket___ = 6,
+		_annotation___ = 7,
+		_RegSymbol___ = 8
+	};
+	static int next(int state, const char c);
+	static int action(int state);
+	static int GroupGet(int state);
+};
+struct Panel
+{
+	enum type
+	{
+		accept = 0,
+		error = 1,
+		push = 2,
+		reduce = 3
+	};
+	static const size_t StateCount;
+	static const size_t NonTerminalCount;
+	static const size_t TerminalCount;
+	static const size_t RulesCount;
+	static const int GOTO[95][23];
+	static const int ACTION[95][30];
+	static const int RulesToSymbol[54];
+	static const int RulesLength[54];
+	static const char* const RulesName[54];
+};
+
+
+
+
+
+
+
+InputPanel::InputPanel()
+{
+	//const char *s_temp;
+	GrammarEnclosed = false;
+	//s_temp = Copy("void");
+	//Terminal.append(s_temp);
+	RootName = NULL;
+
+	addVoidGroup();
+
+	errorCode = NoError;
+	errorInfor1 = 0;
+	errorInfor2 = 0;
+	errorInfor3 = NULL;
+	return;
+}
+InputPanel::~InputPanel()
+{
+	size_t i;
+	//printf("here!\n");
+	for (i = 0; i < RegG.count(); i++) delete RegG[i];
+	//for (i = 0; i < RegC.count(); i++) delete RegC[i];
+	//printf("here!\n");
+	for (i = 0; i < GrammarG.count(); i++) delete GrammarG[i];
+	//printf("here!\n");
+	for (i = 0; i < rules.count(); i++) delete rules[i];
+
+	//printf("here!\n");
+	for (i = 0; i < Terminal.count(); i++) free((void*)Terminal[i]);
+	//printf("here!\n");
+	for (i = 0; i < NonTernimal.count(); i++) free((void*)NonTernimal[i]);
+	//printf("here!\n");
+	free(RootName);
+	//printf("here!\n");
+}
+InputPanel::RegGroup::RegGroup()
+{
+	name = NULL;
+	priority = 0;
+	prefix = 0;
+}
+InputPanel::RegGroup::~RegGroup()
+{
+	size_t i;
+	for (i = 0; i < regs.count(); i++) delete regs[i];
+}
+void InputPanel::RegGroup::SetName(const char* input)
+{
+	name = Copy(input);
+}
+InputPanel::RegContent::RegContent()
+{
+	reg = NULL;
+	name = NULL; 
+	priority = 0;
+}
+InputPanel::RegContent::~RegContent()
+{
+	delete reg;
+	free((void*)name);
+	name = NULL;
+	reg = NULL;
+}
+void InputPanel::RegContent::SetName(const char* input)
+{
+	name = Copy(input);
+}
+InputPanel::Group::Group()
+{
+	name = NULL;
+	group = 0;
+	offset = 0;
+	count = 0;
+}
+InputPanel::Group::~Group()
+{
+	size_t i;
+	free((void*)name);
+	for (i = 0; i < rules.count(); i++)
+		delete rules[i];
+}
+void InputPanel::Group::SetName(const char* input)
+{
+	name = Copy(input);
+}
+InputPanel::Rules::Rules()
+{
+	name = NULL;
+}
+InputPanel::Rules::~Rules()
+{
+	free((void*)name);
+	name = NULL;
+}
+void InputPanel::Rules::SetName(const char* input)
+{
+	name = Copy(input);
+}
+void InputPanel::Rules::demo(FILE* fp, cvccp& N, cvccp& T)
+{
+	long int index;
+	size_t i;
+	for (i = 0; i < formula.count(); i++)
+	{
+		index = formula[i];
+		if (index >= 0)
+			fprintf(fp, "%s ", N[index]);
+		else
+			fprintf(fp, "%s ", T[-index - 1]);
+	}
+}
+void InputPanel::demo(FILE* fp)
+{
+	if (errorCode != NoError)
+	{
+		ErrorDemo(fp);
+		return;
+	}
+	demoL(fp);
+	if(GrammarEnclosed) demoG(fp);
+}
+void InputPanel::ErrorDemo(FILE* fp)
+{
+	const char* s_temp_1, * s_temp_2; 
+	size_t i;
+	switch (errorCode)
+	{
+	case InputPanel::NoError:
+		fprintf(fp, "No Error!\n");
+		break;
+	case InputPanel::ConflictRegGroupName:
+		fprintf(fp, "ConflictRegGroupName: Conflict regular expression's group name\n");
+		fprintf(fp, "There has been a group named as: %s\n", RegG[errorInfor1]->name);
+		break;
+	case InputPanel::repeatRegName:
+		s_temp_1 = RegG[errorInfor1]->regs[errorInfor2]->name;
+		s_temp_2 = RegG[errorInfor1]->name;
+		fprintf(fp, "ConflictRegGroupName: Conflict regular expression's name\n");
+		fprintf(fp, "There has been a regular expression as: %s in group: %s\n", s_temp_1, s_temp_2);
+		break;
+	case InputPanel::missingId:
+		fprintf(fp, "missingId: the identifier %s has not been defined\n", errorInfor3);
+		break;
+	case InputPanel::repeatGGroupName:
+		s_temp_1 = GrammarG[errorInfor1]->name;
+		fprintf(fp, "repeatGGroupName: Conflict grammar Nonternimal symbol name: %s\n", s_temp_1);
+		break;
+	case InputPanel::repeatGName:
+		s_temp_1 = GrammarG[errorInfor1]->rules[errorInfor2]->name;
+		fprintf(fp, "repeatGName: Conflict grammar rule name: %s\n", s_temp_1);
+		break;
+	case InputPanel::ErrorNonTernimal:
+		fprintf(fp, "ErrorNonTernimal: \n");
+		for (i = 0; i < NonTernimal.count(); i++)
+		{
+			fprintf(fp, "symbol[%zu]: %s\n", i, NonTernimal[i]);
+		}
+		break;
+	default:
+		fprintf(fp, "Error Unknown: \n");
+	}
+}
+void InputPanel::demoL(FILE* fp)
+{
+	size_t i, j;
+	RegGroup* group;
+	RegContent* content;
+	fprintf(fp, "lexical:{\n");
+	for (i = 0; i < RegG.count(); i++)
+	{
+		group = RegG[i];
+		fprintf(fp, "\t%s", group->name ? group->name : "None");
+		fprintf(fp, "(%d): \n", group->priority);
+		//fprintf(fp, "Prefix: %zu\n", group->prefix);
+		fprintf(fp, "\t{\n");
+		for (j = 0; j < group->regs.count(); j++)
+		{
+			content = group->regs[j];
+			fprintf(fp, "\t\t%s(%d): ", content->name ? content->name : "None", content->priority);
+			content->reg->Demo(stdout);
+			fprintf(fp, ";\n");
+		}
+		fprintf(fp, "\t}\n");
+	}
+	fprintf(fp, "};\n");
+	
+}
+void InputPanel::demoG(FILE* fp)
+{
+	// Êä³öTerminal/NonTerminal·ûºÅ
+	size_t i, j, site;
+	Rules* rule;
+	Group* g;
+	
+	
+	fprintf(fp, "\n=== Symbols ===\n");
+	fprintf(fp, "Terminals (%zu):\n", Terminal.count());
+	for (i = 0; i < Terminal.count(); i++)
+		fprintf(fp, "\t[%zu]: %s\n", i, Terminal[i]);
+	fprintf(fp, "NonTerminals (%zu):\n", NonTernimal.count());
+	for (i = 0; i < NonTernimal.count(); i++)
+		fprintf(fp, "\t[%zu]: %s\n", i, NonTernimal[i]);
+
+	// Êä³öGrammar Groups
+	fprintf(fp, "all[%5zu]: (%5zu)%s\n", (size_t)0, (size_t)0, RootName ? RootName : "None");
+	site = 1;
+	for (i = 1; i < GrammarG.count(); i++)
+	{
+		g = GrammarG[i];
+		fprintf(fp, "%s[%5zu]: count: %5zu\n", g->name, i, g->rules.count());
+		for (j = 0; j < g->rules.count(); j++)
+		{
+			rule = g->rules[j];
+			fprintf(fp, "\t[%5zu]: %s(%5zu): ", j, rule->name, site);
+			site++;
+			rule->demo(fp, NonTernimal, Terminal);
+			fprintf(fp, "\n");
+		}
+	}
+}
+
+int InputPanel::build(FILE* fp)
+{
+	Morpheme eme;
+	eme.Build<Reg>(fp);
+	NeglectNullToken(eme);
+	return buildGanalysis(eme);
+}
+int InputPanel::build(const char* input)
+{
+	Morpheme eme;
+	int error;
+	error = eme.Build<Reg>(input);
+	if (error != 0) return error;
+	NeglectNullToken(eme);
+	//eme.Demo(stdout);
+	return buildGanalysis(eme);
+}
+int InputPanel::buildGanalysis(const Morpheme& eme)
+{
+	int error;
+	GrammarTree Tree;
+	error = Tree.build<Panel>(eme);
+	if (error != 0) return error;
+	printf("Here?!\n");
+	Tree.Demo(stdout, eme, Panel::RulesName);
+	printf("Here?!\n");
+	error = buildAll(eme, Tree);
+	//printf("Here?!:%d\n", error);
+	return error;
+}
+void InputPanel::NeglectNullToken(Morpheme& eme) const
+{
+	size_t i, site;
+	Reg::regular T;
+	Reg::group G;
+	site = 0;
+	for (i = 0; i < eme.GetCount(); i++)
+	{
+		T = (Reg::regular)(eme[i].accept);
+		G = (Reg::group)(eme[i].category);
+		if (G != Reg::_format___ && G != Reg::_annotation___)
+		{
+			if (i != site) eme.UnitMove(i, site);
+			site += 1;
+		}
+	}
+	eme.CountReset(site);
+	return;
+}
+int InputPanel::buildAll(const Morpheme& eme, GrammarTree& Tree)
+{
+	//RegularExp* TreeNow;
+	//RegularExp* Ltemp, * Rtemp;
+	size_t site_, temp;
+	int error;
+	hyperlex::tree<GrammarTree::TreeInfor>* GT;
+	hyperlex::tree<GrammarTree::TreeInfor>::PostIterator iterator;
+	iterator.initial(Tree.GT);
+	error = 0;
+	while (iterator.still())
+	{
+		GT = iterator.target();
+		if (iterator.state() == 0)
+		{
+			site_ = GT->root().site;
+			if ((RegularExp*)GT->root().rules)
+			{
+				if (site_ == 1)
+				{
+					error = buildL(eme, GT->child(2));
+					break;
+				}
+				else if(site_ == 2)
+				{
+					error = buildL(eme, GT->child(2));
+					if (error != 0) return error;
+					if (GT->child(6)->root().rules) return -1;
+					temp =  GT->child(6)->root().site;
+					RootName = eme.Copy(temp);
+					//lexical BEGIN LEXICAL END grammar colon identifier BEGIN GRAMMAR END
+					error = buildG(eme, GT->child(8));
+					break;
+				}
+			}
+		}
+		iterator.next();
+	}
+	return error;
+}
+
+int InputPanel::buildL(const Morpheme& eme, GLTree* Tree)
+{
+	int error;
+	size_t site_, GroupNow;
+	size_t RegNow, temp;
+	RegContent* Regu;
+	GLTree* GT;
+	GTIter iterator;
+	iterator.initial(Tree);
+	error = 0;
+	RegNow = 0;
+	GroupNow = 0;
+	while (iterator.still())
+	{
+		GT = iterator.target();
+		if (iterator.state() == 0)
+		{
+			site_ = GT->root().site;
+			if ((RegularExp*)GT->root().rules){
+				switch (site_)
+				{
+				//No[3], case RegGROUP: prefix: 5, degeneracy: 4
+				case 5: //3: RegGROUP, No[0] production rules: RegGROUP->RegGROUPNAME colon RegDEF
+				case 6: //3: RegGROUP, No[1] production rules: RegGROUP->RegGROUPNAME BEGIN REGDEFS END
+					error = RegGroupName(GroupNow, eme, GT->child(0));
+					if (error != 0) return error;
+					break;
+				case 9: //5: RegDEF, No[0] production rules: RegDEF->RegNAME semicolon
+					error = RegName(RegNow, GroupNow, eme, GT->child(0));
+					if (error != 0) return error;
+					Regu = RegG[GroupNow]->regs[RegNow];
+					Regu->reg = new RegularExp;
+					Regu->reg->set(Regu->name);
+					//RegG[GroupNow]->regs[RegNow]->reg->Demo(stdout);
+					break;
+				case 10: //5: RegDEF, No[1] production rules: RegDEF->RegNAME colon REGBODY semicolon
+					//printf("here\n");
+					error = RegName(RegNow, GroupNow, eme, GT->child(0));
+					//printf("here: %d\n", error);
+					if (error != 0) return error;
+					error = RegBuild(RegNow, GroupNow, eme, GT->child(2));
+					//printf("here: %d\n", error);
+					if (error != 0) return error;
+					//RegG[GroupNow]->regs[RegNow]->reg->Demo(stdout);
+					break;
+					
+				}
+			}
+		}
+		iterator.next();
+	}
+	return error;
+}
+void InputPanel::addVoidGroup(void)
+{
+	RegGroup* now;
+	now = new RegGroup;
+	now->SetName("void");
+
+}
+int InputPanel::RegGroupName(size_t& siteReturn, const Morpheme& eme, GLTree* Tree)
+{
+	GLTree* GT; 
+	RegGroup* now;
+	size_t i;
+	const char* inputName;
+	BufferChar tempString;
+	//No[6], case RegNAME: prefix: 13, degeneracy: 2
+	//case 13: RegNAME, No[0] production rules: RegNAME->identifier
+	//case 14: RegNAME, No[1] production rules: RegNAME->identifier left integar right
+	GT = Tree->child(0);
+	inputName = eme.GetWord(GT->root().site);
+	for (i = 1; i < RegG.count(); i++)
+	{
+		if (compare(RegG[i]->name, inputName))
+		{
+			errorCode = ConflictRegGroupName;
+			errorInfor1 = i;
+			return 5;
+		}
+	}
+	now = new RegGroup;
+	now->SetName(inputName);
+	RegG.append(now);
+	siteReturn = RegG.count() - 1;
+	if (Tree->root().site == 13)
+	{
+		GT = Tree->child(2);
+		if (GT->root().rules) return -77;
+		tempString = eme.GetWord(GT->root().site);
+		now->priority = tempString.DequeueInt();
+	}
+	return 0;
+}
+int InputPanel::RegName(size_t& siteReturn, size_t group, const Morpheme& eme, GLTree* Tree)
+{
+	RegGroup* now;
+	RegContent* RegNow;
+	GLTree* GT;
+	size_t i, j; 
+	const char* inputName;
+	BufferChar tempString;
+	GT = Tree->child(0)->child(0);
+	inputName = eme.GetWord(GT->root().site);
+	now = RegG[group];
+	//No[5], case RegDEF: prefix: 9, degeneracy: 2
+		//5: RegDEF, No[0] production rules: RegDEF->RegNAME semicolon
+		//5: RegDEF, No[1] production rules: RegDEF->RegNAME colon REGBODY semicolon
+	//No[7], case RegNAME: prefix: 14, degeneracy: 2
+		//7: RegNAME, No[0] production rules: RegNAME->RegNAMEHead
+		//case 15 7: RegNAME, No[1] production rules: RegNAME->RegNAMEHead left integar right
+	//No[8], case RegNAMEHead: prefix: 16, degeneracy: 5
+		//8: RegNAMEHead, No[0] production rules: RegNAMEHead->void
+		//8: RegNAMEHead, No[1] production rules: RegNAMEHead->lexical
+		//8: RegNAMEHead, No[2] production rules: RegNAMEHead->grammar
+		//8: RegNAMEHead, No[3] production rules: RegNAMEHead->all
+		// case 20, 8: RegNAMEHead, No[4] production rules: RegNAMEHead->identifier
+	if (RegSearch(i, j, inputName))
+	{
+		errorCode = repeatRegName;
+		errorInfor1 = i;
+		errorInfor2 = j;
+		return 55;
+	}
+	RegNow = new RegContent;
+	RegNow->SetName(inputName);
+	now->regs.append(RegNow);
+	siteReturn = now->regs.count() - 1;
+	if (Tree->root().site == 15)
+	{
+		GT = Tree->child(2);
+		if (GT->root().rules) return -7788;
+		tempString = eme.GetWord(GT->root().site);
+		RegNow->priority = tempString.DequeueInt();
+	}
+	else
+	{
+		RegNow->priority = now->priority;
+	}
+	return 0;
+}
+bool InputPanel::RegSearch(size_t& group, size_t& site, const char* name)
+{
+	size_t i, j;
+	RegGroup* now;
+	for (i = 0; i < RegG.count(); i++)
+	{
+		now = RegG[i];
+		for (j = 0; j < now->regs.count(); j++)
+		{
+			if (compare(now->regs[j]->name, name))
+			{
+				group = i;
+				site = j;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+int InputPanel::RegBuild(size_t RegNow, size_t group, const Morpheme& eme, GLTree* Tree)
+{
+	int error;
+	//RegContent* RegNow;
+	GLTree* GT;
+	size_t i, j;
+	GTIter iterator;
+	RegularExp* TreeNow = NULL;
+	RegularExp* Ltemp, * Rtemp;
+	size_t site_;
+	const char* idName;
+	error = 0;
+	idName = NULL;
+	iterator.initial(Tree);
+	while (iterator.still())
+	{
+		GT = iterator.target();
+		if (iterator.state() != 0)
+		{
+			site_ = GT->root().site;
+			if ((RegularExp*)GT->root().rules)
+			{
+				//printf("rules: %zu   ", site_);
+				switch (site_)
+				{
+				//No[9], case REGBODY: prefix: 21, degeneracy: 1
+				case 21: //9: REGBODY, No[0] production rules: REGBODY->REGEXPRESSor
+				//No[10], case REGEXPRESSor: prefix: 22, degeneracy: 2
+				case 22: //10: REGEXPRESSor, No[0] production rules: REGEXPRESSor->REGEXPRESS
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 23: //10: REGEXPRESSor, No[1] production rules: REGEXPRESSor->REGEXPRESSor or REGEXPRESS
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					Rtemp = (RegularExp*)(GT->child(2)->root().infor);
+					TreeNow->set(Ltemp, Rtemp, RegularExp::Alternation);
+					break;
+					//No[11], case REGEXPRESS: prefix: 24, degeneracy: 2
+				case 24: //11: REGEXPRESS, No[0] production rules: REGEXPRESS->RegCOMPLEX
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 25: //11: REGEXPRESS, No[1] production rules: REGEXPRESS->REGEXPRESS RegCOMPLEX
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					Rtemp = (RegularExp*)(GT->child(1)->root().infor);
+					TreeNow->set(Ltemp, Rtemp, RegularExp::Concatenation);
+					break;
+					//No[12], case RegCOMPLEX: prefix: 26, degeneracy: 4
+				case 26: //12: RegCOMPLEX, No[0] production rules: RegCOMPLEX->RegNODE
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 27: //12: RegCOMPLEX, No[1] production rules: RegCOMPLEX->RegCOMPLEX plus
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					TreeNow->set(Ltemp, RegularExp::OneOrMore);
+					break;
+				case 28: //12: RegCOMPLEX, No[2] production rules: RegCOMPLEX->RegCOMPLEX star
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					TreeNow->set(Ltemp, RegularExp::ZeroOrMore);
+					break;
+				case 29: //12: RegCOMPLEX, No[3] production rules: RegCOMPLEX->RegCOMPLEX question
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
+					TreeNow->set(Ltemp, RegularExp::ZeroOrOne);
+					break;
+				//No[13], case RegNODE: prefix: 30, degeneracy: 3
+				case 30: //13: RegNODE, No[0] production rules: RegNODE->RegLEAF
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 31: //13: RegNODE, No[1] production rules: RegNODE->left REGEXPRESSor right
+					TreeNow = (RegularExp*)(GT->child(1)->root().infor);
+					GT->child(1)->root().infor = NULL;
+					break;
+				case 32: //13: RegNODE, No[2] production rules: RegNODE->angleL identifier angleR
+					idName = eme.GetWord(GT->child(1)->root().site);
+					TreeNow = new RegularExp;
+					if (RegSearch(i, j, idName))
+					{
+						Ltemp = RegG[i]->regs[j]->reg;
+						TreeNow->copy(*Ltemp);
+					}
+					else error = -13;
+					break;
+				//No[14], case RegLEAF: prefix: 33, degeneracy: 3
+				case 33: //14: RegLEAF, No[0] production rules: RegLEAF->RegCHAR
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+				case 34: //14: RegLEAF, No[1] production rules: RegLEAF->squareL RegCHAR squareR
+					TreeNow = (RegularExp*)(GT->child(1)->root().infor);
+					GT->child(1)->root().infor = NULL;
+					break;
+				case 35: //14: RegLEAF, No[2] production rules: RegLEAF->squareL RegCHAR range RegCHAR squareR
+					TreeNow = new RegularExp;
+					Ltemp = (RegularExp*)(GT->child(1)->root().infor);
+					Rtemp = (RegularExp*)(GT->child(3)->root().infor);
+					TreeNow->set(Ltemp, Rtemp);
+					delete Ltemp;
+					delete Rtemp;
+					Ltemp = NULL;
+					Rtemp = NULL;
+					break;
+				//No[15], case RegCHAR: prefix: 36, degeneracy: 2
+				case 36: //15: RegCHAR, No[0] production rules: RegCHAR->CommonChar
+				case 37: //15: RegCHAR, No[1] production rules: RegCHAR->idChar
+					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
+					GT->child(0)->root().infor = NULL;
+					break;
+
+				}
+				//TreeNow->Demo(stdout);
+				//TreeNow->Demo(stdout);
+				//printf("\n");
+			}
+			else
+			{
+				TreeNow = new RegularExp;
+				TreeNow->set((int)(eme.GetChar(site_)));
+			}
+			GT->root().infor = TreeNow;
+		}
+		iterator.next();
+	}
+	//printf("rules 1: %zu\n", site_);
+	TreeNow = (RegularExp*)(Tree->root().infor);
+	//printf("rules 2: %zu\n", site_);
+	Tree->root().infor = NULL;
+	//printf("rules 3: %zu\n", site_);
+	RegG[group]->regs[RegNow]->reg = TreeNow;
+	//printf("rules 4: %zu\n", site_);
+	return error;
+}
+
+int InputPanel::buildG(const Morpheme& eme, GLTree* Tree)
+{
+	int error;
+	error = 0;
+	
+	//printf("here!\n");
+	addTerminal();
+	addAllGroup();
+	//printf("here!\n");
+	error = buildRules(eme, Tree);
+	//printf("here!\n");
+	if (error != 0) return error;
+	//printf("here!\n");
+	addAllGroup02();
+	//printf("here!\n");
+	error = NonTerminalSort();
+	//printf("here!\n");
+	if (error != 0) return error;
+	GrammarEnclosed = true;
+	return error;
+}
+int InputPanel::buildRules(const Morpheme& eme, GLTree* Tree)
+{
+	GTIter iterator;
+	int error;
+	GLTree* GT;
+
+	size_t site_;
+	size_t groupNow;
+	iterator.initial(Tree);
+	error = 0;
+	groupNow = 0;
+	while (iterator.still())
+	{
+		GT = iterator.target();
+		if (iterator.state() == 0)
+		{
+			site_ = GT->root().site;
+			//printf("here! %zu\n", site_);
+			if ((RegularExp*)GT->root().rules) {
+				switch (site_) {
+					//No[17], case GrammerDEF: prefix: 40, degeneracy: 2
+				case 40: //17: GrammerDEF, No[0] production rules: GrammerDEF->identifier colon GFORMULA semicolon
+					error = GrammarGroup(groupNow, eme, GT->child(0));
+					if (error != 0) return error;
+					error = RulesAppend(groupNow, GT->child(0), eme, GT->child(2));
+					if (error != 0) return error;
+					break;
+				case 41: //17: GrammerDEF, No[1] production rules: GrammerDEF->identifier BEGIN GnameFORMULAS END
+					error = GrammarGroup(groupNow, eme, GT->child(0));
+					if (error != 0) return error;
+					break;
+					//No[18], case GnameFORMULAS: prefix: 42, degeneracy: 2
+				case 42: //18: GnameFORMULAS, No[0] production rules: GnameFORMULAS->identifier colon GFORMULA semicolon
+					error = RulesAppend(groupNow, GT->child(0), eme, GT->child(2));
+					if (error != 0) return error;
+					break;
+				case 43: //18: GnameFORMULAS, No[1] production rules: GnameFORMULAS->GnameFORMULAS identifier colon GFORMULA semicolon
+					error = RulesAppend(groupNow, GT->child(1), eme, GT->child(3));
+					if (error != 0) return error;
+					break;
+				}
+			}
+		}
+		iterator.next();
+	}
+	return error;
+}
+void InputPanel::addAllGroup(void)
+{
+	Group* GG;
+	GG = new Group;
+	GG->SetName("all");
+	GrammarG.append(GG);
+	NonTernimal.append(Copy("all"));
+}
+void InputPanel::addAllGroup02(void)
+{
+	Rules* RR;
+	RR = new Rules;
+	RR->SetName("all");
+	RR->formula.append(SymbolAdd(RootName));
+	GrammarG[0]->rules.append(RR);
+}
+int InputPanel::GrammarGroup(size_t&GroupSite, const Morpheme& eme, GLTree* Tree)
+{
+	int error;
+	size_t i; 
+	const char* inputName;
+	GLTree* GT;
+	Group* now;
+	GT = Tree;
+	error = 0;
+	inputName = eme.GetWord(GT->root().site);
+	for (i = 0; i < GrammarG.count(); i++)
+	{
+		if (compare(GrammarG[i]->name, inputName))
+		{
+			errorCode = repeatGGroupName;
+			errorInfor1 = i;
+			return 557;
+		}
+	}
+	now = new Group;
+	now->SetName(inputName);
+	GrammarG.append(now);
+	GroupSite = GrammarG.count() - 1;
+	return error;
+}
+int InputPanel::RulesAppend(size_t GroupSite, GLTree* Name, const Morpheme& eme, GLTree* Tree)
+{
+	const char* inputName;
+	const char* symbolName;
+	size_t i, site_, middle, length;
+	Group* now;
+	Rules* RR;
+	GTIter iterator;
+	GLTree* GT;
+	now = GrammarG[GroupSite];
+	inputName = eme.GetWord(Name->root().site);
+	for (i = 0; i < now->rules.count(); i++)
+	{
+		if (compare(now->rules[i]->name, inputName))
+		{
+			errorCode = repeatGName;
+			errorInfor1 = i;
+			return 4441;
+		}
+	}
+	RR = new Rules;
+	RR->SetName(inputName);
+	now->rules.append(RR);
+	iterator.initial(Tree);
+	while (iterator.still())
+	{
+		GT = iterator.target();
+		if (iterator.state() == 1)
+		{
+			site_ = GT->root().site;
+			if ((RegularExp*)GT->root().rules) {
+				switch (site_) {
+					//No[19], case GFORMULA: prefix: 44, degeneracy: 2
+				case 44: //19: GFORMULA, No[0] production rules: GFORMULA->GFORMULAUnit
+					symbolName = eme.GetWord(GT->child(0)->child(0)->root().site);
+					RR->formula.append(SymbolAdd(symbolName));
+					break;
+				case 45: //19: GFORMULA, No[1] production rules: GFORMULA->GFORMULA GFORMULAUnit
+					symbolName = eme.GetWord(GT->child(1)->child(0)->root().site);
+					RR->formula.append(SymbolAdd(symbolName));
+					break;
+				}
+			}
+		}
+		iterator.next();
+	}
+	//length = RR->formula.count();
+	//for (i = 0; i < length / 2; i++)
+	//{
+	//	middle = RR->formula[i];
+	//	RR->formula[i] = RR->formula[length - 1 - i];
+	//	RR->formula[length - 1 - i] = middle;
+	//}
+	return 0;
+}
+void InputPanel::addTerminal(void)
+{
+	size_t i, j;
+	const char* temp;
+	temp = Copy("void");
+	Terminal.append(temp);
+	for (i = 0; i < RegG.count(); i++)
+	{
+		for (j = 0; j < RegG[i]->regs.count(); j++)
+		{
+			temp = Copy(RegG[i]->regs[j]->name);
+			Terminal.append(temp);
+		}
+	}
+	temp = Copy("#");
+	Terminal.append(temp);
+}
+long int InputPanel::SymbolAdd(const char* symbol)
+{
+	long int i;
+	const char* temp;
+	if (symbol == NULL) return -1;
+	for (i = 0; i < Terminal.count(); i++)
+		if (compare(symbol, Terminal[i])) return -i - 1;
+	for (i = 0; i < NonTernimal.count(); i++)
+		if ((compare(symbol, NonTernimal[i]))) return i;
+	temp = Copy(symbol);
+	NonTernimal.append(temp);
+	return NonTernimal.count() - 1;
+}
+int InputPanel::NonTerminalSort(void)
+{
+	vector<size_t> sort;
+	size_t i, j, k; 
+	Rules* now;
+	long int temp;
+	sort.recount(NonTernimal.count());
+	sort.value(0);
+	for (i = 0; i < GrammarG.count(); i++)
+	{
+		for (j = 0; j < NonTernimal.count(); j++)
+			if (compare(GrammarG[i]->name, NonTernimal[j])) sort[j] = i;
+	}
+	for (i = 1; i < sort.count(); i++)
+		if (sort[i] == 0) break;
+	if (i < sort.count() || GrammarG.count() != NonTernimal.count())
+	{
+		errorCode = ErrorNonTernimal;
+		return -9990;
+	}
+	for (j = 1; j < NonTernimal.count(); j++)
+	{
+		free((void*)NonTernimal[j]);
+		NonTernimal[j] = Copy(GrammarG[j]->name);
+	}
+	for (i = 0; i < GrammarG.count(); i++)
+	{
+		for (j = 0; j < GrammarG[i]->rules.count(); j++)
+		{
+			now = GrammarG[i]->rules[j];
+			for (k = 0; k < now->formula.count(); k++)
+			{
+				temp = now->formula[k];
+				now->formula[k] = temp >= 0 ? sort[temp] : temp;
+			}
+		}
+	}
+	return 0;
+}
+
+RegTree::RegTree()
+{
+}
+RegTree::~RegTree()
+{
+}
+
 int RegTree::next_Reg(int state, const char c)
 {
 	switch (state)
@@ -594,298 +2251,296 @@ const int Retree::RulesLength[15] = { \
 1 };
 
 
-
-
 void RegTree::build(const char* reg)
 {
 	BufferChar input;
 	input = reg;
 	build(input);
 }
-void RegTree::build(BufferChar& input)
+void RegTree::build(BufferChar & input)
 {
-	BufferChar result;
-	//BufferChar input;
-	BufferChar intermediate;
-	Morpheme eme;
-	size_t head;
-	list<int> stack;
-	list<RegTree*> SrcTree;
-	RegTree* L,  *R,  *M;
-	int top;
-	int information, temp;
-	Retree::type type;
-	size_t length, i, begin_;
-	int accept, symbol;
-	bool DoNext;
-	char now;
-	int GoFull, GoD, GoI;
-	bool demo_buttom;
-	demo_buttom = false;
-	tree.clear();
-	while (RunBuild(accept, result, input, intermediate))
-	{
-		if(accept != 0) eme.append(result, accept, GroupGet_Reg(accept));
-		else 
+		BufferChar result;
+		//BufferChar input;
+		BufferChar intermediate;
+		Morpheme eme;
+		size_t head;
+		list<int> stack;
+		list<RegTree*> SrcTree;
+		RegTree* L, * R, * M;
+		int top;
+		int information, temp;
+		Retree::type type;
+		size_t length, i, begin_;
+		int accept, symbol;
+		bool DoNext;
+		char now;
+		int GoFull, GoD, GoI;
+		bool demo_buttom;
+		demo_buttom = false;
+		tree.clear();
+		while (RunBuild(accept, result, input, intermediate))
 		{
-			input.dequeue(now);
-			result.append(now);
-			eme.append(result, 0, GroupGet_Reg(0));
-		}
-	}
-	eme.AppendEnd(Retree::TerminalCount + 1);
-	if (demo_buttom)  eme.Demo(stdout);
-	stack.append(0);
-	SrcTree.append(NULL);
-	head = 0;
-	DoNext = true;
-	do
-	{
-		top = stack.top();
-		temp = Retree::ACTION[top][eme[head].accept - 1];
-		information = temp / 4;
-		type = (Retree::type) (temp % 4);
-		
-		if (demo_buttom)fprintf(stdout, "\n\nT = %5d, top = %5d, information = %5d, type = %5d, ", eme[head].accept - 1, top, information, (int)type);
-		if (demo_buttom)fprintf(stdout, "head = %5zu, lex = %s, ", head, eme.GetWord(head));
-		if (demo_buttom)fprintf(stdout, "stack.count() = %5zu, top = %5zu\n//================================\n", stack.count(), SrcTree.count());
-		for (i = 0; (i < stack.count()) && demo_buttom; i++)
-		{
-			fprintf(stdout, "%5d, ", stack[i]);
-			if (SrcTree[i] == NULL)
-				fprintf(stdout, "SrcTree[%5zu]: NULL\n", i);
+			if (accept != 0) eme.append(result, accept, GroupGet_Reg(accept));
 			else
 			{
-				fprintf(stdout, "SrcTree[%5zu]: ", i);
-				SrcTree[i]->Demo(stdout);
-				fprintf(stdout, "\n");
+				input.dequeue(now);
+				result.append(now);
+				eme.append(result, 0, GroupGet_Reg(0));
 			}
 		}
-		switch (type)
+		eme.AppendEnd(Retree::TerminalCount + 1);
+		if (demo_buttom)  eme.Demo(stdout);
+		stack.append(0);
+		SrcTree.append(NULL);
+		head = 0;
+		DoNext = true;
+		do
 		{
-		case Retree::accept:
-			if (demo_buttom)SrcTree[SrcTree.count() - 1]->Demo(stdout);
-			tree.move(SrcTree[SrcTree.count() - 1]->tree);
-			for (i = 0; i < SrcTree.count(); i++) delete SrcTree[i];
-			DoNext = false;
-			break;
-		case Retree::error:
-			DoNext = false;
-			break;
-		case Retree::push:
-			stack.append(information);
-			M = new RegTree;
-			M->grow(eme.GetChar(head));
-			SrcTree.append(M);
-			if (demo_buttom) fprintf(stdout, "\tchar = %c\n", eme.GetChar(head));
-			head += 1;
-			break;
-		case Retree::reduce:
-			symbol = Retree::RulesToSymbol[information];
-			length = Retree::RulesLength[information];
-			begin_ = SrcTree.count() - length;
-			if (demo_buttom) fprintf(stdout, "\tsymbol = %5d, length = %5zu, begin_ = %5zu\n", symbol, length, begin_);
-			switch (information)
-			{
-				//No[0], case Ep: prefix: 0, degeneracy: 1
-			case 0: //0: Ep, No[0] production rules: Ep->RegOr
-				M = SrcTree[begin_];
-				SrcTree[begin_] = NULL;
-				break;
-			//No[1], case RegOr: prefix: 1, degeneracy: 2
-			case 1: //1: RegOr, No[0] production rules: RegOr->Reg
-				M = SrcTree[begin_];
-				SrcTree[begin_] = NULL;
-				break;
-			case 2: //1: RegOr, No[1] production rules: RegOr->Reg Or Reg
-				M = new RegTree;
-				M->grow(SrcTree[begin_], SrcTree[begin_ + 2], RegTree::Alternation);
-				break;
-			//No[2], case Reg: prefix: 3, degeneracy: 2
-			case 3: //2: Reg, No[0] production rules: Reg->Complex
-				M = SrcTree[begin_];
-				SrcTree[begin_] = NULL;
-				break;
-			case 4: //2: Reg, No[1] production rules: Reg->Complex Reg
-				M = new RegTree;
-				M->grow(SrcTree[begin_], SrcTree[begin_ + 1], RegTree::Concatenation);
-				break;
-			//No[3], case Complex: prefix: 5, degeneracy: 4
-			case 5: //3: Complex, No[0] production rules: Complex->Node
-				M = SrcTree[begin_];
-				SrcTree[begin_] = NULL;
-				break;
-			case 6: //3: Complex, No[1] production rules: Complex->Complex plus
-				M = new RegTree;
-				M->grow(SrcTree[begin_], RegTree::OneOrMore);
-				break;
-			case 7: //3: Complex, No[2] production rules: Complex->Complex star
-				M = new RegTree;
-				M->grow(SrcTree[begin_], RegTree::ZeroOrMore);
-				break;
-			case 8: //3: Complex, No[3] production rules: Complex->Complex ZeroOrOne
-				M = new RegTree;
-				M->grow(SrcTree[begin_], RegTree::ZeroOrOne);
-				break;
-			//No[4], case Node: prefix: 9, degeneracy: 2
-			case 9: //4: Node, No[0] production rules: Node->Range
-				M = SrcTree[begin_];
-				SrcTree[begin_] = NULL;
-				break;
-			case 10: //4: Node, No[1] production rules: Node->left RegOr right
-				M = SrcTree[begin_ + 1];
-				SrcTree[begin_ + 1] = NULL;
-				break;
-			//No[5], case Range: prefix: 11, degeneracy: 2
-			case 11: //5: Range, No[0] production rules: Range->Char
-				M = SrcTree[begin_];
-				SrcTree[begin_] = NULL;
-				break;
-			case 12: //5: Range, No[1] production rules: Range->begin Char range Char end
-				M = new RegTree;
-				L = SrcTree[begin_ + 1];
-				R = SrcTree[begin_ + 3];
-				M->grow(L->tree[L->tree.Head].content.lower, R->tree[R->tree.Head].content.upper);
-				break;
-			//No[6], case Char: prefix: 13, degeneracy: 2
-			case 13: //6: Char, No[0] production rules: Char->reserved
-				M = SrcTree[begin_];
-				SrcTree[begin_] = NULL;
-				break;
-			case 14: //6: Char, No[1] production rules: Char->CommonChar
-				M = SrcTree[begin_];
-				SrcTree[begin_] = NULL;
-				break;
-			}
-			for (i = 0; i < length; i++) stack.pop();
-			for (i = 0; i < length; i++) delete SrcTree[begin_ + i];
-			for (i = 0; i < length; i++) SrcTree.pop();
-			GoFull = Retree::GOTO[stack.top()][symbol];
-			GoD = GoFull / 4; 
-			GoI = GoFull % 4;
-			stack.append(GoD);
-			SrcTree.append(M);
-			if (demo_buttom)fprintf(stdout, "\tGOTO[%5d][%5d] = (%5d, %5d)\n", stack.top(), symbol, GoD, GoI);
-			break;
-		}
-	} while (DoNext);
+			top = stack.top();
+			temp = Retree::ACTION[top][eme[head].accept - 1];
+			information = temp / 4;
+			type = (Retree::type)(temp % 4);
 
-	//for (i = 0; i < eme.GetCount(); i++)
-	//{
-	//	top;
-	//}
-	//size_t i;
-	//fprintf(stdout, "count = %zu\n", eme.GetCount());
-	//for (i = 0; i < eme.GetCount(); i++)
-	//{
-	//	fprintf(stdout, "<%d : %d, %s>\n", eme.GetCategory(i), eme.GetAccept(i), eme.GetWord(i));
-	//}
-}
-bool RegTree::RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate)
-{
-	/*
-	example:
-	1 aa
-	2 aaBB
-	3 Bcc
-	input: aaBcc
-	*/
-	char now;
-	//char cc;
-	int state, acc;
-	int action;
-	intermediate.clear();
-	state = 0;
-	acc = 0;
-	action = 0;
-	accept = 0;
-	result.clear();
-	while (input.dequeue(now))
-	{
-		/*state switch*/
-		/*change here to get a different automata*/
-		state = next_Reg(state, now);
-		acc = action_Reg(state);
-		/*change here to get a different automata*/
-		accept = acc != 0 ? acc : accept;
-		switch (action)
-		{
-		case 0://initial
-			if (state != 0 && acc == 0)
+			if (demo_buttom)fprintf(stdout, "\n\nT = %5d, top = %5d, information = %5d, type = %5d, ", eme[head].accept - 1, top, information, (int)type);
+			if (demo_buttom)fprintf(stdout, "head = %5zu, lex = %s, ", head, eme.GetWord(head));
+			if (demo_buttom)fprintf(stdout, "stack.count() = %5zu, top = %5zu\n//================================\n", stack.count(), SrcTree.count());
+			for (i = 0; (i < stack.count()) && demo_buttom; i++)
 			{
-				intermediate.append(now);
-				action = 1;
+				fprintf(stdout, "%5d, ", stack[i]);
+				if (SrcTree[i] == NULL)
+					fprintf(stdout, "SrcTree[%5zu]: NULL\n", i);
+				else
+				{
+					fprintf(stdout, "SrcTree[%5zu]: ", i);
+					SrcTree[i]->Demo(stdout);
+					fprintf(stdout, "\n");
+				}
 			}
-			else if (state != 0 && acc != 0)
+			switch (type)
 			{
-				result.append(now);
-				action = 2;
+			case Retree::accept:
+				if (demo_buttom)SrcTree[SrcTree.count() - 1]->Demo(stdout);
+				tree.move(SrcTree[SrcTree.count() - 1]->tree);
+				for (i = 0; i < SrcTree.count(); i++) delete SrcTree[i];
+				DoNext = false;
+				break;
+			case Retree::error:
+				DoNext = false;
+				break;
+			case Retree::push:
+				stack.append(information);
+				M = new RegTree;
+				M->grow(eme.GetChar(head));
+				SrcTree.append(M);
+				if (demo_buttom) fprintf(stdout, "\tchar = %c\n", eme.GetChar(head));
+				head += 1;
+				break;
+			case Retree::reduce:
+				symbol = Retree::RulesToSymbol[information];
+				length = Retree::RulesLength[information];
+				begin_ = SrcTree.count() - length;
+				if (demo_buttom) fprintf(stdout, "\tsymbol = %5d, length = %5zu, begin_ = %5zu\n", symbol, length, begin_);
+				switch (information)
+				{
+					//No[0], case Ep: prefix: 0, degeneracy: 1
+				case 0: //0: Ep, No[0] production rules: Ep->RegOr
+					M = SrcTree[begin_];
+					SrcTree[begin_] = NULL;
+					break;
+					//No[1], case RegOr: prefix: 1, degeneracy: 2
+				case 1: //1: RegOr, No[0] production rules: RegOr->Reg
+					M = SrcTree[begin_];
+					SrcTree[begin_] = NULL;
+					break;
+				case 2: //1: RegOr, No[1] production rules: RegOr->Reg Or Reg
+					M = new RegTree;
+					M->grow(SrcTree[begin_], SrcTree[begin_ + 2], RegTree::Alternation);
+					break;
+					//No[2], case Reg: prefix: 3, degeneracy: 2
+				case 3: //2: Reg, No[0] production rules: Reg->Complex
+					M = SrcTree[begin_];
+					SrcTree[begin_] = NULL;
+					break;
+				case 4: //2: Reg, No[1] production rules: Reg->Complex Reg
+					M = new RegTree;
+					M->grow(SrcTree[begin_], SrcTree[begin_ + 1], RegTree::Concatenation);
+					break;
+					//No[3], case Complex: prefix: 5, degeneracy: 4
+				case 5: //3: Complex, No[0] production rules: Complex->Node
+					M = SrcTree[begin_];
+					SrcTree[begin_] = NULL;
+					break;
+				case 6: //3: Complex, No[1] production rules: Complex->Complex plus
+					M = new RegTree;
+					M->grow(SrcTree[begin_], RegTree::OneOrMore);
+					break;
+				case 7: //3: Complex, No[2] production rules: Complex->Complex star
+					M = new RegTree;
+					M->grow(SrcTree[begin_], RegTree::ZeroOrMore);
+					break;
+				case 8: //3: Complex, No[3] production rules: Complex->Complex ZeroOrOne
+					M = new RegTree;
+					M->grow(SrcTree[begin_], RegTree::ZeroOrOne);
+					break;
+					//No[4], case Node: prefix: 9, degeneracy: 2
+				case 9: //4: Node, No[0] production rules: Node->Range
+					M = SrcTree[begin_];
+					SrcTree[begin_] = NULL;
+					break;
+				case 10: //4: Node, No[1] production rules: Node->left RegOr right
+					M = SrcTree[begin_ + 1];
+					SrcTree[begin_ + 1] = NULL;
+					break;
+					//No[5], case Range: prefix: 11, degeneracy: 2
+				case 11: //5: Range, No[0] production rules: Range->Char
+					M = SrcTree[begin_];
+					SrcTree[begin_] = NULL;
+					break;
+				case 12: //5: Range, No[1] production rules: Range->begin Char range Char end
+					M = new RegTree;
+					L = SrcTree[begin_ + 1];
+					R = SrcTree[begin_ + 3];
+					M->grow(L->tree[L->tree.Head].content.lower, R->tree[R->tree.Head].content.upper);
+					break;
+					//No[6], case Char: prefix: 13, degeneracy: 2
+				case 13: //6: Char, No[0] production rules: Char->reserved
+					M = SrcTree[begin_];
+					SrcTree[begin_] = NULL;
+					break;
+				case 14: //6: Char, No[1] production rules: Char->CommonChar
+					M = SrcTree[begin_];
+					SrcTree[begin_] = NULL;
+					break;
+				}
+				for (i = 0; i < length; i++) stack.pop();
+				for (i = 0; i < length; i++) delete SrcTree[begin_ + i];
+				for (i = 0; i < length; i++) SrcTree.pop();
+				GoFull = Retree::GOTO[stack.top()][symbol];
+				GoD = GoFull / 4;
+				GoI = GoFull % 4;
+				stack.append(GoD);
+				SrcTree.append(M);
+				if (demo_buttom)fprintf(stdout, "\tGOTO[%5d][%5d] = (%5d, %5d)\n", stack.top(), symbol, GoD, GoI);
+				break;
 			}
-			else
-			{
-				input.backspace(now);
-				return true;
-			}
-			break;
-		case 1://run and waiting for accept
-			if (state == 0)
-			{
-				input.backspace(now);
-				input.backspace(intermediate);
-				return true;
-			}
-			else if (acc != 0)
-			{
-				result.append(intermediate);
-				result.append(now);
-				intermediate.clear();
-				action = 2;
-			}
-			else intermediate.append(now);//continue 
-			break;
-		case 2://accept
-			if (state == 0)//accept
-			{
-				input.backspace(now);
-				//accept = last;
-				return true;
-			}
-			else if (acc == 0)
-			{
-				intermediate.append(now);
-				action = 1;
-			}
-			else result.append(now);
-			break;
-		}
+		} while (DoNext);
+
+		//for (i = 0; i < eme.GetCount(); i++)
+		//{
+		//	top;
+		//}
+		//size_t i;
+		//fprintf(stdout, "count = %zu\n", eme.GetCount());
+		//for (i = 0; i < eme.GetCount(); i++)
+		//{
+		//	fprintf(stdout, "<%d : %d, %s>\n", eme.GetCategory(i), eme.GetAccept(i), eme.GetWord(i));
+		//}
 	}
-	if (action == 1)
-		input.backspace(intermediate);
-	return action != 0;
-}
+bool RegTree::RunBuild(int& accept, BufferChar & result, BufferChar & input, BufferChar & intermediate)
+	{
+		/*
+		example:
+		1 aa
+		2 aaBB
+		3 Bcc
+		input: aaBcc
+		*/
+		char now;
+		//char cc;
+		int state, acc;
+		int action;
+		intermediate.clear();
+		state = 0;
+		acc = 0;
+		action = 0;
+		accept = 0;
+		result.clear();
+		while (input.dequeue(now))
+		{
+			/*state switch*/
+			/*change here to get a different automata*/
+			state = next_Reg(state, now);
+			acc = action_Reg(state);
+			/*change here to get a different automata*/
+			accept = acc != 0 ? acc : accept;
+			switch (action)
+			{
+			case 0://initial
+				if (state != 0 && acc == 0)
+				{
+					intermediate.append(now);
+					action = 1;
+				}
+				else if (state != 0 && acc != 0)
+				{
+					result.append(now);
+					action = 2;
+				}
+				else
+				{
+					input.backspace(now);
+					return true;
+				}
+				break;
+			case 1://run and waiting for accept
+				if (state == 0)
+				{
+					input.backspace(now);
+					input.backspace(intermediate);
+					return true;
+				}
+				else if (acc != 0)
+				{
+					result.append(intermediate);
+					result.append(now);
+					intermediate.clear();
+					action = 2;
+				}
+				else intermediate.append(now);//continue 
+				break;
+			case 2://accept
+				if (state == 0)//accept
+				{
+					input.backspace(now);
+					//accept = last;
+					return true;
+				}
+				else if (acc == 0)
+				{
+					intermediate.append(now);
+					action = 1;
+				}
+				else result.append(now);
+				break;
+			}
+		}
+		if (action == 1)
+			input.backspace(intermediate);
+		return action != 0;
+	}
 
 void RegTree::grow(const RegTree* reg, NodeType T)
-{
-	size_t site;
-	tree.clear();
-	site = tree.NewNodeOffset();
-	tree.SetHead(site);
-	tree.append(reg->tree, site);
-	tree[site].content.type = T;
-}
+	{
+		size_t site;
+		tree.clear();
+		site = tree.NewNodeOffset();
+		tree.SetHead(site);
+		tree.append(reg->tree, site);
+		tree[site].content.type = T;
+	}
 void RegTree::grow(const RegTree* regL, const RegTree* regR, NodeType T)
-{
-	size_t site;
-	tree.clear();
-	site = tree.NewNodeOffset();
-	tree.SetHead(site);
-	tree.append(regL->tree, regR->tree, site);
-	tree[site].content.type = T;
-}
+	{
+		size_t site;
+		tree.clear();
+		site = tree.NewNodeOffset();
+		tree.SetHead(site);
+		tree.append(regL->tree, regR->tree, site);
+		tree[site].content.type = T;
+	}
 void RegTree::grow(char C)
-{
-	grow(C, C);
-}
+	{
+		grow(C, C);
+	}
 void RegTree::grow(char L, char U)
 {
 	size_t site;
@@ -894,653 +2549,426 @@ void RegTree::grow(char L, char U)
 	tree.SetHead(site);
 	value(site, L, U);
 }
-void RegTree::value(const RegTree* reg)
-{
-	size_t site;
-	buffer<size_t> output;
-	list<size_t> s;
+void RegTree::value(const RegTree * reg)
+	{
+		size_t site;
+		buffer<size_t> output;
+		list<size_t> s;
 
-	//std::cout << "\n\n====++++++====== " << std::endl;
-	//reg->Demo(stdout);
-	//std::cout << "\ntree.clear();" << std::endl;
-	tree.clear();
-	//std::cout << "site = tree.append(reg->tree, output, s);" << std::endl;
-	tree.append(reg->tree, output, s, site);
-	//std::cout << "tree.SetHead(site);" << std::endl;
-	tree.SetHead(site);
-	
-	//std::cout << "\nsite: "<< site << std::endl;
-	//Demo(stdout);
-	//std::cout << "\n=============== \n" << std::endl;
-}
+		//std::cout << "\n\n====++++++====== " << std::endl;
+		//reg->Demo(stdout);
+		//std::cout << "\ntree.clear();" << std::endl;
+		tree.clear();
+		//std::cout << "site = tree.append(reg->tree, output, s);" << std::endl;
+		tree.append(reg->tree, output, s, site);
+		//std::cout << "tree.SetHead(site);" << std::endl;
+		tree.SetHead(site);
+
+		//std::cout << "\nsite: "<< site << std::endl;
+		//Demo(stdout);
+		//std::cout << "\n=============== \n" << std::endl;
+	}
 
 void RegTree::Reserved(const char* res)
-{
-	size_t i, length, inner, remain, L, R, parent;
-	tree.clear();
-	tree.SetHead(0);
-	for (length = 0; res[length] != '\0'; length++);
-	for (i = 0; i < length * 2 - 1; i++)
-		tree.NewNodeOffset();
-	parent = length - 1;
-	for (i = 0; i < length; i++)
-		value(i + parent, res[i]);
-	inner = 0;
-	remain = parent;
-	while (remain > 1)
 	{
-		remain >>= 1;
-		inner <<= 1;
-		inner += 1;
+		size_t i, length, inner, remain, L, R, parent;
+		tree.clear();
+		tree.SetHead(0);
+		for (length = 0; res[length] != '\0'; length++);
+		for (i = 0; i < length * 2 - 1; i++)
+			tree.NewNodeOffset();
+		parent = length - 1;
+		for (i = 0; i < length; i++)
+			value(i + parent, res[i]);
+		inner = 0;
+		remain = parent;
+		while (remain > 1)
+		{
+			remain >>= 1;
+			inner <<= 1;
+			inner += 1;
+		}
+		remain = parent - inner;
+		//std::cout << "void RegTree::Reserved(" << res << ");" << std::endl;
+		//std::cout << "Binary representation of parent = " << parent << " is: ";
+		//std::cout << std::bitset<sizeof(parent) * 8> (parent) << std::endl;
+		//std::cout << "Binary representation of inner = " << inner << " is: ";
+		//std::cout << std::bitset<sizeof(inner) * 8>(inner) << std::endl;
+		//std::cout << "remain = " << remain << std::endl;
+		for (i = 0; i < parent; i++)
+		{
+			//site = length - 2 - i;
+			//link(site, last - 1, last, Concatenation);
+			//last -= 2;
+			L = 2 * i + 1;
+			R = 2 * i + 2;
+			if (R < parent)
+				link(i, L, R, Concatenation);
+			else if (R == parent) link(i, L, R + remain * 2, Concatenation);
+			else if (i < inner) link(i, L + remain * 2, R + remain * 2, Concatenation);
+			else link(i, 2 * (i - inner) + parent, 2 * (i - inner) + length, Concatenation);
+		}
 	}
-	remain = parent - inner;
-	//std::cout << "void RegTree::Reserved(" << res << ");" << std::endl;
-	//std::cout << "Binary representation of parent = " << parent << " is: ";
-	//std::cout << std::bitset<sizeof(parent) * 8> (parent) << std::endl;
-	//std::cout << "Binary representation of inner = " << inner << " is: ";
-	//std::cout << std::bitset<sizeof(inner) * 8>(inner) << std::endl;
-	//std::cout << "remain = " << remain << std::endl;
-	for (i = 0; i < parent; i++)
-	{
-		//site = length - 2 - i;
-		//link(site, last - 1, last, Concatenation);
-		//last -= 2;
-		L = 2 * i + 1;
-		R = 2 * i + 2;
-		if (R < parent)
-			link(i, L, R, Concatenation);
-		else if (R == parent) link(i, L, R + remain * 2, Concatenation);
-		else if (i < inner) link(i, L + remain * 2, R + remain * 2, Concatenation);
-		else link(i, 2 * (i - inner) + parent, 2 * (i - inner) + length, Concatenation);
-	}
-}
 void RegTree::Int(void)
-{
-	size_t i;
-	tree.clear();
-	tree.SetHead(0);
-	for (i = 0; i < 7; i++)
-		tree.NewNodeOffset();
-	tree[0].left = 1;
-	tree[0].right = 2;
-	tree[1].left = 3;
-	tree[2].left = 6;
-
-	tree[3].left = 4;
-	tree[3].right = 5;
-	
-	tree[0].content.type = Concatenation;
-	tree[1].content.type = ZeroOrOne;
-	tree[2].content.type = OneOrMore;
-	tree[3].content.type = Alternation;
-
-	value(4, '-');
-	value(5, '+');
-	value(6, '0', '9');
-}
-void RegTree::value(size_t site, char LU)
-{
-	value(site, LU, LU);
-}
-void RegTree::value(size_t site, char L, char U)
-{
-	tree[site].content.type = Range;
-	tree[site].content.lower = L;
-	tree[site].content.upper = U;
-}
-void RegTree::link(size_t site, size_t L, size_t R, RegTree::NodeType T)
-{
-	tree[site].left = L;
-	tree[site].right = R;
-	tree[site].content.type = T;
-}
-void RegTree::link(size_t site, size_t L, NodeType T)
-{
-	tree[site].left = L;
-	tree[site].right = SizeMax;
-	tree[site].content.type = T;
-}
-void RegTree::Identifier(void)
-{
-	size_t i;
-	tree.clear();
-	tree.SetHead(0);
-	for (i = 0; i < 14; i++)
-		tree.NewNodeOffset();
-	link(0, 1, 6, Concatenation);
-	link(1, 2, 5, Alternation);
-	link(2, 3, 4, Alternation);
-	value(3, 'a', 'z');
-	value(4, 'A', 'Z');
-	value(5, '_');
-
-	link(6, 7, ZeroOrMore);
-	link(7, 8, 9, Alternation);
-	link(8, 10, 11, Alternation);
-	link(9, 12, 13, Alternation);
-	value(10, 'a', 'z');
-	value(11, 'A', 'Z');
-	value(12, '_');
-	value(13, '0', '9');
-}
-void RegTree::IdentifierHead(void)
-{
-	RegTree* left, * right, *middle;
-	left = new RegTree();
-	left->grow('a', 'z');
-	right = new RegTree();
-	right->grow('A', 'Z');
-	middle = new RegTree();
-	//left->Demo(stdout);
-	//right->Demo(stdout);
-	//std::cout << "\nmiddle = new RegTree();\n" << std::endl;
-	middle->grow(left, right, Alternation);
-	//std::cout << "grow(left, right, Alternation);\n\n" << std::endl;
-	//middle->Demo(stdout);
-	delete left;
-	left = middle;
-	right->grow('_', '_');
-	grow(left, right, Alternation);
-	delete right;
-	delete left;
-}
-void RegTree::IdentifierInner(void)
-{
-	RegTree* left, * right, * middle, *temp;
-	left = new RegTree();
-	left->grow('a', 'z');
-	right = new RegTree();
-	right->grow('A', 'Z');
-	middle = new RegTree();
-	temp = new RegTree();
-	middle->grow(left, right, Alternation);
-	left->grow('_', '_');
-	right->grow('0', '9');
-	temp->grow(left, right, Alternation);
-	grow(middle, temp, Alternation);
-	delete right;
-	delete left;
-	delete temp;
-	delete middle;
-}
-void RegTree::ConstChar(void)
-{
-	RegTree LR, ESC, common__;
-	RegTree temp1, temp2;
-	LR.grow('\'', '\'');
-	ESC.EscapeAll();
-	common__.CommonChar();
-	
-	temp2.grow(&ESC, &common__, Alternation);
-	temp1.grow(&LR, &temp2, Concatenation);
-	grow(&temp1, &LR, Concatenation);
-	//temp1.grow('', '');
-}
-void RegTree::CommonChar(void)
-{
-	RegTree range1, range2, range3, range4, range5;
-	RegTree temp1, temp2, temp3;
-	range1.grow(' ', '!');//32, 33 34:"
-	range2.grow('#', '&');//35, 38 39:'
-	range3.grow('(', '/');//40, 47
-	range4.grow('0', '[');//48, 91 92: '\\'
-	range5.grow(']', '~');//93, 126
-
-	temp1.grow(&range1, &range2, Alternation);
-	temp2.grow(&range3, &range4, Alternation);
-	temp3.grow(&temp1, &temp2, Alternation);
-	grow(&temp3, &range5, Alternation);
-}
-void RegTree::EscapeAll(void)
-{
-	RegTree all__, ESC, Octa, Hexa, num;
-	Hexa.HexaChar();
-	Octa.OctaChar();
-	ESC.EscapeChar();
-	num.grow(&Octa, &Hexa, Alternation);
-	all__.grow(&num, &ESC, Alternation);
-	ESC.grow('\\', '\\');
-	grow(&ESC, &all__, Concatenation);
-}
-void RegTree::EscapeChar(void)
-{
-	int ele;
-	bool temp;
-	RegTree temp1, temp2, temp3;
-	temp = false;
-	for (ele = 0; (size_t)ele < CharSize; ele++)
 	{
-		if (PostfixSwitch((char)ele) == -1) continue;
-		//std::cout << "ele: " << ele << std::endl;
-		temp1.grow((char)ele, (char)ele);
-		//std::cout << "ele: " << (char)ele << std::endl;
-		if (temp)
-		{
-			//std::cout << "temp1.Demo(stdout);"  << std::endl;
-			//temp1.Demo(stdout);
-			//std::cout << "\ntemp2.Demo(stdout);" << std::endl;
-			//temp2.Demo(stdout);
-			//std::cout << "\ntemp3.grow(&temp1, &temp2, Alternation);" << std::endl;
-			temp3.grow(&temp1, &temp2, Alternation);
-			//std::cout << "temp3.tree.Demo(stdout);" << std::endl;
-			//temp3.tree.Demo(stdout);
-			//std::cout << "temp3.Demo(stdout);" << std::endl;
-			//temp3.Demo(stdout);
+		size_t i;
+		tree.clear();
+		tree.SetHead(0);
+		for (i = 0; i < 7; i++)
+			tree.NewNodeOffset();
+		tree[0].left = 1;
+		tree[0].right = 2;
+		tree[1].left = 3;
+		tree[2].left = 6;
 
-			//std::cout << "\ntemp2.value(&temp3);"  << std::endl;
-			temp2.value(&temp3);
+		tree[3].left = 4;
+		tree[3].right = 5;
 
-		}
-		else
-		{
-			temp2.value(&temp1);
-			temp = !temp;
-		}
-		//std::cout << "end"<< std::endl;
+		tree[0].content.type = Concatenation;
+		tree[1].content.type = ZeroOrOne;
+		tree[2].content.type = OneOrMore;
+		tree[3].content.type = Alternation;
+
+		value(4, '-');
+		value(5, '+');
+		value(6, '0', '9');
 	}
-	value(&temp2);
-}
-void RegTree::HexaChar(void)
-{
-	RegTree temp1, temp2, temp3, temp4;
-	temp1.grow('0', '9');
-	temp2.grow('a', 'f');
-	temp3.grow(&temp1, &temp2, Alternation);
-	temp2.grow('A', 'F');
-	temp1.grow(&temp3, &temp2, Alternation);
-	temp3.grow(&temp1, &temp1, Concatenation);
-	temp4.grow(&temp3, &temp1, Alternation);
-	temp1.grow('x', 'x');
-	temp2.grow('X', 'X');
-	temp3.grow(&temp1, &temp2, Alternation);
-	grow(&temp3, &temp4, Concatenation);
-}
-void RegTree::OctaChar(void)
-{
-	RegTree temp1, temp2, temp3, temp4;
-	temp1.grow('0', '7');
-	temp2.grow(&temp1, &temp1, Concatenation);
-	temp3.grow(&temp2, &temp1, Concatenation);
-	temp4.grow(&temp1, &temp2, Alternation);
-	grow(&temp3, &temp4, Alternation);
-}
-void RegTree::swap(const RegTree*& regL, const RegTree*& regR)
-{
-	const RegTree* middle;
-	middle = regL;
-	regL = regR;
-	regR = middle;
-	return;
-}
-void RegTree::spaces(void)
-{
-	size_t i;
-	tree.clear();
-	tree.SetHead(0);
-	for (i = 0; i < 2; i++)
-		tree.NewNodeOffset();
-	link(0, 1, OneOrMore);
-	value(1, ' ');
-}
-void RegTree::LineFeeds(void)
-{
-	size_t i;
-	tree.clear();
-	tree.SetHead(0);
-	for (i = 0; i < 6; i++)
-		tree.NewNodeOffset();
-	link(0, 1, OneOrMore);
-	link(1, 2, 3, Alternation);
-	link(3, 4, 5, Concatenation);
-	value(2, '\n');
-	value(4, '\r');
-	value(5, '\n');
-}
-void RegTree::Demo(FILE* fp) const
-{
-	//tree.inorderTraversal(output);
-	list<traverse> s;
-	traverse temp;
-	NodeType T;
-	char U, L;
-	temp.site = tree.Head;
-	temp.state = 0;
-	if (temp.site != SizeMax)s.append(temp);
-	while (s.count())
+void RegTree::value(size_t site, char LU)
 	{
-		switch (s.top().state)
+		value(site, LU, LU);
+	}
+void RegTree::value(size_t site, char L, char U)
+	{
+		tree[site].content.type = Range;
+		tree[site].content.lower = L;
+		tree[site].content.upper = U;
+	}
+void RegTree::link(size_t site, size_t L, size_t R, RegTree::NodeType T)
+	{
+		tree[site].left = L;
+		tree[site].right = R;
+		tree[site].content.type = T;
+	}
+void RegTree::link(size_t site, size_t L, NodeType T)
+	{
+		tree[site].left = L;
+		tree[site].right = SizeMax;
+		tree[site].content.type = T;
+	}
+void RegTree::Identifier(void)
+	{
+		size_t i;
+		tree.clear();
+		tree.SetHead(0);
+		for (i = 0; i < 14; i++)
+			tree.NewNodeOffset();
+		link(0, 1, 6, Concatenation);
+		link(1, 2, 5, Alternation);
+		link(2, 3, 4, Alternation);
+		value(3, 'a', 'z');
+		value(4, 'A', 'Z');
+		value(5, '_');
+
+		link(6, 7, ZeroOrMore);
+		link(7, 8, 9, Alternation);
+		link(8, 10, 11, Alternation);
+		link(9, 12, 13, Alternation);
+		value(10, 'a', 'z');
+		value(11, 'A', 'Z');
+		value(12, '_');
+		value(13, '0', '9');
+	}
+void RegTree::IdentifierHead(void)
+	{
+		RegTree* left, * right, * middle;
+		left = new RegTree();
+		left->grow('a', 'z');
+		right = new RegTree();
+		right->grow('A', 'Z');
+		middle = new RegTree();
+		//left->Demo(stdout);
+		//right->Demo(stdout);
+		//std::cout << "\nmiddle = new RegTree();\n" << std::endl;
+		middle->grow(left, right, Alternation);
+		//std::cout << "grow(left, right, Alternation);\n\n" << std::endl;
+		//middle->Demo(stdout);
+		delete left;
+		left = middle;
+		right->grow('_', '_');
+		grow(left, right, Alternation);
+		delete right;
+		delete left;
+	}
+void RegTree::IdentifierInner(void)
+	{
+		RegTree* left, * right, * middle, * temp;
+		left = new RegTree();
+		left->grow('a', 'z');
+		right = new RegTree();
+		right->grow('A', 'Z');
+		middle = new RegTree();
+		temp = new RegTree();
+		middle->grow(left, right, Alternation);
+		left->grow('_', '_');
+		right->grow('0', '9');
+		temp->grow(left, right, Alternation);
+		grow(middle, temp, Alternation);
+		delete right;
+		delete left;
+		delete temp;
+		delete middle;
+	}
+void RegTree::ConstChar(void)
+	{
+		RegTree LR, ESC, common__;
+		RegTree temp1, temp2;
+		LR.grow('\'', '\'');
+		ESC.EscapeAll();
+		common__.CommonChar();
+
+		temp2.grow(&ESC, &common__, Alternation);
+		temp1.grow(&LR, &temp2, Concatenation);
+		grow(&temp1, &LR, Concatenation);
+		//temp1.grow('', '');
+	}
+void RegTree::CommonChar(void)
+	{
+		RegTree range1, range2, range3, range4, range5;
+		RegTree temp1, temp2, temp3;
+		range1.grow(' ', '!');//32, 33 34:"
+		range2.grow('#', '&');//35, 38 39:'
+		range3.grow('(', '/');//40, 47
+		range4.grow('0', '[');//48, 91 92: '\\'
+		range5.grow(']', '~');//93, 126
+
+		temp1.grow(&range1, &range2, Alternation);
+		temp2.grow(&range3, &range4, Alternation);
+		temp3.grow(&temp1, &temp2, Alternation);
+		grow(&temp3, &range5, Alternation);
+	}
+void RegTree::EscapeAll(void)
+	{
+		RegTree all__, ESC, Octa, Hexa, num;
+		Hexa.HexaChar();
+		Octa.OctaChar();
+		ESC.EscapeChar();
+		num.grow(&Octa, &Hexa, Alternation);
+		all__.grow(&num, &ESC, Alternation);
+		ESC.grow('\\', '\\');
+		grow(&ESC, &all__, Concatenation);
+	}
+void RegTree::EscapeChar(void)
+	{
+		int ele;
+		bool temp;
+		RegTree temp1, temp2, temp3;
+		temp = false;
+		for (ele = 0; (size_t)ele < CharSize; ele++)
 		{
-		case 0:
-			if (tree[s.top().site].content.type == Alternation && s.top().site != 0)
-				fputc('(', fp);
-			s.top().state = 1;
-			temp.site = tree[s.top().site].left;
-			if (temp.site != SizeMax)
+			if (PostfixSwitch((char)ele) == -1) continue;
+			//std::cout << "ele: " << ele << std::endl;
+			temp1.grow((char)ele, (char)ele);
+			//std::cout << "ele: " << (char)ele << std::endl;
+			if (temp)
 			{
-				//fprintf(fp, "\n   temp.site: %llu, s.top().site: %llu  \n", temp.site, s.top().site);
-				s.append(temp);
+				//std::cout << "temp1.Demo(stdout);"  << std::endl;
+				//temp1.Demo(stdout);
+				//std::cout << "\ntemp2.Demo(stdout);" << std::endl;
+				//temp2.Demo(stdout);
+				//std::cout << "\ntemp3.grow(&temp1, &temp2, Alternation);" << std::endl;
+				temp3.grow(&temp1, &temp2, Alternation);
+				//std::cout << "temp3.tree.Demo(stdout);" << std::endl;
+				//temp3.tree.Demo(stdout);
+				//std::cout << "temp3.Demo(stdout);" << std::endl;
+				//temp3.Demo(stdout);
+
+				//std::cout << "\ntemp2.value(&temp3);"  << std::endl;
+				temp2.value(&temp3);
+
+			}
+			else
+			{
+				temp2.value(&temp1);
+				temp = !temp;
+			}
+			//std::cout << "end"<< std::endl;
+		}
+		value(&temp2);
+	}
+void RegTree::HexaChar(void)
+	{
+		RegTree temp1, temp2, temp3, temp4;
+		temp1.grow('0', '9');
+		temp2.grow('a', 'f');
+		temp3.grow(&temp1, &temp2, Alternation);
+		temp2.grow('A', 'F');
+		temp1.grow(&temp3, &temp2, Alternation);
+		temp3.grow(&temp1, &temp1, Concatenation);
+		temp4.grow(&temp3, &temp1, Alternation);
+		temp1.grow('x', 'x');
+		temp2.grow('X', 'X');
+		temp3.grow(&temp1, &temp2, Alternation);
+		grow(&temp3, &temp4, Concatenation);
+	}
+void RegTree::OctaChar(void)
+	{
+		RegTree temp1, temp2, temp3, temp4;
+		temp1.grow('0', '7');
+		temp2.grow(&temp1, &temp1, Concatenation);
+		temp3.grow(&temp2, &temp1, Concatenation);
+		temp4.grow(&temp1, &temp2, Alternation);
+		grow(&temp3, &temp4, Alternation);
+	}
+void RegTree::swap(const RegTree * &regL, const RegTree * &regR)
+	{
+		const RegTree* middle;
+		middle = regL;
+		regL = regR;
+		regR = middle;
+		return;
+	}
+void RegTree::spaces(void)
+	{
+		size_t i;
+		tree.clear();
+		tree.SetHead(0);
+		for (i = 0; i < 2; i++)
+			tree.NewNodeOffset();
+		link(0, 1, OneOrMore);
+		value(1, ' ');
+	}
+void RegTree::LineFeeds(void)
+	{
+		size_t i;
+		tree.clear();
+		tree.SetHead(0);
+		for (i = 0; i < 6; i++)
+			tree.NewNodeOffset();
+		link(0, 1, OneOrMore);
+		link(1, 2, 3, Alternation);
+		link(3, 4, 5, Concatenation);
+		value(2, '\n');
+		value(4, '\r');
+		value(5, '\n');
+	}
+void RegTree::Demo(FILE * fp) const
+	{
+		//tree.inorderTraversal(output);
+		list<traverse> s;
+		traverse temp;
+		NodeType T;
+		char U, L;
+		temp.site = tree.Head;
+		temp.state = 0;
+		if (temp.site != SizeMax)s.append(temp);
+		while (s.count())
+		{
+			switch (s.top().state)
+			{
+			case 0:
+				if (tree[s.top().site].content.type == Alternation && s.top().site != 0)
+					fputc('(', fp);
+				s.top().state = 1;
+				temp.site = tree[s.top().site].left;
+				if (temp.site != SizeMax)
+				{
+					//fprintf(fp, "\n   temp.site: %llu, s.top().site: %llu  \n", temp.site, s.top().site);
+					s.append(temp);
+					break;
+				}
+
+			case 1:
+				T = tree[s.top().site].content.type;
+				if (T == Alternation)
+					fputc('|', fp);
+				else if (T == OneOrMore)
+					fprintf(fp, "^{+}");
+				else if (T == ZeroOrMore)
+					fprintf(fp, "^{*}");
+				else if (T == ZeroOrOne)
+					fputc('?', fp);
+				else if (T == Range)
+				{
+					U = tree[s.top().site].content.upper;
+					L = tree[s.top().site].content.lower;
+					if (U != L)
+					{
+						if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\'\\%d\'-", (int)L);
+						else fprintf(fp, "[\'%c\'-", L);
+						if ((int)U < 32 || (int)U == 127) fprintf(fp, "\'\\%d\']", (int)U);
+						else fprintf(fp, "\'%c\']", U);
+					}
+					else
+					{
+						if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\'\\%d\']", (int)L);
+						else fprintf(fp, "\'%c\'", L);
+					}
+
+				}
+				s.top().state = 2;
+				temp.site = tree[s.top().site].right;
+				if (temp.site != SizeMax)
+				{
+					s.append(temp);
+					break;
+				}
+			case 2:
+				if (tree[s.top().site].content.type == Alternation && s.top().site != 0)
+					fputc(')', fp);
+				s.pop();
 				break;
 			}
-			
-		case 1:
-			T = tree[s.top().site].content.type;
-			if (T == Alternation)
-				fputc('|', fp);
-			else if (T == OneOrMore)
-				fprintf(fp, "^{+}");
-			else if (T == ZeroOrMore)
-				fprintf(fp, "^{*}");
-			else if (T == ZeroOrOne)
-				fputc('?', fp);
-			else if (T == Range)
-			{
-				U = tree[s.top().site].content.upper;
-				L = tree[s.top().site].content.lower;
-				if (U != L)
-				{
-					if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\'\\%d\'-", (int)L);
-					else fprintf(fp, "[\'%c\'-", L);
-					if ((int)U < 32 || (int)U == 127) fprintf(fp, "\'\\%d\']", (int)U);
-					else fprintf(fp, "\'%c\']", U);
-				}
-				else
-				{
-					if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\'\\%d\']", (int)L);
-					else fprintf(fp, "\'%c\'", L);
-				}
-					
-			}
-			s.top().state = 2;
-			temp.site = tree[s.top().site].right;
-			if (temp.site != SizeMax)
-			{
-				s.append(temp);
-				break;
-			}
-		case 2:
-			if (tree[s.top().site].content.type == Alternation && s.top().site != 0)
-				fputc(')', fp);
-			s.pop();
+		}
+	}
+void RegTree::Demo(FILE * fp, RegTree::NodeType T)
+	{
+		switch (T)
+		{
+		case hyperlex::RegTree::Concatenation:
+			fprintf(fp, "Concatenation\n");
+			break;
+		case hyperlex::RegTree::Alternation:
+			fprintf(fp, "Alternation\n");
+			break;
+		case hyperlex::RegTree::ZeroOrMore:
+			fprintf(fp, "ZeroOrMore\n");
+			break;
+		case hyperlex::RegTree::OneOrMore:
+			fprintf(fp, "OneOrMore\n");
+			break;
+		case hyperlex::RegTree::ZeroOrOne:
+			fprintf(fp, "ZeroOrOne\n");
+			break;
+		case hyperlex::RegTree::Range:
+			fprintf(fp, "Range\n");
+			break;
+		default:
+			fprintf(fp, "???????????\n");
 			break;
 		}
 	}
-}
-void RegTree::Demo(FILE* fp, RegTree::NodeType T)
-{
-	switch (T)
+void RegTree::Demo(FILE * fp, char L, char U)
 	{
-	case hyperlex::RegTree::Concatenation:
-		fprintf(fp, "Concatenation\n");
-		break;
-	case hyperlex::RegTree::Alternation:
-		fprintf(fp, "Alternation\n");
-		break;
-	case hyperlex::RegTree::ZeroOrMore:
-		fprintf(fp, "ZeroOrMore\n");
-		break;
-	case hyperlex::RegTree::OneOrMore:
-		fprintf(fp, "OneOrMore\n");
-		break;
-	case hyperlex::RegTree::ZeroOrOne:
-		fprintf(fp, "ZeroOrOne\n");
-		break;
-	case hyperlex::RegTree::Range:
-		fprintf(fp, "Range\n");
-		break;
-	default:
-		fprintf(fp, "???????????\n");
-		break;
+		if (U != L)
+		{
+			if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\\%d-", (int)L);
+			else fprintf(fp, "[%c-", L);
+			if ((int)U < 32 || (int)U == 127) fprintf(fp, "\\%d]", (int)U);
+			else fprintf(fp, "%c]", U);
+		}
+		else
+		{
+			if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\\%d]", (int)L);
+			else fputc(L, fp);
+		}
 	}
-}
-void RegTree::Demo(FILE* fp, char L, char U)
-{
-	if (U != L)
-	{
-		if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\\%d-", (int)L);
-		else fprintf(fp, "[%c-", L);
-		if ((int)U < 32 || (int)U == 127) fprintf(fp, "\\%d]", (int)U);
-		else fprintf(fp, "%c]", U);
-	}
-	else
-	{
-		if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\\%d]", (int)L);
-		else fputc(L, fp);
-	}
-}
 
-void RegTree::info::Demo(FILE* fp)
+void RegTree::info::Demo(FILE * fp) const
 {
 	RegTree::Demo(fp, lower, upper);
 	RegTree::Demo(fp, type);
 }
 
-static const char* Copy(const char* input)
-{
-	char* nnnn;
-	size_t length, i;
-	for (length = 0; input[length] != '\0'; length++);
-	length += 1;
-	nnnn = (char*)malloc(sizeof(char) * length);
-	for (i = 0; i < length; i++) nnnn[i] = input[i];
-	return nnnn;
-}
-
-
-struct Reg
-{
-	enum regular
-	{
-		_identifier_ = 1,
-		_integar_ = 2,
-		_lexical_ = 3,
-		_grammatical_ = 4,
-		_formula_ = 5,
-		_priority_ = 6,
-		_void_ = 7,
-		_spaces_ = 8,
-		_enters_ = 9,
-		_semicolon_ = 10,
-		_colon_ = 11,
-		_dot_ = 12,
-		_braceL_ = 13,
-		_braceR_ = 14,
-		_anntationS_ = 15,
-		_anntationM_ = 16,
-		_left_ = 17,
-		_right_ = 18,
-		_begin_ = 19,
-		_end_ = 20,
-		_range_ = 21,
-		_star_ = 22,
-		_plus_ = 23,
-		_ZeroOrOne_ = 24,
-		_idchar_ = 25,
-		_CommonChar_ = 26,
-		_Or_ = 27
-	};
-	enum group
-	{
-		__Id__ = 1,
-		__number__ = 2,
-		__reserved_word__ = 3,
-		__division__ = 4,
-		__braket__ = 5,
-		__annotation__ = 6,
-		__superscript__ = 7,
-		__char__ = 8,
-		__Or__ = 9
-	};
-	static int next(int state, const char c);
-	static int action(int state);
-	static int GroupGet(int state);
-};
-struct Panel
-{
-	enum type
-	{
-		accept = 0,
-		error = 1,
-		push = 2,
-		reduce = 3
-	};
-	static const size_t StateCount;
-	static const size_t NonTerminalCount;
-	static const size_t TerminalCount;
-	static const size_t RulesCount;
-	static const int GOTO[44][26];
-	static const int ACTION[44][28];
-	static const int RulesToSymbol[42];
-	static const int RulesLength[42];
-};
-class InputPanel
-{
-public:
-	InputPanel();
-	~InputPanel();
-	int build(FILE* fp);
-	int build(const char* input);
-	struct Group
-	{
-		size_t group;
-		const char* name;
-		size_t count;
-		size_t offset;
-		Group();
-		~Group();
-		void SetName(const char* input);
-	};
-	struct RegContent
-	{
-		const char* name;
-		size_t priority;
-		//When two distinct regular expressions match simultaneously, 
-		//the regular expression with the higher priority number is accepted.
-		RegTree* reg;
-		RegContent();
-		~RegContent();
-		void SetName(const char* input);
-	};
-	struct Rules
-	{
-		const char* name;
-		list<long int> formula;
-		Rules();
-		~Rules();
-		void SetName(const char* input);
-	};
-private:
-	bool GrammarEnclosed;
-	list<Group*> RegG;
-	list<RegContent*> RegC;
-	
-	list<const char*> Terminal;
-	list<const char*> NonTernimal;
-	list<Group*> GrammerG;
-	list<Rules*> rules;
-	int buildGanalysis(const Morpheme& eme);
-	void NeglectNullToken(Morpheme& eme) const;
-};
-InputPanel::InputPanel()
-{
-	const char *s_temp;
-	GrammarEnclosed = false;
-	s_temp = Copy("null");
-	Terminal.append(s_temp);
-	return;
-}
-InputPanel::~InputPanel()
-{
-	size_t i;
-	for (i = 0; i < RegG.count(); i++) delete RegG[i];
-	for (i = 0; i < RegC.count(); i++) delete RegC[i];
-
-	for (i = 0; i < GrammerG.count(); i++) delete GrammerG[i];
-	for (i = 0; i < rules.count(); i++) delete rules[i];
-
-	for (i = 0; i < Terminal.count(); i++) free((void*)Terminal[i]);
-	for (i = 0; i < NonTernimal.count(); i++) free((void*)NonTernimal[i]);
-}
-InputPanel::RegContent::RegContent()
-{
-	reg = NULL;
-	name = NULL;
-}
-InputPanel::RegContent::~RegContent()
-{
-	delete reg;
-	free((void*)name);
-	name = NULL;
-	reg = NULL;
-}
-void InputPanel::RegContent::SetName(const char* input)
-{
-	name = Copy(input);
-}
-InputPanel::Group::Group()
-{
-	name = NULL;
-}
-InputPanel::Group::~Group()
-{
-	free((void*)name);
-}
-void InputPanel::Group::SetName(const char* input)
-{
-	name = Copy(input);
-}
-InputPanel::Rules::Rules()
-{
-	name = NULL;
-}
-InputPanel::Rules::~Rules()
-{
-	free((void*)name);
-	name = NULL;
-}
-void InputPanel::Rules::SetName(const char* input)
-{
-	name = Copy(input);
-}
-
-
-int InputPanel::build(FILE* fp)
-{
-	Morpheme eme;
-	eme.Build<Reg>(fp);
-	NeglectNullToken(eme);
-	return buildGanalysis(eme);
-}
-int InputPanel::build(const char* input)
-{
-	Morpheme eme;
-	eme.Build<Reg>(input);
-	NeglectNullToken(eme);
-	return buildGanalysis(eme);
-}
-int InputPanel::buildGanalysis(const Morpheme& eme)
-{
-	int error;
-	GrammarTree Tree;
-	error = Tree.build<Panel>(eme);
-	return error;
-}
-void InputPanel::NeglectNullToken(Morpheme& eme) const
-{
-	size_t i, site;
-	Reg::regular T;
-	site = 0;
-	for (i = 0; i < eme.GetCount(); i++)
-	{
-		T = (Reg::regular)(eme[i].accept);
-		if ((T != Reg::_spaces_) && (T != Reg::_enters_))
-		{
-			if (i != site) eme.UnitMove(i, site);
-			site += 1;
-		}
-	}
-	eme.CountReset(site);
-	return;
-}
 
 
 lexicalPanel::lexicalPanel()
@@ -1636,6 +3064,7 @@ lexicalPanel::infor::infor()
 	reg = NULL;
 	name = NULL;
 	attribute = NULL;
+	group = 0;
 }
 lexicalPanel::infor::~infor()
 {
@@ -1719,10 +3148,10 @@ void lexicalPanel::CppPrint(FILE* fp, const char* name)
 	}
 	fprintf(fp, "\n\t};\n");
 	fprintf(fp, "\tenum group\n\t{\n");
-	fprintf(fp, "\t\t__%s__ = %zu", attribute[0], (size_t)1);
+	fprintf(fp, "\t\t_%s___ = %zu", attribute[0], (size_t)1);
 	for (i = 1; i < attribute.count(); i++)
 	{
-		fprintf(fp, ",\n\t\t__%s__ = %zu", attribute[i], i + 1);
+		fprintf(fp, ",\n\t\t_%s___ = %zu", attribute[i], i + 1);
 	}
 	fprintf(fp, "\n\t};\n");
 	fprintf(fp, "\tstatic int next(int state, const char c);\n");
@@ -1993,6 +3422,240 @@ void lexicalPanel::SetRegS(void)
 	regular.append(II);
 
 	SetReg();
+}
+void lexicalPanel::SetRegFinal(void)
+{
+	infor* II;
+	//identifier: identifier
+	{
+		II = new infor;
+		II->SetAttribute("identifier");
+		II->SetName("identifier");
+		II->reg = new RegTree();
+		II->priority = 1;
+		II->reg->Identifier();
+		regular.append(II);
+	}
+	//const: integar, CommonChar, idChar
+	{
+		II = new infor;
+		II->SetAttribute("const");
+		II->SetName("integar");
+		II->reg = new RegTree();
+		II->reg->build("\'+\'[0-9]+");//group (\'+\'|\'-\')?[0-9]+
+		II->priority = 3;
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("const");
+		II->SetName("CommonChar");
+		II->reg = new RegTree();
+		II->reg->ConstChar();
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("const");
+		II->SetName("idChar");
+		II->priority = 2;
+		II->reg = new RegTree();
+		II->reg->IdentifierInner();
+		regular.append(II);
+
+		
+	}
+	//reserved: lexical, grammar, void, all
+	{
+		II = new infor;
+		II->SetName("lexical");
+		II->SetAttribute("reserved");
+		II->reg = new RegTree();
+		II->reg->build("lexical");
+		II->priority = 4;
+		regular.append(II);
+
+		II = new infor;
+		II->SetName("grammar");
+		II->SetAttribute("reserved");
+		II->reg = new RegTree();
+		II->reg->build("grammar");
+		II->priority = 4;
+		regular.append(II);
+
+		II = new infor;
+		II->SetName("void");
+		II->SetAttribute("reserved");
+		II->reg = new RegTree();
+		II->reg->build("void");
+		II->priority = 4;
+		regular.append(II);
+
+		II = new infor;
+		II->SetName("all");
+		II->SetAttribute("reserved");
+		II->reg = new RegTree();
+		II->reg->build("all");
+		II->priority = 4;
+		regular.append(II);
+	}
+	//format: spaces, enters, tab
+	{
+		II = new infor;
+		II->SetAttribute("format");
+		II->SetName("spaces");
+		II->reg = new RegTree();
+		II->reg->spaces();
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("format");
+		II->SetName("enters");
+		II->reg = new RegTree();
+		II->reg->LineFeeds();
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("format");
+		II->SetName("tab");
+		II->reg = new RegTree();
+		II->reg->build("\'\\t\'");
+		regular.append(II);
+	}
+	//division: semicolon, colon, dot
+	{
+		II = new infor;
+		II->SetAttribute("division");
+		II->SetName("semicolon");
+		II->reg = new RegTree();
+		II->reg->Reserved(";");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("division");
+		II->SetName("colon");
+		II->reg = new RegTree();
+		II->reg->Reserved(":");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("division");
+		II->SetName("dot");
+		II->reg = new RegTree();
+		II->reg->Reserved(".");
+		regular.append(II);
+	}
+	//braket: braceL, braceR, left, right, squareL, squareR, angleL, angleR;
+	{
+		II = new infor;
+		II->SetAttribute("braket");
+		II->SetName("braceL");
+		II->reg = new RegTree();
+		II->reg->Reserved("{");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("braket");
+		II->SetName("braceR");
+		II->reg = new RegTree();
+		II->reg->Reserved("}");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("braket");
+		II->SetName("left");
+		II->reg = new RegTree();
+		II->reg->Reserved("(");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("braket");
+		II->SetName("right");
+		II->reg = new RegTree();
+		II->reg->Reserved(")");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("braket");
+		II->SetName("squareL");
+		II->reg = new RegTree();
+		II->reg->Reserved("[");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("braket");
+		II->SetName("squareR");
+		II->reg = new RegTree();
+		II->reg->Reserved("]");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("braket");
+		II->SetName("angleL");
+		II->reg = new RegTree();
+		II->reg->Reserved("<");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("braket");
+		II->SetName("angleR");
+		II->reg = new RegTree();
+		II->reg->Reserved(">");
+		regular.append(II);
+	}
+	//anntation: anntationS, anntationM
+	{
+		II = new infor;
+		II->SetAttribute("annotation");
+		II->SetName("anntationS");
+		II->reg = new RegTree();
+		II->reg->build("\'/\'\'/\'([\'\\0\'-\'\\11\']|[\'\\13\'-\'\\177\'])*\'\\n\'");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("annotation");
+		II->SetName("anntationM");
+		II->reg = new RegTree();
+		II->reg->build("\'/\'\'*\'([\'\\0\'-\'\\177\'])*\'*\'+\'/\'");/**///
+		regular.append(II);
+	}
+	//RegSymbol: range, star, plus, question, or;
+	{
+		II = new infor;
+		II->SetAttribute("RegSymbol");
+		II->SetName("range");
+		II->reg = new RegTree();
+		II->reg->Reserved("-");
+		II->priority = 5;
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("RegSymbol");
+		II->SetName("star");
+		II->reg = new RegTree();
+		II->reg->Reserved("*");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("RegSymbol");
+		II->SetName("plus");
+		II->reg = new RegTree();
+		II->reg->Reserved("+");
+		II->priority = 5;
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("RegSymbol");
+		II->SetName("question");
+		II->reg = new RegTree();
+		II->reg->Reserved("?");
+		regular.append(II);
+
+		II = new infor;
+		II->SetAttribute("RegSymbol");
+		II->SetName("or");
+		II->reg = new RegTree();
+		II->reg->Reserved("|");
+		regular.append(II);
+	}
 }
 void lexicalPanel::append(lexicalPanel::infor* II)
 {
@@ -3648,7 +5311,7 @@ int grammerS::build(BufferChar& input)
 			input.dequeue(aa);
 			continue;
 		}
-		Result = result.vector();
+		Result = result.ptr();
 		//fprintf(stdout, "<%s, %d>\n", Result, accept);
 		//fprintf(stdout, "%s", result.vector());
 		//continue;
@@ -5328,124 +6991,238 @@ char hyperlex::CharGet(int& error, const char* list, size_t end, size_t& head)
 
 
 
-const size_t Panel::StateCount = 44;
-const size_t Panel::NonTerminalCount = 26;
-const size_t Panel::TerminalCount = 27;
-const size_t Panel::RulesCount = 42;
-const int Panel::GOTO[44][26] = { \
-{1, 6, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 94, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 18, 1}, \
-{1, 1, 1, 1, 30, 34, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 86, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 90}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 42, 1}, \
-{1, 1, 1, 1, 1, 1, 46, 50, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 78, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 82}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 58, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 62, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 66}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 102, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 106, 110, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 170, 1, 1, 1, 1, 1, 174}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 118, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 122, 126, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 162, 1, 1, 1, 166}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 138, 142, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
+const size_t Panel::StateCount = 95;
+const size_t Panel::NonTerminalCount = 23;
+const size_t Panel::TerminalCount = 29;
+const size_t Panel::RulesCount = 54;
+const int Panel::GOTO[95][23] = { \
+{1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 14}, \
+{1, 1, 26, 30, 1, 1, 34, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 254, 1, 1, 34, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 258, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 58}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 230, 234, 1, 70, 74, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 66, 1, 70, 74, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 118, 122, 126, 130, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 210, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 194, 126, 130, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 174, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 186, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 206, 130, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 210, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 238, 1, 70, 74, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 242, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 274}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 278, 282, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 374, 1, 1, 1, 378, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 290}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 334, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 298, 302, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 326, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 354, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 346, 302, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 326, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 366, 302, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 326, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
 //==============================
-const int Panel::ACTION[44][28] = { \
-{1, 1, 1, 14, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{11, 1, 1, 1, 98, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 38, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 26, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 163, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 38, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 43, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 74, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{167, 167, 1, 1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 39, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{15, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{7, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 114, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 114, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 123, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 123, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 130, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 130, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 135, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 135, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 134, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 146, 1, 1, 1, 1, 1, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 146, 1, 1, 1, 1, 1, 150, 1, 1, 158, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 147, 1, 1, 1, 1, 1, 147, 1, 1, 147, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 155, 1, 1, 1, 1, 1, 155, 1, 1, 155, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 159, 1, 1, 1, 1, 1, 159, 1, 1, 159, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 151, 1, 1, 1, 1, 1, 151, 1, 1, 151, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 143, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 143, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 139, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 139, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 131, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 131, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 127, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 127, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{19, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
+const int Panel::ACTION[95][30] = { \
+{1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 18, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 38, 1, 1, 1, 1, 1, 42, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 215, 1, 1, 1, 215, 215, 215, 215, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 38, 1, 1, 1, 1, 1, 42, 1, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 15, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 62, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 47, 1, 1, 1, 46, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 50, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 55, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 78, 1, 1, 1, 82, 86, 90, 94, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 78, 1, 1, 1, 82, 86, 90, 94, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 23, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 110, 114, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 59, 59, 1, 1, 1, 98, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 83, 83, 1, 1, 1, 83, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 71, 71, 1, 1, 1, 71, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 75, 75, 1, 1, 1, 75, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 67, 67, 1, 1, 1, 67, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 79, 79, 1, 1, 1, 79, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 102, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 106, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 63, 63, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 39, 1, 1, 1, 39, 39, 39, 39, 1, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 226, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 87, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 202}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 91, 1, 1, 1, 1, 154, 91, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 91}, \
+{1, 1, 1, 99, 99, 1, 1, 1, 1, 1, 1, 1, 99, 1, 1, 1, 1, 99, 99, 99, 1, 99, 1, 1, 1, 1, 214, 218, 222, 99}, \
+{1, 1, 1, 107, 107, 1, 1, 1, 1, 1, 1, 1, 107, 1, 1, 1, 1, 107, 107, 107, 1, 107, 1, 1, 1, 1, 107, 107, 107, 107}, \
+{1, 1, 1, 123, 123, 1, 1, 1, 1, 1, 1, 1, 123, 1, 1, 1, 1, 123, 123, 123, 1, 123, 1, 1, 1, 1, 123, 123, 123, 123}, \
+{1, 1, 1, 135, 135, 1, 1, 1, 1, 1, 1, 1, 135, 1, 1, 1, 1, 135, 135, 135, 1, 135, 1, 1, 1, 1, 135, 135, 135, 135}, \
+{1, 1, 1, 147, 147, 1, 1, 1, 1, 1, 1, 1, 147, 1, 1, 1, 1, 147, 147, 147, 147, 147, 1, 1, 1, 147, 147, 147, 147, 147}, \
+{1, 1, 1, 151, 151, 1, 1, 1, 1, 1, 1, 1, 151, 1, 1, 1, 1, 151, 151, 151, 151, 151, 1, 1, 1, 151, 151, 151, 151, 151}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 166, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 170, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 131, 131, 1, 1, 1, 1, 1, 1, 1, 131, 1, 1, 1, 1, 131, 131, 131, 1, 131, 1, 1, 1, 1, 131, 131, 131, 131}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 178, 1, 1, 1, 1, 182, 1, 1, 1, 1}, \
+{1, 1, 1, 139, 139, 1, 1, 1, 1, 1, 1, 1, 139, 1, 1, 1, 1, 139, 139, 139, 1, 139, 1, 1, 1, 1, 139, 139, 139, 139}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 190, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 143, 143, 1, 1, 1, 1, 1, 1, 1, 143, 1, 1, 1, 1, 143, 143, 143, 1, 143, 1, 1, 1, 1, 143, 143, 143, 143}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 198, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 202}, \
+{1, 1, 1, 127, 127, 1, 1, 1, 1, 1, 1, 1, 127, 1, 1, 1, 1, 127, 127, 127, 1, 127, 1, 1, 1, 1, 127, 127, 127, 127}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 95, 1, 1, 1, 1, 154, 95, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 95}, \
+{1, 1, 1, 103, 103, 1, 1, 1, 1, 1, 1, 1, 103, 1, 1, 1, 1, 103, 103, 103, 1, 103, 1, 1, 1, 1, 214, 218, 222, 103}, \
+{1, 1, 1, 115, 115, 1, 1, 1, 1, 1, 1, 1, 115, 1, 1, 1, 1, 115, 115, 115, 1, 115, 1, 1, 1, 1, 115, 115, 115, 115}, \
+{1, 1, 1, 111, 111, 1, 1, 1, 1, 1, 1, 1, 111, 1, 1, 1, 1, 111, 111, 111, 1, 111, 1, 1, 1, 1, 111, 111, 111, 111}, \
+{1, 1, 1, 119, 119, 1, 1, 1, 1, 1, 1, 1, 119, 1, 1, 1, 1, 119, 119, 119, 1, 119, 1, 1, 1, 1, 119, 119, 119, 119}, \
+{1, 43, 1, 1, 1, 43, 43, 43, 43, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 78, 1, 1, 1, 82, 86, 90, 94, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 31, 1, 1, 1, 31, 31, 31, 31, 1, 1, 1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 35, 1, 1, 1, 35, 35, 35, 35, 1, 1, 1, 1, 1, 1, 1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 27, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{211, 211, 1, 1, 1, 1, 211, 211, 1, 1, 1, 1, 250, 1, 1, 1, 211, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{207, 207, 1, 1, 1, 1, 207, 207, 1, 1, 1, 1, 1, 1, 1, 1, 207, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 19, 1, 1, 1, 1, 1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{7, 1, 1, 1, 1, 1, 262, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 266, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 270, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 18, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 286, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 286, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 155, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 155, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 294, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 338, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 330, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 179, 1, 1, 1, 179, 179, 179, 179, 1, 1, 1, 179, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 199, 1, 1, 1, 199, 199, 199, 199, 1, 1, 1, 199, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 191, 1, 1, 1, 191, 191, 191, 191, 1, 1, 1, 191, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 195, 1, 1, 1, 195, 195, 195, 195, 1, 1, 1, 195, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 187, 1, 1, 1, 187, 187, 187, 187, 1, 1, 1, 187, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 203, 1, 1, 1, 203, 203, 203, 203, 1, 1, 1, 203, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 183, 1, 1, 1, 183, 183, 183, 183, 1, 1, 1, 183, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 163, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 163, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 358, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 342, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 350, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 171, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 171, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 362, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 370, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 175, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 175, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 159, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 159, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
 //==============================
-const int Panel::RulesToSymbol[42] = { \
+const int Panel::RulesToSymbol[54] = { \
 0,\
 1,\
 1,\
 2,\
+2,\
+3,\
 3,\
 4,\
 4,\
 5,\
+5,\
+6,\
 6,\
 6,\
 7,\
+7,\
+8,\
+8,\
+8,\
 8,\
 8,\
 9,\
 10,\
+10,\
+11,\
 11,\
 12,\
 12,\
+12,\
+12,\
 13,\
 13,\
-14,\
+13,\
 14,\
 14,\
 14,\
@@ -5458,32 +7235,38 @@ const int Panel::RulesToSymbol[42] = { \
 18,\
 18,\
 19,\
+19,\
+20,\
+20,\
+20,\
 20,\
 20,\
 21,\
-22,\
-22,\
-23,\
-23,\
-24,\
-25 };
+21,\
+22 };
 //==============================
-const int Panel::RulesLength[42] = { \
-1,\
-2,\
+const int Panel::RulesLength[54] = { \
 1,\
 4,\
+10,\
+1,\
+2,\
+3,\
 4,\
 1,\
 2,\
+2,\
 4,\
 1,\
-2,\
+1,\
 4,\
-2,\
-2,\
+1,\
 4,\
-4,\
+1,\
+1,\
+1,\
+1,\
+1,\
 1,\
 1,\
 3,\
@@ -5495,22 +7278,85 @@ const int Panel::RulesLength[42] = { \
 2,\
 1,\
 3,\
+3,\
 1,\
+3,\
 5,\
 1,\
 1,\
 1,\
 2,\
 4,\
-1,\
-2,\
 4,\
+4,\
+5,\
 1,\
 2,\
 1,\
 1,\
+1,\
+1,\
+1,\
 2,\
+1,\
 2 };
+//==============================
+const char* const Panel::RulesName[54] = { \
+"Ep->TEXT ",\
+"TEXT->lexical BEGIN LEXICAL END ",\
+"TEXT->lexical BEGIN LEXICAL END grammar colon identifier BEGIN GRAMMAR END ",\
+"LEXICAL->RegGROUP ",\
+"LEXICAL->LEXICAL RegGROUP ",\
+"RegGROUP->RegGROUPNAME colon RegDEF ",\
+"RegGROUP->RegGROUPNAME BEGIN REGDEFS END ",\
+"REGDEFS->RegDEF ",\
+"REGDEFS->REGDEFS RegDEF ",\
+"RegDEF->RegNAME semicolon ",\
+"RegDEF->RegNAME colon REGBODY semicolon ",\
+"RegGROUPNAME->identifier ",\
+"RegGROUPNAME->void ",\
+"RegGROUPNAME->identifier left integer right ",\
+"RegNAME->RegNAMEHead ",\
+"RegNAME->RegNAMEHead left integer right ",\
+"RegNAMEHead->void ",\
+"RegNAMEHead->lexical ",\
+"RegNAMEHead->grammar ",\
+"RegNAMEHead->all ",\
+"RegNAMEHead->identifier ",\
+"REGBODY->REGEXPRESSor ",\
+"REGEXPRESSor->REGEXPRESS ",\
+"REGEXPRESSor->REGEXPRESSor or REGEXPRESS ",\
+"REGEXPRESS->RegCOMPLEX ",\
+"REGEXPRESS->REGEXPRESS RegCOMPLEX ",\
+"RegCOMPLEX->RegNODE ",\
+"RegCOMPLEX->RegCOMPLEX plus ",\
+"RegCOMPLEX->RegCOMPLEX star ",\
+"RegCOMPLEX->RegCOMPLEX question ",\
+"RegNODE->RegLEAF ",\
+"RegNODE->left REGEXPRESSor right ",\
+"RegNODE->angleL identifier angleR ",\
+"RegLEAF->RegCHAR ",\
+"RegLEAF->squareL RegCHAR squareR ",\
+"RegLEAF->squareL RegCHAR range RegCHAR squareR ",\
+"RegCHAR->CommonChar ",\
+"RegCHAR->idChar ",\
+"GRAMMAR->GrammerDEF ",\
+"GRAMMAR->GRAMMAR GrammerDEF ",\
+"GrammerDEF->identifier colon GFORMULA semicolon ",\
+"GrammerDEF->identifier BEGIN GnameFORMULAS END ",\
+"GnameFORMULAS->identifier colon GFORMULA semicolon ",\
+"GnameFORMULAS->GnameFORMULAS identifier colon GFORMULA semicolon ",\
+"GFORMULA->GFORMULAUnit ",\
+"GFORMULA->GFORMULA GFORMULAUnit ",\
+"GFORMULAUnit->void ",\
+"GFORMULAUnit->lexical ",\
+"GFORMULAUnit->grammar ",\
+"GFORMULAUnit->identifier ",\
+"GFORMULAUnit->all ",\
+"END->braceR semicolon ",\
+"END->braceR ",\
+"BEGIN->colon braceL " };
+
 
 
 
@@ -5519,38 +7365,39 @@ int Reg::next(int state, const char c)
 	switch (state)
 	{
 	case 0:
-		if (c == (char)10) return 9;
-		else if (c == (char)13) return 29;
-		else if (c == ' ') return 8;
-		else if (c == '\'') return 28;
+		if (c == (char)9) return 11;
+		else if (c == (char)10) return 10;
+		else if (c == (char)13) return 30;
+		else if (c == ' ') return 9;
+		else if (c == '\'') return 45;
 		else if (c == '(') return 17;
 		else if (c == ')') return 18;
-		else if (c == '*') return 22;
-		else if (c == '+') return 23;
-		else if (c == '-') return 21;
-		else if (c == '.') return 12;
-		else if (c == '/') return 56;
-		else if ('0' <= c && c <= '9') return 2;
-		else if (c == ':') return 11;
-		else if (c == ';') return 10;
-		else if (c == '\?') return 24;
-		else if ('A' <= c && c <= 'Z') return 25;
+		else if (c == '*') return 26;
+		else if (c == '+') return 27;
+		else if (c == '-') return 25;
+		else if (c == '.') return 14;
+		else if (c == '/') return 54;
+		else if ('0' <= c && c <= '9') return 4;
+		else if (c == ':') return 13;
+		else if (c == ';') return 12;
+		else if (c == '<') return 21;
+		else if (c == '>') return 22;
+		else if (c == '\?') return 28;
+		else if ('A' <= c && c <= 'Z') return 43;
 		else if (c == '[') return 19;
 		else if (c == ']') return 20;
-		else if (c == '_') return 25;
-		else if ('a' <= c && c <= 'e') return 25;
-		else if (c == 'f') return 53;
-		else if (c == 'g') return 54;
-		else if ('h' <= c && c <= 'k') return 25;
-		else if (c == 'l') return 52;
-		else if ('m' <= c && c <= 'o') return 25;
-		else if (c == 'p') return 62;
-		else if ('q' <= c && c <= 'u') return 25;
-		else if (c == 'v') return 61;
-		else if ('w' <= c && c <= 'z') return 25;
-		else if (c == '{') return 13;
-		else if (c == '|') return 27;
-		else if (c == '}') return 14;
+		else if (c == '_') return 43;
+		else if (c == 'a') return 48;
+		else if ('b' <= c && c <= 'f') return 43;
+		else if (c == 'g') return 50;
+		else if ('h' <= c && c <= 'k') return 43;
+		else if (c == 'l') return 47;
+		else if ('m' <= c && c <= 'u') return 43;
+		else if (c == 'v') return 49;
+		else if ('w' <= c && c <= 'z') return 43;
+		else if (c == '{') return 15;
+		else if (c == '|') return 29;
+		else if (c == '}') return 16;
 		else return 0;
 	case 1:
 		if ('0' <= c && c <= '9') return 1;
@@ -5562,17 +7409,9 @@ int Reg::next(int state, const char c)
 		if ('0' <= c && c <= '9') return 2;
 		else return 0;
 	case 3:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'z') return 1;
-		else return 0;
+		return 0;
 	case 4:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'z') return 1;
-		else return 0;
+		return 0;
 	case 5:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
@@ -5592,14 +7431,18 @@ int Reg::next(int state, const char c)
 		else if ('a' <= c && c <= 'z') return 1;
 		else return 0;
 	case 8:
-		if (c == ' ') return 8;
+		if ('0' <= c && c <= '9') return 1;
+		else if ('A' <= c && c <= 'Z') return 1;
+		else if (c == '_') return 1;
+		else if ('a' <= c && c <= 'z') return 1;
 		else return 0;
 	case 9:
-		if (c == (char)10) return 9;
-		else if (c == (char)13) return 29;
+		if (c == ' ') return 9;
 		else return 0;
 	case 10:
-		return 0;
+		if (c == (char)10) return 10;
+		else if (c == (char)13) return 30;
+		else return 0;
 	case 11:
 		return 0;
 	case 12:
@@ -5611,10 +7454,7 @@ int Reg::next(int state, const char c)
 	case 15:
 		return 0;
 	case 16:
-		if ((char)0 <= c && c <= ')') return 55;
-		else if (c == '*') return 65;
-		else if ('+' <= c && c <= (char)127) return 55;
-		else return 0;
+		return 0;
 	case 17:
 		return 0;
 	case 18:
@@ -5628,36 +7468,25 @@ int Reg::next(int state, const char c)
 	case 22:
 		return 0;
 	case 23:
-		if ('0' <= c && c <= '9') return 2;
-		else return 0;
-	case 24:
 		return 0;
-	case 25:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'z') return 1;
+	case 24:
+		if ((char)0 <= c && c <= ')') return 44;
+		else if (c == '*') return 53;
+		else if ('+' <= c && c <= (char)127) return 44;
 		else return 0;
+	case 25:
+		return 0;
 	case 26:
 		return 0;
 	case 27:
-		return 0;
+		if ('0' <= c && c <= '9') return 2;
+		else return 0;
 	case 28:
-		if (' ' <= c && c <= '!') return 66;
-		else if ('#' <= c && c <= '&') return 66;
-		else if ('(' <= c && c <= '[') return 66;
-		else if (c == '\\') return 63;
-		else if (']' <= c && c <= '~') return 66;
-		else return 0;
+		return 0;
 	case 29:
-		if (c == (char)10) return 9;
-		else return 0;
+		return 0;
 	case 30:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if (c == 'a') return 5;
-		else if ('b' <= c && c <= 'z') return 1;
+		if (c == (char)10) return 10;
 		else return 0;
 	case 31:
 		if ('0' <= c && c <= '9') return 1;
@@ -5680,7 +7509,7 @@ int Reg::next(int state, const char c)
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
 		else if ('a' <= c && c <= 'k') return 1;
-		else if (c == 'l') return 3;
+		else if (c == 'l') return 5;
 		else if ('m' <= c && c <= 'z') return 1;
 		else return 0;
 	case 34:
@@ -5710,9 +7539,9 @@ int Reg::next(int state, const char c)
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 's') return 1;
-		else if (c == 't') return 60;
-		else if ('u' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 'q') return 1;
+		else if (c == 'r') return 6;
+		else if ('s' <= c && c <= 'z') return 1;
 		else return 0;
 	case 38:
 		if ('0' <= c && c <= '9') return 1;
@@ -5748,147 +7577,53 @@ int Reg::next(int state, const char c)
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 't') return 1;
-		else if (c == 'u') return 68;
-		else if ('v' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 'w') return 1;
+		else if (c == 'x') return 36;
+		else if ('y' <= c && c <= 'z') return 1;
 		else return 0;
 	case 43:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'l') return 1;
-		else if (c == 'm') return 42;
-		else if ('n' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 'z') return 1;
 		else return 0;
 	case 44:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'q') return 1;
-		else if (c == 'r') return 43;
-		else if ('s' <= c && c <= 'z') return 1;
+		if ((char)0 <= c && c <= ')') return 44;
+		else if (c == '*') return 53;
+		else if ('+' <= c && c <= (char)127) return 44;
 		else return 0;
 	case 45:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'w') return 1;
-		else if (c == 'x') return 36;
-		else if ('y' <= c && c <= 'z') return 1;
+		if (' ' <= c && c <= '!') return 55;
+		else if ('#' <= c && c <= '&') return 55;
+		else if ('(' <= c && c <= '[') return 55;
+		else if (c == '\\') return 51;
+		else if (']' <= c && c <= '~') return 55;
 		else return 0;
 	case 46:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'x') return 1;
-		else if (c == 'y') return 6;
-		else if (c == 'z') return 1;
+		else if ('a' <= c && c <= 'k') return 1;
+		else if (c == 'l') return 8;
+		else if ('m' <= c && c <= 'z') return 1;
 		else return 0;
 	case 47:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 's') return 1;
-		else if (c == 't') return 46;
-		else if ('u' <= c && c <= 'z') return 1;
+		else if ('a' <= c && c <= 'd') return 1;
+		else if (c == 'e') return 42;
+		else if ('f' <= c && c <= 'z') return 1;
 		else return 0;
 	case 48:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'h') return 1;
-		else if (c == 'i') return 47;
-		else if ('j' <= c && c <= 'z') return 1;
-		else return 0;
-	case 49:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'q') return 1;
-		else if (c == 'r') return 48;
-		else if ('s' <= c && c <= 'z') return 1;
-		else return 0;
-	case 50:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'n') return 1;
-		else if (c == 'o') return 49;
-		else if ('p' <= c && c <= 'z') return 1;
-		else return 0;
-	case 51:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'h') return 1;
-		else if (c == 'i') return 50;
-		else if ('j' <= c && c <= 'z') return 1;
-		else return 0;
-	case 52:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'd') return 1;
-		else if (c == 'e') return 45;
-		else if ('f' <= c && c <= 'z') return 1;
-		else return 0;
-	case 53:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'n') return 1;
-		else if (c == 'o') return 44;
-		else if ('p' <= c && c <= 'z') return 1;
-		else return 0;
-	case 54:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'q') return 1;
-		else if (c == 'r') return 41;
-		else if ('s' <= c && c <= 'z') return 1;
-		else return 0;
-	case 55:
-		if ((char)0 <= c && c <= ')') return 55;
-		else if (c == '*') return 65;
-		else if ('+' <= c && c <= (char)127) return 55;
-		else return 0;
-	case 56:
-		if (c == '*') return 55;
-		else if (c == '/') return 64;
-		else return 0;
-	case 57:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
 		else if ('a' <= c && c <= 'k') return 1;
-		else if (c == 'l') return 4;
+		else if (c == 'l') return 46;
 		else if ('m' <= c && c <= 'z') return 1;
 		else return 0;
-	case 58:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if (c == 'a') return 57;
-		else if ('b' <= c && c <= 'z') return 1;
-		else return 0;
-	case 59:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'b') return 1;
-		else if (c == 'c') return 58;
-		else if ('d' <= c && c <= 'z') return 1;
-		else return 0;
-	case 60:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'h') return 1;
-		else if (c == 'i') return 59;
-		else if ('j' <= c && c <= 'z') return 1;
-		else return 0;
-	case 61:
+	case 49:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
@@ -5896,71 +7631,67 @@ int Reg::next(int state, const char c)
 		else if (c == 'o') return 32;
 		else if ('p' <= c && c <= 'z') return 1;
 		else return 0;
-	case 62:
+	case 50:
 		if ('0' <= c && c <= '9') return 1;
 		else if ('A' <= c && c <= 'Z') return 1;
 		else if (c == '_') return 1;
 		else if ('a' <= c && c <= 'q') return 1;
-		else if (c == 'r') return 51;
+		else if (c == 'r') return 41;
 		else if ('s' <= c && c <= 'z') return 1;
 		else return 0;
-	case 63:
-		if (c == (char)0) return 66;
-		else if (c == '\"') return 66;
-		else if (c == '\'') return 66;
-		else if ('0' <= c && c <= '7') return 69;
-		else if (c == '\?') return 66;
-		else if (c == 'X') return 67;
-		else if (c == '\\') return 66;
-		else if ('a' <= c && c <= 'b') return 66;
-		else if (c == 'f') return 66;
-		else if (c == 'n') return 66;
-		else if (c == 'r') return 66;
-		else if (c == 't') return 66;
-		else if (c == 'v') return 66;
-		else if (c == 'x') return 67;
+	case 51:
+		if (c == (char)0) return 55;
+		else if (c == '\"') return 55;
+		else if (c == '\'') return 55;
+		else if ('0' <= c && c <= '7') return 57;
+		else if (c == '\?') return 55;
+		else if (c == 'X') return 56;
+		else if (c == '\\') return 55;
+		else if ('a' <= c && c <= 'b') return 55;
+		else if (c == 'f') return 55;
+		else if (c == 'n') return 55;
+		else if (c == 'r') return 55;
+		else if (c == 't') return 55;
+		else if (c == 'v') return 55;
+		else if (c == 'x') return 56;
 		else return 0;
-	case 64:
-		if ((char)0 <= c && c <= (char)9) return 64;
-		else if (c == (char)10) return 15;
-		else if ((char)11 <= c && c <= (char)127) return 64;
+	case 52:
+		if ((char)0 <= c && c <= (char)9) return 52;
+		else if (c == (char)10) return 23;
+		else if ((char)11 <= c && c <= (char)127) return 52;
 		else return 0;
-	case 65:
-		if ((char)0 <= c && c <= ')') return 55;
-		else if (c == '*') return 65;
-		else if ('+' <= c && c <= '.') return 55;
-		else if (c == '/') return 16;
-		else if ('0' <= c && c <= (char)127) return 55;
+	case 53:
+		if ((char)0 <= c && c <= ')') return 44;
+		else if (c == '*') return 53;
+		else if ('+' <= c && c <= '.') return 44;
+		else if (c == '/') return 24;
+		else if ('0' <= c && c <= (char)127) return 44;
 		else return 0;
-	case 66:
-		if (c == '\'') return 26;
+	case 54:
+		if (c == '*') return 44;
+		else if (c == '/') return 52;
 		else return 0;
-	case 67:
-		if ('0' <= c && c <= '9') return 70;
-		else if ('A' <= c && c <= 'F') return 70;
-		else if ('a' <= c && c <= 'f') return 70;
+	case 55:
+		if (c == '\'') return 3;
 		else return 0;
-	case 68:
-		if ('0' <= c && c <= '9') return 1;
-		else if ('A' <= c && c <= 'Z') return 1;
-		else if (c == '_') return 1;
-		else if ('a' <= c && c <= 'k') return 1;
-		else if (c == 'l') return 30;
-		else if ('m' <= c && c <= 'z') return 1;
+	case 56:
+		if ('0' <= c && c <= '9') return 58;
+		else if ('A' <= c && c <= 'F') return 58;
+		else if ('a' <= c && c <= 'f') return 58;
 		else return 0;
-	case 69:
-		if (c == '\'') return 26;
-		else if ('0' <= c && c <= '7') return 71;
+	case 57:
+		if (c == '\'') return 3;
+		else if ('0' <= c && c <= '7') return 59;
 		else return 0;
-	case 70:
-		if (c == '\'') return 26;
-		else if ('0' <= c && c <= '9') return 66;
-		else if ('A' <= c && c <= 'F') return 66;
-		else if ('a' <= c && c <= 'f') return 66;
+	case 58:
+		if (c == '\'') return 3;
+		else if ('0' <= c && c <= '9') return 55;
+		else if ('A' <= c && c <= 'F') return 55;
+		else if ('a' <= c && c <= 'f') return 55;
 		else return 0;
-	case 71:
-		if (c == '\'') return 26;
-		else if ('0' <= c && c <= '7') return 66;
+	case 59:
+		if (c == '\'') return 3;
+		else if ('0' <= c && c <= '7') return 55;
 		else return 0;
 	}
 	return 0;
@@ -5970,123 +7701,99 @@ int Reg::action(int state)
 	switch (state)
 	{
 	case 1:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 2:
-		return 2;//number: integar
+		return 2;//const: integar
 	case 3:
-		return 3;//reserved_word: lexical
+		return 3;//const: CommonChar
 	case 4:
-		return 4;//reserved_word: grammatical
+		return 4;//const: idChar
 	case 5:
-		return 5;//reserved_word: formula
+		return 5;//reserved: lexical
 	case 6:
-		return 6;//reserved_word: priority
+		return 6;//reserved: grammar
 	case 7:
-		return 7;//reserved_word: void
+		return 7;//reserved: void
 	case 8:
-		return 8;//division: spaces
+		return 8;//reserved: all
 	case 9:
-		return 9;//division: enters
+		return 9;//format: spaces
 	case 10:
-		return 10;//division: semicolon
+		return 10;//format: enters
 	case 11:
-		return 11;//division: colon
+		return 11;//format: tab
 	case 12:
-		return 12;//division: dot
+		return 12;//division: semicolon
 	case 13:
-		return 13;//braket: braceL
+		return 13;//division: colon
 	case 14:
-		return 14;//braket: braceR
+		return 14;//division: dot
 	case 15:
-		return 15;//annotation: anntationS
+		return 15;//braket: braceL
 	case 16:
-		return 16;//annotation: anntationM
+		return 16;//braket: braceR
 	case 17:
 		return 17;//braket: left
 	case 18:
 		return 18;//braket: right
 	case 19:
-		return 19;//braket: begin
+		return 19;//braket: squareL
 	case 20:
-		return 20;//braket: end
+		return 20;//braket: squareR
 	case 21:
-		return 21;//braket: range
+		return 21;//braket: angleL
 	case 22:
-		return 22;//superscript: star
+		return 22;//braket: angleR
 	case 23:
-		return 23;//superscript: plus
+		return 23;//annotation: anntationS
 	case 24:
-		return 24;//superscript: ZeroOrOne
+		return 24;//annotation: anntationM
 	case 25:
-		return 25;//char: idchar
+		return 25;//RegSymbol: range
 	case 26:
-		return 26;//char: CommonChar
+		return 26;//RegSymbol: star
 	case 27:
-		return 27;//Or: Or
-	case 30:
-		return 1;//Id: identifier
+		return 27;//RegSymbol: plus
+	case 28:
+		return 28;//RegSymbol: question
+	case 29:
+		return 29;//RegSymbol: or
 	case 31:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 32:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 33:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 34:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 35:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 36:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 37:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 38:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 39:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 40:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 41:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 42:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 43:
-		return 1;//Id: identifier
-	case 44:
-		return 1;//Id: identifier
-	case 45:
-		return 1;//Id: identifier
+		return 4;//const: idChar
 	case 46:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 47:
-		return 1;//Id: identifier
+		return 4;//const: idChar
 	case 48:
-		return 1;//Id: identifier
+		return 4;//const: idChar
 	case 49:
-		return 1;//Id: identifier
+		return 4;//const: idChar
 	case 50:
-		return 1;//Id: identifier
-	case 51:
-		return 1;//Id: identifier
-	case 52:
-		return 25;//char: idchar
-	case 53:
-		return 25;//char: idchar
-	case 54:
-		return 25;//char: idchar
-	case 57:
-		return 1;//Id: identifier
-	case 58:
-		return 1;//Id: identifier
-	case 59:
-		return 1;//Id: identifier
-	case 60:
-		return 1;//Id: identifier
-	case 61:
-		return 25;//char: idchar
-	case 62:
-		return 25;//char: idchar
-	case 68:
-		return 1;//Id: identifier
+		return 4;//const: idChar
 	}
 	return 0;
 }
@@ -6095,62 +7802,67 @@ int Reg::GroupGet(int accept)
 	switch (accept)
 	{
 	case 1:
-		return 1;//Id: identifier
+		return 1;//identifier: identifier
 	case 2:
-		return 2;//number: integar
+		return 2;//const: integar
 	case 3:
-		return 3;//reserved_word: lexical
+		return 2;//const: CommonChar
 	case 4:
-		return 3;//reserved_word: grammatical
+		return 2;//const: idChar
 	case 5:
-		return 3;//reserved_word: formula
+		return 3;//reserved: lexical
 	case 6:
-		return 3;//reserved_word: priority
+		return 3;//reserved: grammar
 	case 7:
-		return 3;//reserved_word: void
+		return 3;//reserved: void
 	case 8:
-		return 4;//division: spaces
+		return 3;//reserved: all
 	case 9:
-		return 4;//division: enters
+		return 4;//format: spaces
 	case 10:
-		return 4;//division: semicolon
+		return 4;//format: enters
 	case 11:
-		return 4;//division: colon
+		return 4;//format: tab
 	case 12:
-		return 4;//division: dot
+		return 5;//division: semicolon
 	case 13:
-		return 5;//braket: braceL
+		return 5;//division: colon
 	case 14:
-		return 5;//braket: braceR
+		return 5;//division: dot
 	case 15:
-		return 6;//annotation: anntationS
+		return 6;//braket: braceL
 	case 16:
-		return 6;//annotation: anntationM
+		return 6;//braket: braceR
 	case 17:
-		return 5;//braket: left
+		return 6;//braket: left
 	case 18:
-		return 5;//braket: right
+		return 6;//braket: right
 	case 19:
-		return 5;//braket: begin
+		return 6;//braket: squareL
 	case 20:
-		return 5;//braket: end
+		return 6;//braket: squareR
 	case 21:
-		return 5;//braket: range
+		return 6;//braket: angleL
 	case 22:
-		return 7;//superscript: star
+		return 6;//braket: angleR
 	case 23:
-		return 7;//superscript: plus
+		return 7;//annotation: anntationS
 	case 24:
-		return 7;//superscript: ZeroOrOne
+		return 7;//annotation: anntationM
 	case 25:
-		return 8;//char: idchar
+		return 8;//RegSymbol: range
 	case 26:
-		return 8;//char: CommonChar
+		return 8;//RegSymbol: star
 	case 27:
-		return 9;//Or: Or
+		return 8;//RegSymbol: plus
+	case 28:
+		return 8;//RegSymbol: question
+	case 29:
+		return 8;//RegSymbol: or
 	}
 	return 0;
 }
+
 
 
 
