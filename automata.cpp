@@ -1143,12 +1143,16 @@ struct Panel
 
 
 
-
+//如果all 没有被定义为词法单元(终结符号)那么all不能出现在文法产生式体内。
+//反之all 被定义为词法单元，当all出现在文法产生式体内它会被视为一个终结符号。
+//如果void被定义为一个词法单元(终结符号)，那么它将不能表达一个空产生式，
+//换言之整个，输入文件系统不能再接受空符号。
 
 InputPanel::InputPanel()
 {
 	//const char *s_temp;
 	GrammarEnclosed = false;
+	
 	//s_temp = Copy("void");
 	//Terminal.append(s_temp);
 	RootName = NULL;
@@ -1159,6 +1163,7 @@ InputPanel::InputPanel()
 	errorInfor1 = 0;
 	errorInfor2 = 0;
 	errorInfor3 = NULL;
+	errorInfor4 = true;
 	return;
 }
 InputPanel::~InputPanel()
@@ -1175,7 +1180,7 @@ InputPanel::~InputPanel()
 	//printf("here!\n");
 	for (i = 0; i < Terminal.count(); i++) free((void*)Terminal[i]);
 	//printf("here!\n");
-	for (i = 0; i < NonTernimal.count(); i++) free((void*)NonTernimal[i]);
+	for (i = 0; i < NontTerminal.count(); i++) free((void*)NontTerminal[i]);
 	//printf("here!\n");
 	free(RootName);
 	//printf("here!\n");
@@ -1200,6 +1205,8 @@ InputPanel::RegContent::RegContent()
 	reg = NULL;
 	name = NULL; 
 	priority = 0;
+	accept = 1;
+	group = 0;
 }
 InputPanel::RegContent::~RegContent()
 {
@@ -1256,7 +1263,7 @@ void InputPanel::Rules::demo(FILE* fp, cvccp& N, cvccp& T)
 			fprintf(fp, "%s ", T[-index - 1]);
 	}
 }
-void InputPanel::demo(FILE* fp)
+void InputPanel::demo(FILE* fp) const
 {
 	if (errorCode != NoError)
 	{
@@ -1266,10 +1273,12 @@ void InputPanel::demo(FILE* fp)
 	demoL(fp);
 	if(GrammarEnclosed) demoG(fp);
 }
-void InputPanel::ErrorDemo(FILE* fp)
+
+
+void InputPanel::ErrorDemo(FILE* fp) const
 {
 	const char* s_temp_1, * s_temp_2; 
-	size_t i;
+	size_t i, j;
 	switch (errorCode)
 	{
 	case InputPanel::NoError:
@@ -1289,25 +1298,36 @@ void InputPanel::ErrorDemo(FILE* fp)
 		fprintf(fp, "missingId: the identifier %s has not been defined\n", errorInfor3);
 		break;
 	case InputPanel::repeatGGroupName:
-		s_temp_1 = GrammarG[errorInfor1]->name;
-		fprintf(fp, "repeatGGroupName: Conflict grammar Nonternimal symbol name: %s\n", s_temp_1);
+		if(errorInfor4) s_temp_1 = GrammarG[errorInfor1]->name;
+		else s_temp_1 = NontTerminal[errorInfor1];
+		fprintf(fp, "repeatGGroupName: Conflict No.%zu grammar Nonternimal symbol name: %s\n", errorInfor1, s_temp_1);
 		break;
 	case InputPanel::repeatGName:
 		s_temp_1 = GrammarG[errorInfor1]->rules[errorInfor2]->name;
 		fprintf(fp, "repeatGName: Conflict grammar rule name: %s\n", s_temp_1);
 		break;
 	case InputPanel::ErrorNonTernimal:
-		fprintf(fp, "ErrorNonTernimal: \n");
-		for (i = 0; i < NonTernimal.count(); i++)
-		{
-			fprintf(fp, "symbol[%zu]: %s\n", i, NonTernimal[i]);
-		}
+		fprintf(fp, "ErrorNonTernimal: Non-ternimal symbols in rules' body are conflict with their names.\n");
+		fprintf(fp, "Non-ternimal count in body: %zu, in their head: %zu\n", NontTerminal.count(), GrammarG.count());
+		for (i = 0; i < NontTerminal.count() && i < GrammarG.count(); i++)
+			fprintf(fp, "symbol[%zu]: %s, %s\n", i, NontTerminal[i], GrammarG[i]->name);
+		for (j = i; j < NontTerminal.count(); j++)
+			fprintf(fp, "symbol[%zu]: %s, None\n", i, NontTerminal[i]);
+		for (j = i; j < GrammarG.count(); j++)
+			fprintf(fp, "symbol[%zu]: None, %s\n", i, GrammarG[i]->name);
+		break;
+	case InputPanel::WorngRuleBody:
+		fprintf(fp, "WorngRuleBody: symbol 'all' can not appear in rule body as a non-ternimal symbol.\n");
+		fprintf(fp, "symbol[%zu](%s)", errorInfor1, GrammarG[errorInfor1]->name);
+		fprintf(fp, "rule[%zu](%s): ", errorInfor2, (GrammarG[errorInfor1])->rules[errorInfor2]->name);
+		GrammarG[errorInfor1]->rules[errorInfor2]->demo(fp, NontTerminal, Terminal);
+		fprintf(fp, "\n");
 		break;
 	default:
 		fprintf(fp, "Error Unknown: \n");
 	}
 }
-void InputPanel::demoL(FILE* fp)
+void InputPanel::demoL(FILE* fp) const
 {
 	size_t i, j;
 	RegGroup* group;
@@ -1323,7 +1343,7 @@ void InputPanel::demoL(FILE* fp)
 		for (j = 0; j < group->regs.count(); j++)
 		{
 			content = group->regs[j];
-			fprintf(fp, "\t\t%s(%d): ", content->name ? content->name : "None", content->priority);
+			fprintf(fp, "\t\t[%ld]%s(%d): ", content->accept, content->name ? content->name : "None", content->priority);
 			content->reg->Demo(stdout);
 			fprintf(fp, ";\n");
 		}
@@ -1332,7 +1352,7 @@ void InputPanel::demoL(FILE* fp)
 	fprintf(fp, "};\n");
 	
 }
-void InputPanel::demoG(FILE* fp)
+void InputPanel::demoG(FILE* fp) const
 {
 	// 输出Terminal/NonTerminal符号
 	size_t i, j, site;
@@ -1344,9 +1364,9 @@ void InputPanel::demoG(FILE* fp)
 	fprintf(fp, "Terminals (%zu):\n", Terminal.count());
 	for (i = 0; i < Terminal.count(); i++)
 		fprintf(fp, "\t[%zu]: %s\n", i, Terminal[i]);
-	fprintf(fp, "NonTerminals (%zu):\n", NonTernimal.count());
-	for (i = 0; i < NonTernimal.count(); i++)
-		fprintf(fp, "\t[%zu]: %s\n", i, NonTernimal[i]);
+	fprintf(fp, "NonTerminals (%zu):\n", NontTerminal.count());
+	for (i = 0; i < NontTerminal.count(); i++)
+		fprintf(fp, "\t[%zu]: %s\n", i, NontTerminal[i]);
 
 	// 输出Grammar Groups
 	fprintf(fp, "all[%5zu]: (%5zu)%s\n", (size_t)0, (size_t)0, RootName ? RootName : "None");
@@ -1360,11 +1380,94 @@ void InputPanel::demoG(FILE* fp)
 			rule = g->rules[j];
 			fprintf(fp, "\t[%5zu]: %s(%5zu): ", j, rule->name, site);
 			site++;
-			rule->demo(fp, NonTernimal, Terminal);
+			rule->demo(fp, NontTerminal, Terminal);
 			fprintf(fp, "\n");
 		}
 	}
 }
+
+void InputPanel::printL(FILE* fp, const char* nameL)const
+{
+	NFA* nfa = NULL;
+	sheetDFA* DFAsheet = NULL;
+	DFA* DFAgraph = NULL;
+	size_t i, No, groupTemp;
+	vector<const char*> Name__, Attribute__;
+
+	nfa = new NFA(*this);
+	DFAsheet = new sheetDFA(*nfa);
+	DFAsheet->shrink();
+	DFAgraph = new DFA(DFAsheet);
+
+	fprintf(fp, "struct %s\n{\n", nameL);
+	//nfa = new NFA(*this);
+	fprintf(fp, "\tenum regular\n\t{\n");
+	//DFAsheet = new sheetDFA(*nfa);
+	//fprintf(fp, "\t\tnull = %zu,", 0);
+	fprintf(fp, "\t\t_%s_ = %zu", regular[0]->name, (size_t)1);
+	//DFAsheet->shrink();
+	for (i = 1; i < regular.count(); i++)
+	{
+		fprintf(fp, ",\n\t\t_%s_ = %ld", regular[i]->name, regular[i]->accept);
+	}
+
+	fprintf(fp, "\n\t};\n");
+	//DFAgraph = new DFA(DFAsheet);
+	fprintf(fp, "\tenum group\n\t{\n");
+	if(RegG.count() >= 2)
+		fprintf(fp, "\t\t_%s___ = %zu", RegG[1]->name, (size_t)1);
+	for (i = 2; i < RegG.count(); i++)
+	{
+		fprintf(fp, ",\n\t\t_%s___ = %zu", RegG[i]->name, i);
+	}
+	fprintf(fp, "\n\t};\n");
+	fprintf(fp, "\tstatic int next(int state, const char c);\n");
+	fprintf(fp, "\tstatic int action(int state);\n");
+	fprintf(fp, "\tstatic int GroupGet(int state);\n");
+	fprintf(fp, "};\n");
+
+	
+	
+	
+	
+	Name__.recount(regular.count());
+	Attribute__.recount(regular.count());
+	for (i = 0; i < regular.count(); i++)
+	{
+		groupTemp = regular[i]->group;
+		Name__[i] = regular[i]->name; 
+		Attribute__[i] = RegG[groupTemp]->name;
+	}
+
+	DFAgraph->CppPrint(fp, nameL);
+	DFAgraph->CppPrintAccept(fp, nameL, Attribute__.ptr(), Name__.ptr());
+	if (nameL != NULL) fprintf(fp, "int %s::GroupGet", nameL);
+	else fprintf(fp, "int null::GroupGet");
+	fprintf(fp, "(int accept)\n{\n");
+	fprintf(fp, "\tswitch (accept)\n\t{\n");
+	for (No = 0; No < regular.count(); No++)
+	{
+		groupTemp = regular[No]->group;
+		fprintf(fp, "\tcase %zu:\n", No + 1);
+		fprintf(fp, "\t\treturn %zu;", groupTemp);
+		fprintf(fp, "//");
+		fprintf(fp, "%s: ", RegG[groupTemp]->name);
+		fprintf(fp, "%s", regular[No]->name);
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\t}\n");
+	fprintf(fp, "\treturn 0;\n}\n");
+
+	delete nfa;
+	delete DFAsheet;
+	delete DFAgraph;
+}
+void InputPanel::printG(FILE* fp, const char* nameG)const
+{
+	
+
+}
+
 
 int InputPanel::build(FILE* fp)
 {
@@ -1393,7 +1496,10 @@ int InputPanel::buildGanalysis(const Morpheme& eme)
 	Tree.Demo(stdout, eme, Panel::RulesName);
 	printf("Here?!\n");
 	error = buildAll(eme, Tree);
-	//printf("Here?!:%d\n", error);
+	printf("Here?!:%d\n", error);
+	if (error != 0) return error;
+	buildLpost();
+	printf("Here?!:%d\n", error);
 	return error;
 }
 void InputPanel::NeglectNullToken(Morpheme& eme) const
@@ -1474,12 +1580,16 @@ int InputPanel::buildL(const Morpheme& eme, GLTree* Tree)
 		if (iterator.state() == 0)
 		{
 			site_ = GT->root().site;
+
 			if ((RegularExp*)GT->root().rules){
+				//printf("here: %zu\n", site_);
 				switch (site_)
 				{
 				//No[3], case RegGROUP: prefix: 5, degeneracy: 4
 				case 5: //3: RegGROUP, No[0] production rules: RegGROUP->RegGROUPNAME colon RegDEF
 				case 6: //3: RegGROUP, No[1] production rules: RegGROUP->RegGROUPNAME BEGIN REGDEFS END
+					//printf("ghghhere: %zu\n", GT->ChildCount());
+					//printf("ghghhere: %zu\n", (size_t)GT->child(0));
 					error = RegGroupName(GroupNow, eme, GT->child(0));
 					if (error != 0) return error;
 					break;
@@ -1499,7 +1609,7 @@ int InputPanel::buildL(const Morpheme& eme, GLTree* Tree)
 					error = RegBuild(RegNow, GroupNow, eme, GT->child(2));
 					//printf("here: %d\n", error);
 					if (error != 0) return error;
-					//RegG[GroupNow]->regs[RegNow]->reg->Demo(stdout);
+					RegG[GroupNow]->regs[RegNow]->reg->Demo(stdout);
 					break;
 					
 				}
@@ -1514,7 +1624,7 @@ void InputPanel::addVoidGroup(void)
 	RegGroup* now;
 	now = new RegGroup;
 	now->SetName("void");
-
+	RegG.append(now);
 }
 int InputPanel::RegGroupName(size_t& siteReturn, const Morpheme& eme, GLTree* Tree)
 {
@@ -1526,6 +1636,7 @@ int InputPanel::RegGroupName(size_t& siteReturn, const Morpheme& eme, GLTree* Tr
 	//No[6], case RegNAME: prefix: 13, degeneracy: 2
 	//case 13: RegNAME, No[0] production rules: RegNAME->identifier
 	//case 14: RegNAME, No[1] production rules: RegNAME->identifier left integar right
+	//printf("RegGroupName\n");
 	GT = Tree->child(0);
 	inputName = eme.GetWord(GT->root().site);
 	for (i = 1; i < RegG.count(); i++)
@@ -1537,6 +1648,13 @@ int InputPanel::RegGroupName(size_t& siteReturn, const Morpheme& eme, GLTree* Tr
 			return 5;
 		}
 	}
+	//printf("compare\n");
+	if (compare(RegG[0]->name, inputName))
+	{
+		siteReturn = 0;
+		return 0;
+	}
+	//printf("compare\n");
 	now = new RegGroup;
 	now->SetName(inputName);
 	RegG.append(now);
@@ -1828,7 +1946,7 @@ void InputPanel::addAllGroup(void)
 	GG = new Group;
 	GG->SetName("all");
 	GrammarG.append(GG);
-	NonTernimal.append(Copy("all"));
+	NontTerminal.append(Copy("all"));
 }
 void InputPanel::addAllGroup02(void)
 {
@@ -1853,8 +1971,21 @@ int InputPanel::GrammarGroup(size_t&GroupSite, const Morpheme& eme, GLTree* Tree
 		if (compare(GrammarG[i]->name, inputName))
 		{
 			errorCode = repeatGGroupName;
+			errorInfor4 = true;
 			errorInfor1 = i;
+			errorInfor1 = GrammarG.count();
 			return 557;
+		}
+	}
+	for (i = 0; i < Terminal.count(); i++)
+	{
+		if (compare(Terminal[i], inputName))
+		{
+			errorCode = repeatGGroupName;
+			errorInfor4 = false;
+			errorInfor1 = i;
+			errorInfor2 = GrammarG.count();
+			return 558;
 		}
 	}
 	now = new Group;
@@ -1879,10 +2010,13 @@ int InputPanel::RulesAppend(size_t GroupSite, GLTree* Name, const Morpheme& eme,
 		if (compare(now->rules[i]->name, inputName))
 		{
 			errorCode = repeatGName;
-			errorInfor1 = i;
+			
+			errorInfor1 = i; 
+			errorInfor2 = now->rules.count() - 1;
 			return 4441;
 		}
 	}
+	
 	RR = new Rules;
 	RR->SetName(inputName);
 	now->rules.append(RR);
@@ -1922,16 +2056,19 @@ void InputPanel::addTerminal(void)
 {
 	size_t i, j;
 	const char* temp;
-	temp = Copy("void");
-	Terminal.append(temp);
-	for (i = 0; i < RegG.count(); i++)
+	bool voidExist = false;
+	Terminal.append();
+	for (i = 1; i < RegG.count(); i++)
 	{
 		for (j = 0; j < RegG[i]->regs.count(); j++)
 		{
 			temp = Copy(RegG[i]->regs[j]->name);
 			Terminal.append(temp);
+			if (compare("void", temp)) voidExist = true;
 		}
 	}
+	if (voidExist) Terminal[0] = Copy("*");
+	else Terminal[0] = Copy("void");
 	temp = Copy("#");
 	Terminal.append(temp);
 }
@@ -1942,11 +2079,11 @@ long int InputPanel::SymbolAdd(const char* symbol)
 	if (symbol == NULL) return -1;
 	for (i = 0; i < Terminal.count(); i++)
 		if (compare(symbol, Terminal[i])) return -i - 1;
-	for (i = 0; i < NonTernimal.count(); i++)
-		if ((compare(symbol, NonTernimal[i]))) return i;
+	for (i = 0; i < NontTerminal.count(); i++)
+		if ((compare(symbol, NontTerminal[i]))) return i;
 	temp = Copy(symbol);
-	NonTernimal.append(temp);
-	return NonTernimal.count() - 1;
+	NontTerminal.append(temp);
+	return NontTerminal.count() - 1;
 }
 int InputPanel::NonTerminalSort(void)
 {
@@ -1954,24 +2091,25 @@ int InputPanel::NonTerminalSort(void)
 	size_t i, j, k; 
 	Rules* now;
 	long int temp;
-	sort.recount(NonTernimal.count());
+	int error = 0;
+	sort.recount(NontTerminal.count());
 	sort.value(0);
 	for (i = 0; i < GrammarG.count(); i++)
 	{
-		for (j = 0; j < NonTernimal.count(); j++)
-			if (compare(GrammarG[i]->name, NonTernimal[j])) sort[j] = i;
+		for (j = 0; j < NontTerminal.count(); j++)
+			if (compare(GrammarG[i]->name, NontTerminal[j])) sort[j] = i;
 	}
 	for (i = 1; i < sort.count(); i++)
 		if (sort[i] == 0) break;
-	if (i < sort.count() || GrammarG.count() != NonTernimal.count())
+	if (i < sort.count() || GrammarG.count() != NontTerminal.count())
 	{
 		errorCode = ErrorNonTernimal;
 		return -9990;
 	}
-	for (j = 1; j < NonTernimal.count(); j++)
+	for (j = 1; j < NontTerminal.count(); j++)
 	{
-		free((void*)NonTernimal[j]);
-		NonTernimal[j] = Copy(GrammarG[j]->name);
+		free((void*)NontTerminal[j]);
+		NontTerminal[j] = Copy(GrammarG[j]->name);
 	}
 	for (i = 0; i < GrammarG.count(); i++)
 	{
@@ -1981,11 +2119,40 @@ int InputPanel::NonTerminalSort(void)
 			for (k = 0; k < now->formula.count(); k++)
 			{
 				temp = now->formula[k];
+				if (temp == 0)
+				{
+					error = -9991;
+					errorCode = WorngRuleBody;
+					errorInfor1 = i;
+					errorInfor2 = j;
+
+				}
 				now->formula[k] = temp >= 0 ? sort[temp] : temp;
+				
 			}
 		}
 	}
-	return 0;
+	return error;
+}
+
+void InputPanel::buildLpost(void)
+{
+	size_t i, j;
+	RegContent* now;
+	for (i = 0; i < RegG.count(); i++)
+	{
+		for (j = 0; j < RegG[i]->regs.count(); j++)
+			RegG[i]->regs[j]->group = i;
+	}
+	for (i = 1; i < RegG.count(); i++)
+	{
+		for (j = 0; j < RegG[i]->regs.count(); j++)
+		{
+			now = RegG[i]->regs[j];
+			regular.append(now);
+			now->accept = regular.count();
+		}
+	}
 }
 
 RegTree::RegTree()
@@ -3870,6 +4037,84 @@ void sNFA::refresh(void)
 	accepted = 0;
 	//CC.refresh();
 }
+void sNFA::build(const RegularExp* Reg)
+{
+	buffer<size_t> output;
+	vector<size_t> s;
+	vector<sNFA*> nfa;
+	BiTree<RegularExp::item>::iterator iterator;
+	BiTree<RegularExp::item>* target;
+	RegularExp::NodeType T; 
+	sNFA* now, * L, * R;
+	vector<bool> input;
+	size_t j;
+	L = NULL;
+	R = NULL;
+	refresh();
+	input.recount(CharSize + 1);
+	iterator.initial(Reg->tree);
+	while (iterator.still())
+	{
+		target = iterator.target();
+		if (iterator.state() == 2)
+		{
+			T = target->content().type;
+			if (target == Reg->tree) now = this;
+			else now = new sNFA;
+			switch (T)
+			{
+			case hyperlex::RegularExp::Concatenation:
+			case hyperlex::RegularExp::Alternation:
+				L = (sNFA*)target->left()->label();
+				target->left()->label() = NULL;
+				R = (sNFA*)target->right()->label();
+				target->right()->label() = NULL;
+				break;
+			case hyperlex::RegularExp::ZeroOrMore:
+			case hyperlex::RegularExp::OneOrMore:
+			case hyperlex::RegularExp::ZeroOrOne:
+				L = (sNFA*)target->left()->label();
+				target->left()->label() = NULL;
+				R = NULL;
+				break;
+			default:
+				L = NULL;
+				R = NULL;
+				break;
+			}
+			switch (T)
+			{
+			case hyperlex::RegularExp::Concatenation:
+				now->serial(L, R);
+				break;
+			case hyperlex::RegularExp::Alternation:
+				now->parallel(L, R);
+				break;
+			case hyperlex::RegularExp::ZeroOrMore:
+				now->any(L);
+				break;
+			case hyperlex::RegularExp::OneOrMore:
+				now->plus(L);
+				break;
+			case hyperlex::RegularExp::ZeroOrOne:
+				now->ZeroOrOne(L);
+				break;
+			case hyperlex::RegularExp::Range:
+				for (j = 0; j < CharSize; j++)
+					input[j] = (j <= (size_t)target->content().upper && j >= (size_t)target->content().lower);
+				now->build(input.ptr());
+				break;
+			default:
+				break;
+			}
+			target->label() = now;
+			delete L;
+			delete R;
+		}
+		iterator.next();
+	}
+	Reg->tree->label() = NULL;
+}
 void sNFA::build(const RegTree* Reg)
 {
 	buffer<size_t> output;
@@ -3882,7 +4127,7 @@ void sNFA::build(const RegTree* Reg, buffer<size_t> &output, list<size_t> &s, li
 	size_t i, length, site, j;
 	RegTree::NodeType T;
 	sNFA* now, *highest, *L, *R;
-	bool input[128];
+	bool input[CharSize + 1];
 	refresh();
 	output.clear();
 	s.refresh();
@@ -4362,6 +4607,27 @@ NFA::NFA(const lexicalPanel& lP)
 	priority[0] = 0;
 	//stack.reshape(StateAmount);
 	//stack.refresh();
+}
+NFA::NFA(const InputPanel& lP)
+{
+	vector<sNFA*> all;
+	size_t count, i;
+
+	count = lP.regular.count();
+	all.recount(count);
+	//printf("all.recount(%zu);\n", count);
+	for (i = 0; i < count; i++)
+	{
+		//printf("all[%zu] = new sNFA()\n", i);
+		all[i] = new sNFA();
+		all[i]->build(lP.regular[i]->reg);
+	}
+	build(all.ptr(), count);
+	for (i = 0; i < count; i++)
+		delete all[i];
+	for (i = 0; i < count; i++) priority[i + 1] = (size_t)(lP.regular[i]->priority + 1);
+	priority[0] = 0;
+	
 }
 NFA::~NFA()
 {

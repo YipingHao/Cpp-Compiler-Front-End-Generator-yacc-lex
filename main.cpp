@@ -1432,6 +1432,8 @@ static int test_20(const char* output_path, ParaFile& pf)
     error = IP.build(input.ptr());
     std::cout << "error: " << error << std::endl;
     IP.demo(stdout);
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    IP.printL(stdout, "regular");
 }
 
 

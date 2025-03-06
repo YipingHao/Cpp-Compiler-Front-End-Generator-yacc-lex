@@ -135,14 +135,33 @@ namespace hyperlex
 		const T& content(void) const;
 		BiTree<T>*& left(void);
 		BiTree<T>*& right(void);
+		void*& label(void);
 		BiTree<T>* copy(void);
+		struct Iterator
+		{
+			BiTree<T>* target;
+			int state;
+		};
+		class iterator
+		{
+		public:
+			iterator() {}
+			~iterator() {}
+			void initial(BiTree<T>* root);
+			int& state(void);
+			BiTree<T>*& target(void);
+			void next(void);
+			bool still(void);
+		protected:
+			vector<Iterator> stack;
+
+		};
 	private:
 		BiTree<T>* Left;
 		BiTree<T>* Right;
 		void* tempLabel;
 		T Content;
 	};
-
 	template <class T> class buffer
 	{
 	protected:
@@ -186,7 +205,6 @@ namespace hyperlex
 }
 namespace hyperlex
 {
-	
 	template <class T> class list
 	{
 	private:
@@ -299,7 +317,6 @@ namespace hyperlex
 		void append(const Dgraph<Cg, Ca>& right, size_t VerticeOffset);
 		void Demo(FILE* fp) const;
 	};
-
 	template <class T> class bitree
 	{
 		bitree<T>* left;
@@ -414,7 +431,17 @@ namespace hyperlex
 	};
 	
 }
-
+namespace hyperlex
+{
+	class NFA;
+	class sNFA;
+	class sheetDFA;
+	class DFA;
+	class lexicalPanel;
+	class LR0;
+	class LR1;
+	class Gsheet;
+}
 // input analysis and lexical analysis.
 namespace hyperlex
 {
@@ -526,6 +553,7 @@ namespace hyperlex
 		void set(RegularExp* regL, RegularExp* regR, NodeType T);
 		void set(RegularExp* regL, RegularExp* regR);
 		void set(const Morpheme& eme, hyperlex::tree<GrammarTree::TreeInfor>* Tree);
+		friend class sNFA;
 	private:
 		BiTree<item>* tree;
 		void set(void);
@@ -540,13 +568,17 @@ namespace hyperlex
 		~InputPanel();
 		int build(FILE* fp);
 		int build(const char* input);
-		void demo(FILE* fp);
-		void ErrorDemo(FILE* fp);
+		void demo(FILE* fp) const;
+		void ErrorDemo(FILE* fp) const;
+		void printL(FILE* fp, const char* nameL)const;
+		void printG(FILE* fp, const char* nameG)const;
 
 		struct RegContent
 		{
 			const char* name;
-			int priority;
+			long int priority;
+			long int accept;
+			size_t group; 
 			//When two distinct regular expressions match simultaneously, 
 			//the regular expression with the higher priority number is accepted.
 			RegularExp* reg;
@@ -593,18 +625,20 @@ namespace hyperlex
 			missingId = 3,
 			repeatGGroupName = 4,
 			repeatGName = 5,
-			ErrorNonTernimal
+			ErrorNonTernimal,
+			WorngRuleBody 
 		};
+		friend class NFA;
 	private:
 		typedef hyperlex::tree<GrammarTree::TreeInfor> GLTree;
 		typedef hyperlex::tree<GrammarTree::TreeInfor>::PostIterator GTIter;
 		bool GrammarEnclosed;
 		vector<RegGroup*> RegG;
-		//list<RegContent*> RegC;
+		vector<RegContent*> regular;
 		vector<Group*> GrammarG;
 
 		vector<const char*> Terminal;
-		vector<const char*> NonTernimal;
+		vector<const char*> NontTerminal;
 		char* RootName;
 
 		vector<Rules*> rules;
@@ -613,12 +647,19 @@ namespace hyperlex
 		size_t errorInfor1;
 		size_t errorInfor2;
 		const char* errorInfor3;
+		bool errorInfor4;
+		/*
+		demo of input file analysis;
+		*/
+		void demoL(FILE* fp) const;
+		void demoG(FILE* fp) const;
 
-		void demoL(FILE* fp);
-		void demoG(FILE* fp);
-
+		/*
+		* input analysis;
+		*/
 		int buildGanalysis(const Morpheme& eme);
 		int buildAll(const Morpheme& eme, GrammarTree& Tree);
+		void buildLpost(void);
 
 		int buildL(const Morpheme& eme, GLTree* Tree);
 		void addVoidGroup(void);
@@ -639,17 +680,7 @@ namespace hyperlex
 		int NonTerminalSort(void);
 	};
 }
-namespace hyperlex
-{
-	class NFA;
-	class sNFA;
-	class sheetDFA;
-	class DFA;
-	class lexicalPanel;
-	class LR0;
-	class LR1;
-	class Gsheet;
-}
+
 // lexical analysis
 
 namespace hyperlex
@@ -856,6 +887,7 @@ namespace hyperlex
 		~sNFA();
 		//typedef buffer<Convert> converts;
 		void refresh(void);
+		void build(const RegularExp* Reg);
 		void build(const RegTree* Reg);
 		void build(const RegTree *Reg, buffer<size_t> &output, list<size_t>& s, list<sNFA*> &nfa);
 		void Demo(FILE* fp) const;
@@ -889,6 +921,7 @@ namespace hyperlex
 		NFA(const sNFA& single);
 		NFA(const sNFA* const* multiple, size_t count);
 		NFA(const lexicalPanel&lP);
+		NFA(const InputPanel& lP);
 		~NFA();
 		void initial(bool* state, list<size_t>& stack) const;
 		void closure(bool* state, list<size_t> &stack) const;
@@ -1180,7 +1213,6 @@ namespace hyperlex
 		}
 		return error;
 	}
-	
 }
 // grammer analysis
 namespace hyperlex
@@ -1814,6 +1846,57 @@ namespace hyperlex
 		Left = NULL;
 		Right = NULL;
 	}
+	template <class T> int& BiTree<T>::iterator::state(void)
+	{
+		return stack.top().state;
+	}
+	template <class T> BiTree<T>*& BiTree<T>::iterator::target(void)
+	{
+		return stack.top().target;
+	}
+	template <class T> void BiTree<T>::iterator::initial(BiTree<T>* root)
+	{
+		Iterator now;
+		stack.clear();
+		if (root != NULL)
+		{
+			now.state = 0;
+			now.target = root;
+			stack.append(now);
+		}
+	}
+	template <class T> void BiTree<T>::iterator::next(void)
+	{
+		size_t i;
+		Iterator now, parent;
+		now.state = 0;
+		if (stack.pop(parent) != 0)
+		{
+			if (parent.state == 0)
+			{
+				parent.state = 2;
+				stack.append(parent);
+				if (parent.target->Right != NULL)
+				{
+					now.target = parent.target->Right;
+					stack.append(now);
+				}
+				parent.state = 1;
+				stack.append(parent);
+				if (parent.target->Left != NULL)
+				{
+					now.target = parent.target->Left;
+					stack.append(now);
+				}
+			}
+		}
+
+	}
+	template <class T> bool BiTree<T>::iterator::still(void)
+	{
+		return stack.count() != 0;
+	}
+
 	template <class T> void BiTree<T>::clear(void)
 	{
 		vector<BiTree<T>*> output;
@@ -1870,6 +1953,10 @@ namespace hyperlex
 	template <class T> BiTree<T>*& BiTree<T>::right(void)
 	{
 		return Right;
+	}
+	template <class T> void*& BiTree<T>::label(void)
+	{
+		return tempLabel;
 	}
 	template <class T> void BiTree<T>::PreOrderTraversal(vector<BiTree<T>*>& output)
 	{
