@@ -438,6 +438,7 @@ namespace hyperlex
 	class sheetDFA;
 	class DFA;
 	class lexicalPanel;
+	class grammerS;
 	class LR0;
 	class LR1;
 	class Gsheet;
@@ -571,7 +572,7 @@ namespace hyperlex
 		void demo(FILE* fp) const;
 		void ErrorDemo(FILE* fp) const;
 		void printL(FILE* fp, const char* nameL)const;
-		void printG(FILE* fp, const char* nameG)const;
+		int printG(FILE* output, FILE* infor, const char* nameG)const;
 
 		struct RegContent
 		{
@@ -629,6 +630,7 @@ namespace hyperlex
 			WorngRuleBody 
 		};
 		friend class NFA;
+		friend class grammerS;
 	private:
 		typedef hyperlex::tree<GrammarTree::TreeInfor> GLTree;
 		typedef hyperlex::tree<GrammarTree::TreeInfor>::PostIterator GTIter;
@@ -1225,6 +1227,7 @@ namespace hyperlex
 		friend class Gsheet;
 		grammerS();
 		~grammerS();
+		int build(const InputPanel& input);
 		int build(FILE* fp);
 		int build(BufferChar& input);
 		void Demo(FILE* fp) const;
@@ -1424,6 +1427,8 @@ namespace hyperlex
 		void CppStructPrint(const char* name, FILE* fp, const grammerS * grammer)const;
 		// now site 0 is END-EOF, site 1-N Are N terminal symbol
 		static const char* TypeToChar(type TT);
+		const ErrorType ErrorTypeGet(void);
+		const ErrorInfor ErrorInforGet(void);
 	private:
 		size_t StateCount;
 		size_t TerminalCount;

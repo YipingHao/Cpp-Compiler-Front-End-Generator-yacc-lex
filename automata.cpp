@@ -1462,10 +1462,45 @@ void InputPanel::printL(FILE* fp, const char* nameL)const
 	delete DFAsheet;
 	delete DFAgraph;
 }
-void InputPanel::printG(FILE* fp, const char* nameG)const
+int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 {
-	
+	grammerS gs;
+	LR0* lr0 = NULL;
+	LR1* lr1 = NULL;
+	Gsheet Gsheet0, Gsheet1;
+	Gsheet::ErrorInfor EI;
+	Gsheet::ErrorType ET;
+	//printf("???\n");
+	gs.build(*this);
+	//printf("???\n");
 
+
+	lr0 = new LR0(&gs);
+	Gsheet0.build(lr0, &gs);
+	ET = Gsheet0.ErrorTypeGet();
+	lr0->Demo(infor, &gs);
+	Gsheet0.Demo(infor);
+	if (ET == NoError)
+	{
+		Gsheet0.CppStructPrint(nameG, output, &gs);
+		delete lr0;
+		return 0;
+	}
+
+	lr1 = new LR1(&gs);
+	Gsheet1.build(lr1, &gs);
+	ET = Gsheet1.ErrorTypeGet();
+	lr1->Demo(infor, &gs);
+	Gsheet1.Demo(infor);
+	if (ET == NoError)
+	{
+		Gsheet1.CppStructPrint(nameG, output, &gs);
+		delete lr1;
+		return 1;
+	}
+	delete lr0;
+	delete lr1;
+	return 2;
 }
 
 
@@ -5398,6 +5433,77 @@ grammerS::~grammerS()
 		free((void*)ternimal[i]);
 	}
 }
+int grammerS::build(const InputPanel& input)
+{
+	//return 0;
+	size_t i, prefix_here, j, k; 
+	production PP;
+	const char* Stemp;
+	InputPanel::Rules* ruleTemp;
+	long int Inttemp;
+	for (i = 0; i < input.NontTerminal.count(); i++)
+	{
+		Stemp = Copy(input.NontTerminal[i]);
+		name.append(Stemp);
+	}
+	for (i = 2; i < input.Terminal.count(); i++)
+	{
+		Stemp = Copy(input.Terminal[i - 1]);
+		ternimal.append(Stemp);
+	}
+	
+	count = name.count();
+	TerminalCount = ternimal.count();
+	ternimal.append(Copy("epsilon"));
+	ternimal.append(Copy("END-EOF"));
+	epsilon = (long long int)TerminalCount;
+	epsilon = -epsilon - 1;
+	end = epsilon - 1;
+	degeneracy.refresh(count);//has length of count.
+	//degeneracy[i]: rules' count of non-terminal[i]
+	prefix.refresh(count);;//has length of count
+	prefix_here = 0;
+	for (i = 0; i < count; i++)
+	{
+		degeneracy[i] = input.GrammarG[i]->rules.count();
+		prefix[i] = prefix_here;
+		prefix_here += degeneracy[i];
+	}
+	rules.refresh(prefix_here);
+	for (i = 0; i < count; i++)
+	{
+		PP.symbol = i;
+		for (j = 0; j < degeneracy[i]; j++)
+		{
+			PP.begin = all.count();
+			ruleTemp = input.GrammarG[i]->rules[j];
+			PP.length = ruleTemp->formula.count();
+			for (k = 0; k < PP.length; k++)
+			{
+				Inttemp = ruleTemp->formula[k];
+				if (Inttemp < 0)
+				{
+					Inttemp = -Inttemp - 1;
+					if (Inttemp == 0)
+						Inttemp = epsilon;
+					else if(Inttemp == (TerminalCount + 1))
+						Inttemp = end;
+					else 
+						Inttemp = -(Inttemp - 1) - 1;
+				}
+				all.append((long long int)Inttemp);
+			}
+			rules[prefix[i] + j] = PP;
+		}
+	}
+
+
+	FirstBiuld();
+	//return 0;
+	FollowBiuld();
+	ERROR = done;
+	return (int)done;
+}
 int grammerS::build(FILE* fp)
 {
 	BufferChar input;
@@ -6753,6 +6859,14 @@ const char* Gsheet::TypeToChar(Gsheet::type TT)
 	default:
 		return "error";
 	}
+}
+const Gsheet::ErrorType Gsheet::ErrorTypeGet(void)
+{
+	return ET;
+}
+const Gsheet::ErrorInfor Gsheet::ErrorInforGet(void)
+{
+	return EI;
 }
 
 Gsheet::infor Gsheet::Goto(size_t state, size_t symbol) const
