@@ -31,6 +31,7 @@ void ErrorDemo(FILE* fp) const;
 void printL(FILE* fp, const char* nameL)const;
 int printG(FILE* output, FILE* infor, const char* nameG)const;
 ```
+
         1.  build方法接受一个可以读的输入文件或者一个字符串作为输入，编码最好为ASCII.
         2.  demo方法展示读入文件的信息，如果发现输入文件有一些错误，那么它可以自动调用ErrorDemo方法展示错误。用户也可以主动使用 ErrorDemo方法输出错误信息。
         3.  printL方法打印Cpp风格的DFA代码，这个DFA封装在一个名字为nameL的类中. printG打印一个LR分析器对应的分析表（状态转移表等等），这个表格封装在一个名字为nameG的类中。这个类对应的代码输出在FILE*output中，而FILE* infor是文法分析对应的信息。
