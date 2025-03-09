@@ -87,19 +87,37 @@ lexical:{
         letter: [a-z]|[A-Z];
     }
     id: id(+5): (<letter> | _) (<letter> | _ | num)+;
+    number: {integer: (-|+)?<num>+;}
     operator:
     {
         sum: '+';
         multi: '*';
     }
-    value:
-}
-grammar: TEXT:
-{
-    TEXT：
+    value: value: '=';
+    braket:
     {
-        rules1: ****;
-        rules2: ****;  
+        left:'(';
+        right: ')';
+    };
+};
+grammar: EXP:
+{
+    LEFT：id;
+    EXP: LEFT value RIGHT; 
+    RIGHT：{
+        single: MULTI;
+        multi: RIGHT sum MULTI; //(MULTI * UNIT)
+    }
+    MULTI: 
+    {
+        single: UNIT;
+        multi: MULTI multi UNIT; //(MULTI * UNIT)
+    }
+    UNIT: 
+    {
+        const: integer;
+        xyz： id;
+        alot: left RIGHT right;//(RIGHT)
     }
 }
 ```
@@ -121,6 +139,11 @@ reserved: reserved: int；
 reserved: {
     double(+5): double;
     char: char;
+}
+```
+如果某个组的正则表达式唯一，则可以省略花括号。但是以下的定义是不合法的，组名不会自动成为唯一的正则表达式的名字:
+```
+id: (<letter> | _) (<letter> | _ | <num>)+;
 }
 ```
 #### 正则表达式的优先级
