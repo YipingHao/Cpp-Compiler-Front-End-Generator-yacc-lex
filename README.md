@@ -59,7 +59,7 @@ lexical:{
         num: [0-9];
         letter: [a-z]|[A-Z];
     }
-    id: id（+5）: (<letter> | _) (<letter> | _ | num)+;
+    id: id(+5): (<letter> | _) (<letter> | _ | num)+;
     void: hexa: [0-9] | [a-f] | [A-F];
 }
 grammar: TEXT:
@@ -87,7 +87,7 @@ void:
 num: [0-9];
 letter: [a-z]|[A-Z];
 }
-id: id（+5）: (<letter> | _) (<letter> | _ | <num>)+;
+id: id(+5): (<letter> | _) (<letter> | _ | <num>)+;
 void: hexa: [0-9] | [a-f] | [A-F];
 ```
 #### 正则表达式的优先级
