@@ -1433,8 +1433,9 @@ static int test_20(const char* output_path, ParaFile& pf)
     std::cout << "error: " << error << std::endl;
     IP.demo(stdout);
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-    IP.printL(stdout, "regular");
-
+    error = IP.printL(stdout, "regular");
+    std::cout << "error: " << error << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     error = IP.printG(stdout, stdout, "panel");
     std::cout << "error: " << error << std::endl;
 }

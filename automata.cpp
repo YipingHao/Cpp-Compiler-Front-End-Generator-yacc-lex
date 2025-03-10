@@ -1157,9 +1157,9 @@ InputPanel::InputPanel()
 	//Terminal.append(s_temp);
 	RootName = NULL;
 
-	addVoidGroup();
+	//addVoidGroup();
 
-	errorCode = NoError;
+	errorCode = buildUndone;
 	errorInfor1 = 0;
 	errorInfor2 = 0;
 	errorInfor3 = NULL;
@@ -1168,23 +1168,60 @@ InputPanel::InputPanel()
 }
 InputPanel::~InputPanel()
 {
+	clear();
+}
+void InputPanel::initial(void)
+{
+	//const char *s_temp;
+	GrammarEnclosed = false;
+
+	//s_temp = Copy("void");
+	//Terminal.append(s_temp);
+	RootName = NULL;
+
+	addVoidGroup();
+
+	errorCode = buildUndone;
+	errorInfor1 = 0;
+	errorInfor2 = 0;
+	errorInfor3 = NULL;
+	errorInfor4 = true;
+	return;
+}
+void InputPanel::clear(void)
+{
 	size_t i;
 	//printf("here!\n");
 	for (i = 0; i < RegG.count(); i++) delete RegG[i];
+	RegG.clear();
 	//for (i = 0; i < RegC.count(); i++) delete RegC[i];
 	//printf("here!\n");
 	for (i = 0; i < GrammarG.count(); i++) delete GrammarG[i];
+	GrammarG.clear();
 	//printf("here!\n");
 	for (i = 0; i < rules.count(); i++) delete rules[i];
+	rules.clear();
 
 	//printf("here!\n");
 	for (i = 0; i < Terminal.count(); i++) free((void*)Terminal[i]);
+	Terminal.clear();
 	//printf("here!\n");
 	for (i = 0; i < NontTerminal.count(); i++) free((void*)NontTerminal[i]);
-	//printf("here!\n");
+	NontTerminal.clear();
+
+	rules.clear();
+
 	free(RootName);
-	//printf("here!\n");
+	RootName = NULL;
+	 
+	GrammarEnclosed = false;
+	errorCode = NoError;
+	errorInfor1 = 0;
+	errorInfor2 = 0;
+	errorInfor3 = NULL;
+	errorInfor4 = true;
 }
+
 InputPanel::RegGroup::RegGroup()
 {
 	name = NULL;
@@ -1323,6 +1360,10 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		GrammarG[errorInfor1]->rules[errorInfor2]->demo(fp, NontTerminal, Terminal);
 		fprintf(fp, "\n");
 		break;
+	case InputPanel::buildUndone:
+		fprintf(fp, "buildUndone: has not been built.\n");
+		fprintf(fp, "\n");
+		break;
 	default:
 		fprintf(fp, "Error Unknown: \n");
 	}
@@ -1386,13 +1427,15 @@ void InputPanel::demoG(FILE* fp) const
 	}
 }
 
-void InputPanel::printL(FILE* fp, const char* nameL)const
+int InputPanel::printL(FILE* fp, const char* nameL)const
 {
 	NFA* nfa = NULL;
 	sheetDFA* DFAsheet = NULL;
 	DFA* DFAgraph = NULL;
 	size_t i, No, groupTemp;
 	vector<const char*> Name__, Attribute__;
+
+	if (errorCode != NoError) return -1;
 
 	nfa = new NFA(*this);
 	DFAsheet = new sheetDFA(*nfa);
@@ -1461,6 +1504,7 @@ void InputPanel::printL(FILE* fp, const char* nameL)const
 	delete nfa;
 	delete DFAsheet;
 	delete DFAgraph;
+	return 0;
 }
 int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 {
@@ -1471,6 +1515,7 @@ int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 	Gsheet::ErrorInfor EI;
 	Gsheet::ErrorType ET;
 	//printf("???\n");
+	if (errorCode != NoError) return -1;
 	gs.build(*this);
 	//printf("???\n");
 
@@ -1515,11 +1560,16 @@ int InputPanel::build(const char* input)
 {
 	Morpheme eme;
 	int error;
+	clear();
+	initial();
 	error = eme.Build<Reg>(input);
 	if (error != 0) return error;
 	NeglectNullToken(eme);
 	//eme.Demo(stdout);
-	return buildGanalysis(eme);
+	error = buildGanalysis(eme);
+	if (error != 0) return error;
+	errorCode = NoError;
+	return 0;
 }
 int InputPanel::buildGanalysis(const Morpheme& eme)
 {
@@ -1527,14 +1577,14 @@ int InputPanel::buildGanalysis(const Morpheme& eme)
 	GrammarTree Tree;
 	error = Tree.build<Panel>(eme);
 	if (error != 0) return error;
-	printf("Here?!\n");
-	Tree.Demo(stdout, eme, Panel::RulesName);
-	printf("Here?!\n");
+	//printf("Here?!\n");
+	//Tree.Demo(stdout, eme, Panel::RulesName);
+	//printf("Here?!\n");
 	error = buildAll(eme, Tree);
-	printf("Here?!:%d\n", error);
+	//printf("Here?!:%d\n", error);
 	if (error != 0) return error;
 	buildLpost();
-	printf("Here?!:%d\n", error);
+	//printf("Here?!:%d\n", error);
 	return error;
 }
 void InputPanel::NeglectNullToken(Morpheme& eme) const
@@ -1644,7 +1694,7 @@ int InputPanel::buildL(const Morpheme& eme, GLTree* Tree)
 					error = RegBuild(RegNow, GroupNow, eme, GT->child(2));
 					//printf("here: %d\n", error);
 					if (error != 0) return error;
-					RegG[GroupNow]->regs[RegNow]->reg->Demo(stdout);
+					//RegG[GroupNow]->regs[RegNow]->reg->Demo(stdout);
 					break;
 					
 				}

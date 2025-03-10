@@ -31,7 +31,7 @@ int build(FILE* fp);
 int build(const char* input);
 void demo(FILE* fp) const;
 void ErrorDemo(FILE* fp) const;
-void printL(FILE* fp, const char* nameL)const;
+int printL(FILE* fp, const char* nameL)const;
 int printG(FILE* output, FILE* infor, const char* nameG)const;
 ```
 
@@ -43,8 +43,8 @@ demo方法展示读入文件的信息，如果发现输入文件有一些错误�
  `printL`方法打印Cpp风格的DFA代码，这个DFA封装在一个名字为`nameL`的类中. `printG`打印一个LR分析器对应的分析表（状态转移表等等），这个表格封装在一个名字为`nameG`的类中。这个类对应的代码输出在`FILE*output`中，而`FILE* infor`是文法分析对应的信息。
 目前这两个文件指针都不可以为NULL。
 ####        4.  返回信息
-用户输入的文法如果是lr0的`printG`返回LR0分析表（状态转移表等等），此时`printG`返回 0。用户输入的文法如果是lr1的`printG`返回LR1分析表（状态转移表等等），此时`printG`返回 1。
-如果用户输入的文法超过了这两种文法分析器生成器的能力，`printG`返回2。此时`FILE*output`不会有任何输出。
+如果`InputPanel`没有正确的完成对输入文件的解析，调用`printL`返回-1，其余返回0。用户输入的文法如果是lr0的`printG`返回LR0分析表（状态转移表等等），此时`printG`返回 0。用户输入的文法如果是lr1的`printG`返回LR1分析表（状态转移表等等），此时`printG`返回 1。
+如果用户输入的文法超过了这两种文法分析器生成器的能力，`printG`返回2。此时`FILE*output`不会有任何输出。如果`InputPanel`没有正确的完成对输入文件的解析，调用`printG`返回-1。
 ####        5.  
 
 
@@ -271,7 +271,7 @@ grammar: ****: {
 ## 输出文件格式
 相较于输出一个词法分析器加上文法分析器的完整代码，我们更倾向于输出词法分析器和文法分析器的”驱动表“。这种做法有更高的灵活度。如果用户不像动手写分析器，我们提供两个类将输出的”驱动表“转化为完整代码。
 ### 1.  词法分析器输出格式
-InputPanel的成员函数`void printL(FILE* fp, const char* nameL)const`输出的词法分析器的驱动表是一个结构体`struct nameL`，的声明和定义，声明格式如下:
+InputPanel的成员函数`int printL(FILE* fp, const char* nameL)const`输出的词法分析器的驱动表是一个结构体`struct nameL`，的声明和定义，声明格式如下:
 ```
 struct <nameL>
 {
@@ -293,6 +293,9 @@ struct <nameL>
 };
 ```
 其中枚举类型`regular`可以帮助将定义的正则表达式名字和它们的编号对应起来，枚举类型`group`可以帮助将定义的正则表达式种类和它们的编号对应起来。两个编号都从1开始。在代码中使用枚举类型代替具体的编号有更好的可读性和可维护性。`static int next(int state, const char c)`则是正则表达式对应的DFA的状态转移函数。它接受当前状态和一个字符，返回DFA的下一个状态。`static int action(int state);`的输入是DFA的状态，返回值是当前DFA的接受状态，如果当前状态没有识别出任何东西则返回0。除了0其余返回值和`enum regular`相对应。`static int GroupGet(int state);`输入一个接受状态，换言之一个`enum regular`，返回当前此法单元对应的群组。三个成员函数内部都无`static`类型变量不申请堆内存，是”纯函数“。
+
+如果`InputPanel`没有正确的完成对输入文件的解析，调用返回-1，其余返回0。
+
 ### 2.  文法分析表输出格式
 InputPanel的成员函数`int printG(FILE* output, FILE* infor, const char* nameG)const;`输出的文法分析器驱动表是一个结构体`struct nameG`，的声明和定义，声明格式如下:
 ```

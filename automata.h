@@ -571,7 +571,7 @@ namespace hyperlex
 		int build(const char* input);
 		void demo(FILE* fp) const;
 		void ErrorDemo(FILE* fp) const;
-		void printL(FILE* fp, const char* nameL)const;
+		int printL(FILE* fp, const char* nameL)const;
 		int printG(FILE* output, FILE* infor, const char* nameG)const;
 
 		struct RegContent
@@ -627,7 +627,8 @@ namespace hyperlex
 			repeatGGroupName = 4,
 			repeatGName = 5,
 			ErrorNonTernimal,
-			WorngRuleBody 
+			WorngRuleBody,
+			buildUndone
 		};
 		friend class NFA;
 		friend class grammerS;
@@ -650,6 +651,9 @@ namespace hyperlex
 		size_t errorInfor2;
 		const char* errorInfor3;
 		bool errorInfor4;
+
+		void initial(void);
+		void clear(void);
 		/*
 		demo of input file analysis;
 		*/
@@ -1150,8 +1154,8 @@ namespace hyperlex
 			temp = T::ACTION[top][input[head].accept];
 			information = temp / 4;
 			type = (typename T::type)(temp % 4);
-			printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
-			printf("head = %5zu, lex = %s, \n", head, input.GetWord(head));
+			//printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
+			//printf("head = %5zu, lex = %s, \n", head, input.GetWord(head));
 			switch (type)
 			{
 			case T::accept:
@@ -1196,8 +1200,17 @@ namespace hyperlex
 				GoFull = T::GOTO[stack.top()][symbol];
 				GoD = GoFull / 4;
 				GoI = GoFull % 4;
-				stack.append(GoD);
-				TempTree.append(TreeNow);
+				//printf("<%6d: %6d, %6d>\n", GoFull, GoD, GoI);
+				if ((typename T::type)GoI == T::push)
+				{
+					stack.append(GoD);
+					TempTree.append(TreeNow);
+				}
+				else
+				{
+					error = GoFull;
+					DoNext = false;
+				}
 				break;
 			}
 
