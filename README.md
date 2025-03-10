@@ -308,6 +308,20 @@ struct <nameG>
 		push = 2,
 		reduce = 3
 	};
+    enum nonterminal
+    {
+		nonterminal_name00 = 0,
+		nonterminal_name01 = 1,
+		//大量重复
+        nonterminal_namelast = NonTerminalCount - 1
+	};
+    enum rules
+    {
+		rules_name00 = 0,
+		rules_name01 = 1,
+		//大量重复
+        rules_namelast = RulesCount - 1
+	};
 	static const size_t StateCount;
 	static const size_t NonTerminalCount;
 	static const size_t TerminalCount;
@@ -320,6 +334,9 @@ struct <nameG>
 };
 ```
 其中枚举类型`type`是文法分析动作种类与整数的关系。成员数组`ACTION[StateCount][TerminalCount]`存储当前状态下，当前终结符号下该有的动作。成员数组`GOTO[StateCount][NonTerminalCount]`存储当前状态下，当前非终结符号下该有的动作。存储的`int`值是对4取模得到动作种类，除以整数4才得到具体的动作。对于`GOTO`而言有意义的动作种类只有两个`push`和`error`，然而存储是还是用了四个状态。`RulesToSymbol`存储当前产生式对应的非终结符号，`RulesToSymbol`存储当前产生式的长度，`RulesName` 存储当前产生式的名字。
+
+其中枚举类型`nonterminal`可以帮助将定义的非终结符号和程序产生的编号对应起来。其中枚举类型`rules`可以帮助将定义的文法产生式和它们的编号对应起来。可以用枚举类型`rules`寻址`RulesToSymbol`，`RulesToSymbol`和`RulesName`。可以用枚举类型`nonterminal`寻址`GOTO[StateCount][NonTerminalCount]`第二个维度。
+
 ```
 int temp = <nameG>::ACTION[top][input[head].accept];
 int information = temp / 4;
@@ -361,5 +378,10 @@ case <nameG>::reduce:
 ### 已知问题
 目前版本为1.0也就是刚刚可以用的地步。目前有两个小bug没有修，首先死状态软件在缩减DFA状态的过程中会崩溃。如果设置两个正则表达式可以接受相同的串，请设置不同的权限区分它们，使得任意一个正则表达式都有可以接受的串。举个例子如果保留字void也能被识别标识符的正则表达式识别，那么请保证void的权限高于标识符，否则遇到void会被识别成标识符，导致任何情况void不可被识别，进而导致状态缩减时崩溃。其次空产生式会导致打印的文法分析表的产生式长度一项有一些异常。下个小版本修理这两个东西。
 ### 异常与内存管理
-本软件不抛出任何异常，内部混合使用malloc与new。并且使用时不检查返回值。
+本软件不抛出任何异常。内部混合使用malloc与new，并且使用时不检查返回值是否为NULL。可以做到malloc与free绑定，new与delete绑定。
 
+### 线程安全
+本软件内无任何静态变量，全局变量。线程安全。
+
+### C++版本
+依据C++03版本，没有现代C++的高级特性。

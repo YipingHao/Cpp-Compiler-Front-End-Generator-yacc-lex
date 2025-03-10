@@ -659,7 +659,7 @@ namespace hyperlex
 		*/
 		void demoL(FILE* fp) const;
 		void demoG(FILE* fp) const;
-
+		void printGName(FILE* output, FILE* infor, const char* nameG)const;
 		/*
 		* input analysis;
 		*/
@@ -1438,6 +1438,8 @@ namespace hyperlex
 		void Cprint(const char* name, FILE* fp)const;
 		void CppPrint(const char* name, FILE* fp)const;
 		void CppStructPrint(const char* name, FILE* fp, const grammerS * grammer)const;
+		void CppStructPrint01(const char* name, FILE* fp, const grammerS* grammer)const;
+		void CppStructPrint02(const char* name, FILE* fp, const grammerS* grammer)const;
 		// now site 0 is END-EOF, site 1-N Are N terminal symbol
 		static const char* TypeToChar(type TT);
 		const ErrorType ErrorTypeGet(void);
@@ -1463,6 +1465,9 @@ namespace hyperlex
 		void Demo01(FILE* fp)const;
 		void Demo02(FILE* fp)const;
 		void Demo03(FILE* fp)const;
+
+		//void CppStructPrint01(const char* name, FILE* fp, const grammerS* grammer)const;
+		//void CppStructPrint02(const char* name, FILE* fp, const grammerS* grammer)const;
 	};
 }
 #define SizeMax ((size_t)0xffffffffffffffff)

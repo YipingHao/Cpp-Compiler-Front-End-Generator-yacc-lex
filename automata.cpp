@@ -1128,6 +1128,90 @@ struct Panel
 		push = 2,
 		reduce = 3
 	};
+	enum nonterminal
+	{
+		_all_ = 0,
+		_TEXT_ = 1,
+		_LEXICAL_ = 2,
+		_RegGROUP_ = 3,
+		_REGDEFS_ = 4,
+		_RegDEF_ = 5,
+		_RegGROUPNAME_ = 6,
+		_RegNAME_ = 7,
+		_RegNAMEHead_ = 8,
+		_REGBODY_ = 9,
+		_REGEXPRESSor_ = 10,
+		_REGEXPRESS_ = 11,
+		_RegCOMPLEX_ = 12,
+		_RegNODE_ = 13,
+		_RegLEAF_ = 14,
+		_RegCHAR_ = 15,
+		_GRAMMAR_ = 16,
+		_GrammerDEF_ = 17,
+		_GnameFORMULAS_ = 18,
+		_GFORMULA_ = 19,
+		_GFORMULAUnit_ = 20,
+		_END_ = 21,
+		_BEGIN_ = 22
+	};
+	enum rules
+	{
+		_all_all_ = 0,
+		_TEXT_LG_ = 1,
+		_TEXT_OnlyL_ = 2,
+		_LEXICAL_multi_ = 3,
+		_LEXICAL_single_ = 4,
+		_RegGROUP_multi_ = 5,
+		_RegGROUP_single_ = 6,
+		_REGDEFS_multi_ = 7,
+		_REGDEFS_single_ = 8,
+		_RegDEF_full_ = 9,
+		_RegDEF_default_ = 10,
+		_RegGROUPNAME_priority_ = 11,
+		_RegGROUPNAME_bare_ = 12,
+		_RegGROUPNAME_blocks_ = 13,
+		_RegNAME_priority_ = 14,
+		_RegNAME_bare_ = 15,
+		_RegNAMEHead_aid_ = 16,
+		_RegNAMEHead_aall_ = 17,
+		_RegNAMEHead_agrammar_ = 18,
+		_RegNAMEHead_alexical_ = 19,
+		_RegNAMEHead_avoid_ = 20,
+		_REGBODY_REGBODY_ = 21,
+		_REGEXPRESSor_ororor_ = 22,
+		_REGEXPRESSor_single_ = 23,
+		_REGEXPRESS_multi_ = 24,
+		_REGEXPRESS_single_ = 25,
+		_RegCOMPLEX_multi3_ = 26,
+		_RegCOMPLEX_multi2_ = 27,
+		_RegCOMPLEX_multi1_ = 28,
+		_RegCOMPLEX_single_ = 29,
+		_RegNODE_replace_ = 30,
+		_RegNODE_braket_ = 31,
+		_RegNODE_single_ = 32,
+		_RegLEAF_range_ = 33,
+		_RegLEAF_single2_ = 34,
+		_RegLEAF_single_ = 35,
+		_RegCHAR_id_ = 36,
+		_RegCHAR_commom_ = 37,
+		_GRAMMAR_multi_ = 38,
+		_GRAMMAR_single_ = 39,
+		_GrammerDEF_multi_ = 40,
+		_GrammerDEF_single_ = 41,
+		_GnameFORMULAS_multi_ = 42,
+		_GnameFORMULAS_single_ = 43,
+		_GFORMULA_more_ = 44,
+		_GFORMULA_unit_ = 45,
+		_GFORMULAUnit_aall_ = 46,
+		_GFORMULAUnit_aid_ = 47,
+		_GFORMULAUnit_agrammar_ = 48,
+		_GFORMULAUnit_alexical_ = 49,
+		_GFORMULAUnit_avoid_ = 50,
+		_END_half_ = 51,
+		_END_full_ = 52,
+		_BEGIN_BEGIN_ = 53
+	};
+
 	static const size_t StateCount;
 	static const size_t NonTerminalCount;
 	static const size_t TerminalCount;
@@ -1426,7 +1510,30 @@ void InputPanel::demoG(FILE* fp) const
 		}
 	}
 }
-
+void InputPanel::printGName(FILE* output, FILE* infor, const char* nameG)const
+{
+	size_t i, j;
+	size_t site;
+	Rules* now;
+	Group* GG;
+	site = 0;
+	fprintf(output, "\tenum rules\n\t{\n");
+	for (i = 0; i < GrammarG.count(); i++)
+	{
+		GG = GrammarG[i];
+		for (j = 0; j < GG->rules.count(); j++)
+		{
+			now = GG->rules[j];
+			if(site == 0)
+				fprintf(output, "\t\t_%s_%s_ = %d", GG->name, now->name, (int)site);
+			else 
+				fprintf(output, ",\n\t\t_%s_%s_ = %d", GrammarG[i]->name, now->name, (int)site);
+			site += 1;
+		}
+		
+	}
+	fprintf(output, "\n\t};\n");
+}
 int InputPanel::printL(FILE* fp, const char* nameL)const
 {
 	NFA* nfa = NULL;
@@ -1527,7 +1634,9 @@ int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 	Gsheet0.Demo(infor);
 	if (ET == NoError)
 	{
-		Gsheet0.CppStructPrint(nameG, output, &gs);
+		Gsheet0.CppStructPrint01(nameG, output, &gs);
+		printGName(output, infor, nameG);
+		Gsheet0.CppStructPrint02(nameG, output, &gs);
 		delete lr0;
 		return 0;
 	}
@@ -1539,7 +1648,9 @@ int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 	Gsheet1.Demo(infor);
 	if (ET == NoError)
 	{
-		Gsheet1.CppStructPrint(nameG, output, &gs);
+		Gsheet1.CppStructPrint01(nameG, output, &gs);
+		printGName(output, infor, nameG);
+		Gsheet1.CppStructPrint02(nameG, output, &gs);
 		delete lr1;
 		return 1;
 	}
@@ -7017,18 +7128,32 @@ void Gsheet::CppPrint(const char* name, FILE* fp)const
 }
 void Gsheet::CppStructPrint(const char* name, FILE* fp, const grammerS* grammer)const
 {
-	size_t i, j;
-	//size_t No;
-	int infor;
+	CppStructPrint01(name, fp, grammer);
+	CppStructPrint02(name, fp, grammer);
+}
+void Gsheet::CppStructPrint01(const char* name, FILE* fp, const grammerS* grammer)const
+{
+	size_t i;
+	size_t length;
 	fprintf(fp, "struct %s\n{\n", name);
-	
+
 	fprintf(fp, "\tenum type\n\t{\n");
 	fprintf(fp, "\t\taccept = %d,\n", (int)accept);
 	fprintf(fp, "\t\terror = %d,\n", (int)error);
 	fprintf(fp, "\t\tpush = %d,\n", (int)push);
 	fprintf(fp, "\t\treduce = %d\n\t};\n", (int)reduce);
 
-	
+	length = grammer->name.count();
+	fprintf(fp, "\tenum nonterminal\n\t{\n");
+	for (i = 1; i < length; i++)
+		fprintf(fp, "\t\t_%s_ = %d,\n", grammer->name[i - 1], (int)(i - 1));
+	if (length != 0) fprintf(fp, "\t\t_%s_ = %d\n", grammer->name[length - 1], (int)(length - 1));
+	fprintf(fp, "\t};\n");
+}
+void Gsheet::CppStructPrint02(const char* name, FILE* fp, const grammerS* grammer)const
+{
+	size_t i, j;
+	int infor;
 
 	fprintf(fp, "\tstatic const size_t StateCount;\n");
 	fprintf(fp, "\tstatic const size_t NonTerminalCount;\n");
@@ -7041,9 +7166,7 @@ void Gsheet::CppStructPrint(const char* name, FILE* fp, const grammerS* grammer)
 	fprintf(fp, "\tstatic const int RulesLength[%zu];\n", RulesCount);
 	fprintf(fp, "\tstatic const char* const RulesName[%zu];\n", RulesCount);
 
-	//fprintf(fp, "\t%s();\n", name);
 	fprintf(fp, "};\n");
-	//const int aa1::w[4] = { 
 
 	fprintf(fp, "const size_t %s::StateCount = %zu;\n", name, StateCount);
 	fprintf(fp, "const size_t %s::NonTerminalCount = %zu;\n", name, NonTerminalCount);
@@ -7064,10 +7187,10 @@ void Gsheet::CppStructPrint(const char* name, FILE* fp, const grammerS* grammer)
 			infor += (int)GOTO[i * NonTerminalCount + j].action;
 			fprintf(fp, ", %d", infor);
 		}
-		if(i + 1 < StateCount) fprintf(fp, "}, \\\n");
+		if (i + 1 < StateCount) fprintf(fp, "}, \\\n");
 		else  fprintf(fp, "}};\n");
 	}
-		
+
 	fprintf(fp, "//==============================\n");//
 	//====================================================
 	fprintf(fp, "const int %s::ACTION[%zu][%zu] = { \\ \n", name, StateCount, (TerminalCount + 1));
@@ -7112,7 +7235,6 @@ void Gsheet::CppStructPrint(const char* name, FILE* fp, const grammerS* grammer)
 	grammer->Demo(fp, RulesCount - 1);
 	fprintf(fp, "\"};\n");
 }
-
 static bool compare(const char* str1, const char* str2)
 {
 	size_t i;
