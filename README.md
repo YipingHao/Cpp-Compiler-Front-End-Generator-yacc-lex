@@ -50,35 +50,8 @@ demo方法展示读入文件的信息，如果发现输入文件有一些错误�
 
 ## 输入文件格式
 
-### 1.  禁止单独输入文法规则
-用户可以选择在文件中，只写词法规则，也可以选择在文件中同时写词法和文法规则，但是不能单独的写文法规则。如果用户需要单独的文法规则，那么可以随便写一个补位性质的词法分析规则。词法规则的定义由关键字lexical加上一个冒号开头，所有的词法规则需要被花括号括起来。文法规则的定义由关键字`grammar`加上一个冒号开头，所有的文法规则需要被花括号括起来。此外文法规则需要在关键字之后指定一个非终结符号作为接受的符号。
-```
-lexical:{
-    void: 
-    {
-        num: [0-9];
-        letter: [a-z]|[A-Z];
-    }
-    id: id(+5): (<letter> | _) (<letter> | _ | <num>)+;
-    void: hexa: [0-9] | [a-f] | [A-F];
-}
-grammar: TEXT:
-{
-    TEXT：
-    {
-        rules1: ****;
-        rules2: ****;  
-    }
-}
-```
-### 2.  输入文件的词法与文法
-无名生成器分析用户文件所用的词法分析器和文法分析器也是由无名生成器自动生成的。所以在Testfile目录里面，你可以看到本分析器的词法分析和文法分析规则文件input.txt。用户可以从此文件实际上包含了大部分输入文件的格式细节与格式规范。
-### 3.  保留字与标识符
-输入文件接受C语言风格的标识符，但是与C语言不同的是，无名生成器接受的标识符的最小长度是2，单字母不能作为合法的标识符。此外输入文件有四个保留字`all`，`grammar`，`lexical`，`void`。
-### 4.  格式细则：
-输入文件广泛使用C语言风格的花括号，右花括号后面是否跟着一个分号都可以，但是不能跟着多个。
-输入文件的词法分析之后丢弃所有的空格换行和水平制表符号。输入文件支持C语言风格的注释，这个注释由词法分析器识别后丢弃，具体注释的词法请参阅input.txt。
-### 5.  完整的输入文件例子
+### 1.  完整的输入文件例子
+这是一个完整的输入文件的例子，这个文件在Testfile目录中，是sample.txt。
 ```
 lexical:{
     void:
@@ -122,6 +95,36 @@ grammar: EXP:
 }
 
 ```
+
+### 2.  禁止单独输入文法规则
+用户可以选择在文件中，只写词法规则，也可以选择在文件中同时写词法和文法规则，但是不能单独的写文法规则。如果用户需要单独的文法规则，那么可以随便写一个补位性质的词法分析规则。词法规则的定义由关键字lexical加上一个冒号开头，所有的词法规则需要被花括号括起来。文法规则的定义由关键字`grammar`加上一个冒号开头，所有的文法规则需要被花括号括起来。此外文法规则需要在关键字之后指定一个非终结符号作为接受的符号。
+```
+lexical:{
+    void: 
+    {
+        num: [0-9];
+        letter: [a-z]|[A-Z];
+    }
+    id: id(+5): (<letter> | _) (<letter> | _ | <num>)+;
+    void: hexa: [0-9] | [a-f] | [A-F];
+}
+grammar: TEXT:
+{
+    TEXT：
+    {
+        rules1: ****;
+        rules2: ****;  
+    }
+}
+```
+### 3.  输入文件的词法与文法
+无名生成器分析用户文件所用的词法分析器和文法分析器也是由无名生成器自动生成的。所以在Testfile目录里面，你可以看到本分析器的词法分析和文法分析规则文件input.txt。用户可以从此文件实际上包含了大部分输入文件的格式细节与格式规范。
+### 4.  保留字与标识符
+输入文件接受C语言风格的标识符，但是与C语言不同的是，无名生成器接受的标识符的最小长度是2，单字母不能作为合法的标识符。此外输入文件有四个保留字`all`，`grammar`，`lexical`，`void`。
+### 5.  格式细则：
+输入文件广泛使用C语言风格的花括号，右花括号后面是否跟着一个分号都可以，但是不能跟着多个。
+输入文件的词法分析之后丢弃所有的空格换行和水平制表符号。输入文件支持C语言风格的注释，这个注释由词法分析器识别后丢弃，具体注释的词法请参阅input.txt。
+
 ### 6.  词法分析输入格式
 #### 正则表达式的命名       
  每一个输入的正则表达式都需要被命名，它们的名字可以是保留字或者标识符。每一个被输入的正则表达式都需要被指定一个类型或者说群组，群组名必须是标识符或者保留字`void`。`void`群组的正则表达式不会作为词法分析器的输出，而只成为预制的模块，用于简化后续的正则表达式的输入。除了`void`组,任何两个群组的名字不能重名，任何两个正则表达式的名字也不能重名。所有`void`群组内的表达式会被合并。命名后跟随的冒号不可省略不可重复。
@@ -295,7 +298,8 @@ struct <nameL>
 ```
 其中枚举类型`regular`可以帮助将定义的正则表达式名字和它们的编号对应起来，枚举类型`group`可以帮助将定义的正则表达式种类和它们的编号对应起来。两个编号都从1开始。在代码中使用枚举类型代替具体的编号有更好的可读性和可维护性。`static int next(int state, const char c)`则是正则表达式对应的DFA的状态转移函数。它接受当前状态和一个字符，返回DFA的下一个状态。`static int action(int state);`的输入是DFA的状态，返回值是当前DFA的接受状态，如果当前状态没有识别出任何东西则返回0。除了0其余返回值和`enum regular`相对应。`static int GroupGet(int state);`输入一个接受状态，换言之一个`enum regular`，返回当前此法单元对应的群组。三个成员函数内部都无`static`类型变量不申请堆内存，是”纯函数“。
 
-如果`InputPanel`没有正确的完成对输入文件的解析，调用`int printL`返回-1，如果优先级设置问题则返回-2其余返回0。
+如果`InputPanel`没有正确的完成对输入文件的解析，调用`int printL`返回-1，如果优先级设置问题则返回-2其余返回0。样例输入文件输出的结构体作为一个例子出现在说明的最后部分的附录中。
+
 
 ### 2.  文法分析表输出格式
 InputPanel的成员函数`int printG(FILE* output, FILE* infor, const char* nameG)const;`输出的文法分析器驱动表是一个结构体`struct nameG`，的声明和定义，声明格式如下:
@@ -336,7 +340,7 @@ struct <nameG>
 ```
 其中枚举类型`type`是文法分析动作种类与整数的关系。成员数组`ACTION[StateCount][TerminalCount]`存储当前状态下，当前终结符号下该有的动作。成员数组`GOTO[StateCount][NonTerminalCount]`存储当前状态下，当前非终结符号下该有的动作。存储的`int`值是对4取模得到动作种类，除以整数4才得到具体的动作。对于`GOTO`而言有意义的动作种类只有两个`push`和`error`，然而存储是还是用了四个状态。`RulesToSymbol`存储当前产生式对应的非终结符号，`RulesToSymbol`存储当前产生式的长度，`RulesName` 存储当前产生式的名字。
 
-其中枚举类型`nonterminal`可以帮助将定义的非终结符号和程序产生的编号对应起来。其中枚举类型`rules`可以帮助将定义的文法产生式和它们的编号对应起来。可以用枚举类型`rules`寻址`RulesToSymbol`，`RulesToSymbol`和`RulesName`。可以用枚举类型`nonterminal`寻址`GOTO[StateCount][NonTerminalCount]`第二个维度。
+其中枚举类型`nonterminal`可以帮助将定义的非终结符号和程序产生的编号对应起来。其中枚举类型`rules`可以帮助将定义的文法产生式和它们的编号对应起来。可以用枚举类型`rules`寻址`RulesToSymbol`，`RulesToSymbol`和`RulesName`。可以用枚举类型`nonterminal`寻址`GOTO[StateCount][NonTerminalCount]`第二个维度。样例输入文件输出的结构体作为一个例子出现在说明的最后部分的附录中。
 
 ```
 int temp = <nameG>::ACTION[top][input[head].accept];
@@ -459,3 +463,248 @@ int sample(input)
 
 ### C++版本
 依据C++03版本，没有现代C++的高级特性。
+
+## 附录
+
+### 1. 输出样例
+
+#### 读入文件sample.txt后软件输出的词法分析器
+
+```
+struct regular
+{
+        enum regular
+        {
+                _id_ = 1,
+                _integer_ = 2,
+                _sum_ = 3,
+                _multi_ = 4,
+                _value_ = 5,
+                _left_ = 6,
+                _right_ = 7
+        };
+        enum group
+        {
+                _id___ = 1,
+                _number___ = 2,
+                _operator___ = 3,
+                _value___ = 4,
+                _braket___ = 5
+        };
+        static int next(int state, const char c);
+        static int action(int state);
+        static int GroupGet(int state);
+};
+int regular::next(int state, const char c)
+{
+        switch (state)
+        {
+        case 0:
+                if(c == '(') return 6;
+                else if(c == ')') return 7;
+                else if(c == '*') return 4;
+                else if(c == '+') return 3;
+                else if(c == '-') return 8;
+                else if('0' <= c && c <= '9') return 2;
+                else if(c == '=') return 5;
+                else if('A' <= c && c <= 'Z') return 9;
+                else if(c == '_') return 9;
+                else if('a' <= c && c <= 'z') return 9;
+                else return 0;
+        case 1:
+                if('0' <= c && c <= '9') return 1;
+                else if('A' <= c && c <= 'Z') return 1;
+                else if(c == '_') return 1;
+                else if('a' <= c && c <= 'z') return 1;
+                else return 0;
+        case 2:
+                if('0' <= c && c <= '9') return 2;
+                else return 0;
+        case 3:
+                if('0' <= c && c <= '9') return 2;
+                else return 0;
+        case 4:
+                return 0;
+        case 5:
+                return 0;
+        case 6:
+                return 0;
+        case 7:
+                return 0;
+        case 8:
+                if('0' <= c && c <= '9') return 2;
+                else return 0;
+        case 9:
+                if('0' <= c && c <= '9') return 1;
+                else if('A' <= c && c <= 'Z') return 1;
+                else if(c == '_') return 1;
+                else if('a' <= c && c <= 'z') return 1;
+                else return 0;
+        }
+        return 0;
+}
+int regular::action(int state)
+{
+        switch (state)
+        {
+        case 1:
+                return 1;//id: id
+        case 2:
+                return 2;//number: integer
+        case 3:
+                return 3;//operator: sum
+        case 4:
+                return 4;//operator: multi
+        case 5:
+                return 5;//value: value
+        case 6:
+                return 6;//braket: left
+        case 7:
+                return 7;//braket: right
+        }
+        return 0;
+}
+int regular::GroupGet(int accept)
+{
+        switch (accept)
+        {
+        case 1:
+                return 1;//id: id
+        case 2:
+                return 2;//number: integer
+        case 3:
+                return 3;//operator: sum
+        case 4:
+                return 3;//operator: multi
+        case 5:
+                return 4;//value: value
+        case 6:
+                return 5;//braket: left
+        case 7:
+                return 5;//braket: right
+        }
+        return 0;
+}
+```
+#### 读入文件sample.txt后软件输出的文法分析器
+```
+struct panel
+{
+        enum type
+        {
+                accept = 0,
+                error = 1,
+                push = 2,
+                reduce = 3
+        };
+        enum nonterminal
+        {
+                _all_ = 0,
+                _LEFT_ = 1,
+                _EXP_ = 2,
+                _RIGHT_ = 3,
+                _MULTI_ = 4,
+                _UNIT_ = 5
+        };
+        enum rules
+        {
+                _all_all_ = 0,
+                _LEFT_LEFT_ = 1,
+                _EXP_EXP_ = 2,
+                _RIGHT_multi_ = 3,
+                _RIGHT_single_ = 4,
+                _MULTI_multi_ = 5,
+                _MULTI_single_ = 6,
+                _UNIT_alot_ = 7,
+                _UNIT_xyz_ = 8,
+                _UNIT_const_ = 9
+        };
+        static const size_t StateCount;
+        static const size_t NonTerminalCount;
+        static const size_t TerminalCount;
+        static const size_t RulesCount;
+        static const int GOTO[17][6];
+        static const int ACTION[17][8];
+        static const int RulesToSymbol[10];
+        static const int RulesLength[10];
+        static const char* const RulesName[10];
+};
+const size_t panel::StateCount = 17;
+const size_t panel::NonTerminalCount = 6;
+const size_t panel::TerminalCount = 7;
+const size_t panel::RulesCount = 10;
+const int panel::GOTO[17][6] = { \
+{1, 6, 10, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 22, 26, 30}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 46, 26, 30}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 58, 30}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 66}, \
+{1, 1, 1, 1, 1, 1}};
+//==============================
+const int panel::ACTION[17][8] = { \
+{1, 14, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 18, 1, 1}, \
+{0, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 7, 1, 1}, \
+{1, 34, 38, 1, 1, 1, 42, 1}, \
+{11, 1, 1, 50, 1, 1, 1, 1}, \
+{19, 1, 1, 19, 62, 1, 1, 19}, \
+{27, 1, 1, 27, 27, 1, 1, 27}, \
+{35, 1, 1, 35, 35, 1, 1, 35}, \
+{39, 1, 1, 39, 39, 1, 1, 39}, \
+{1, 34, 38, 1, 1, 1, 42, 1}, \
+{1, 1, 1, 50, 1, 1, 1, 54}, \
+{1, 34, 38, 1, 1, 1, 42, 1}, \
+{31, 1, 1, 31, 31, 1, 1, 31}, \
+{15, 1, 1, 15, 62, 1, 1, 15}, \
+{1, 34, 38, 1, 1, 1, 42, 1}, \
+{23, 1, 1, 23, 23, 1, 1, 23}};
+//==============================
+const int panel::RulesToSymbol[10] = { \
+0,\
+1,\
+2,\
+3,\
+3,\
+4,\
+4,\
+5,\
+5,\
+5};
+//==============================
+const int panel::RulesLength[10] = { \
+1,\
+1,\
+3,\
+3,\
+1,\
+3,\
+1,\
+3,\
+1,\
+1};
+//==============================
+const char* const panel::RulesName[10] = { \
+"all->EXP ",\
+"LEFT->id ",\
+"EXP->LEFT value RIGHT ",\
+"RIGHT->RIGHT sum MULTI ",\
+"RIGHT->MULTI ",\
+"MULTI->MULTI multi UNIT ",\
+"MULTI->UNIT ",\
+"UNIT->left RIGHT right ",\
+"UNIT->id ",\
+"UNIT->integer "};
+
+```
