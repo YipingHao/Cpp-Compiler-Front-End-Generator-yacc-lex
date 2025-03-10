@@ -628,7 +628,8 @@ namespace hyperlex
 			repeatGName = 5,
 			ErrorNonTernimal,
 			WorngRuleBody,
-			buildUndone
+			missingIdinRegdef,
+			buildUndone,
 		};
 		friend class NFA;
 		friend class grammerS;
@@ -954,6 +955,7 @@ namespace hyperlex
 		sheetDFA(const NFA & nfa);
 		~sheetDFA();
 		void shrink(void);
+		bool ifDeadAccept(void)const;
 		int next(int state, const char c)const;
 		int action(int state)const;
 		
@@ -962,6 +964,7 @@ namespace hyperlex
 	private:
 		size_t count;
 		size_t AcceptCount;
+		size_t LiveAcceptCount;
 		matlist<int> sheet;
 		list<int> accept;
 		//matlist<int> accept;

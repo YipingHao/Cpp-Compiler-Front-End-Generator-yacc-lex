@@ -1444,6 +1444,10 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		GrammarG[errorInfor1]->rules[errorInfor2]->demo(fp, NontTerminal, Terminal);
 		fprintf(fp, "\n");
 		break;
+	case InputPanel::missingIdinRegdef:
+		fprintf(fp, "missingIdinRegdef: need definition of regular expression: %s.\n", errorInfor3);
+		fprintf(fp, "\n");
+		break;
 	case InputPanel::buildUndone:
 		fprintf(fp, "buildUndone: has not been built.\n");
 		fprintf(fp, "\n");
@@ -1541,11 +1545,12 @@ int InputPanel::printL(FILE* fp, const char* nameL)const
 	DFA* DFAgraph = NULL;
 	size_t i, No, groupTemp;
 	vector<const char*> Name__, Attribute__;
-
+	int error;
 	if (errorCode != NoError) return -1;
-
+	error = 0;
 	nfa = new NFA(*this);
 	DFAsheet = new sheetDFA(*nfa);
+	if (DFAsheet->ifDeadAccept()) error = -2;
 	DFAsheet->shrink();
 	DFAgraph = new DFA(DFAsheet);
 
@@ -1611,7 +1616,7 @@ int InputPanel::printL(FILE* fp, const char* nameL)const
 	delete nfa;
 	delete DFAsheet;
 	delete DFAgraph;
-	return 0;
+	return error;
 }
 int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 {
@@ -1622,7 +1627,7 @@ int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 	Gsheet::ErrorInfor EI;
 	Gsheet::ErrorType ET;
 	//printf("???\n");
-	if (errorCode != NoError) return -1;
+	if (errorCode != NoError || !GrammarEnclosed) return -1;
 	gs.build(*this);
 	//printf("???\n");
 
@@ -2016,7 +2021,12 @@ int InputPanel::RegBuild(size_t RegNow, size_t group, const Morpheme& eme, GLTre
 						Ltemp = RegG[i]->regs[j]->reg;
 						TreeNow->copy(*Ltemp);
 					}
-					else error = -13;
+					else
+					{
+						errorCode = missingIdinRegdef;
+						errorInfor3 = idName;
+						error = -13;
+					}
 					break;
 				//No[14], case RegLEAF: prefix: 33, degeneracy: 3
 				case 33: //14: RegLEAF, No[0] production rules: RegLEAF->RegCHAR
@@ -4981,7 +4991,7 @@ sheetDFA::sheetDFA(const NFA& nfa) : sheet(CharSize)
 	int ele;
 	size_t Scount;
 	size_t NewSite_;
-
+	LiveAcceptCount = 0;
 
 	to.Malloc(nfa.StateAmount);
 	auxiliary.reshape(nfa.StateAmount);
@@ -5083,6 +5093,14 @@ void sheetDFA::acceptSet(const matlist<bool>& Dstates, const NFA& nfa)
 		//std::cout << "accept[i]: " << accept[i] << std::endl;
 		//Demo(stdout, Dstates[i], Dstates.column());
 	}
+	vector<bool> live;
+	live.recount(AcceptCount + 1);
+	live.value(false);
+	for (i = 0; i < accept.count(); i++)
+		live[accept[i]] = true;
+	for (i = 0; i < live.count(); i++)
+		LiveAcceptCount += live[i] ? 1 : 0;
+	LiveAcceptCount -= 1;
 	//std::cout << "Dstates.row(): " << Dstates.row() << std::endl;
 	//for (i = 0; i < Dstates.row(); i++)
 	//{
@@ -5174,6 +5192,10 @@ void sheetDFA::Demo(FILE* fp, const bool* state, size_t n)
 		if(state[i]) fprintf(fp, "%zu ", i);
 	fprintf(fp, "\n");
 }
+bool sheetDFA::ifDeadAccept(void) const
+{
+	return AcceptCount != LiveAcceptCount;
+}
 void sheetDFA::shrink(void)
 {
 	ShrinkList* SL;
@@ -5181,7 +5203,7 @@ void sheetDFA::shrink(void)
 	size_t i, j, toRecord, now, state, NewS, nextS;
 	size_t toNow;
 	bool change;
-	SL = new ShrinkList(AcceptCount + 1, sheet.row());
+	SL = new ShrinkList(LiveAcceptCount + 1, sheet.row());
 	for (i = 0; i < sheet.row(); i++)
 		SL->Insert(i, accept[i]);
 	//SL->Demo(stdout);
