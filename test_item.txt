@@ -6,10 +6,36 @@
 //=======================================================================================================
 {
 	//server = "GPU";
-	//item = 11;//grammerT
-	item = 13;
-	InputFileName = "./data/LR1.txt";
+	//item = 13;//grammerT
+	//item = 19;
+	item = 20;
+	//InputFileName = "./data/error.txt";
 	//InputFileName = "./data/grammerT2.txt";
+	InputFileName = "./data/sample.txt";
+	//InputFileName = "./data/Panel2.txt";
+	//InputFileName = "./data/input.txt";
+	OutputFileName = "./output/G.txt";
+	PrintToFile = "F";//F if print to screen;
+	OutputLabel = "Panel";
 }
 /*
+test 20: new regular expression
 */
+// item 13 option
+{
+	lr0demo = "F";
+	lr0Gdemo = "F";
+	lr0Cdemo = "F";
+	lr0Cppdemo = "F";
+	
+	lr1demo = "F";
+	lr1Gdemo = "F";
+	lr1Cdemo = "F";
+	lr1Cppdemo = "F";
+}
+// item 17 option
+{
+	regs = "F";
+	Cdemo = "F";
+	Cppdemo = "T";	
+}

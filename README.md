@@ -51,7 +51,7 @@ demo方法展示读入文件的信息，如果发现输入文件有一些错误�
 ## 输入文件格式
 
 ### 1.  禁止单独输入文法规则
-用户可以选择在文件中，只写词法规则，也可以选择在文件中同时写词法和文法规则，但是不能单独的写文法规则。如果用户需要单独的文法规则，那么可以随便写一个补位性质的词法分析规则。词法规则的定义由关键字lexical加上一个冒号开头，所有的词法规则需要被花括号括起来。文法规则的定义由关键字grammar加上一个冒号开头，所有的文法规则需要被花括号括起来。此外文法规则需要在关键字之后指定一个非终结符号作为接受的符号。
+用户可以选择在文件中，只写词法规则，也可以选择在文件中同时写词法和文法规则，但是不能单独的写文法规则。如果用户需要单独的文法规则，那么可以随便写一个补位性质的词法分析规则。词法规则的定义由关键字lexical加上一个冒号开头，所有的词法规则需要被花括号括起来。文法规则的定义由关键字`grammar`加上一个冒号开头，所有的文法规则需要被花括号括起来。此外文法规则需要在关键字之后指定一个非终结符号作为接受的符号。
 ```
 lexical:{
     void: 
@@ -59,7 +59,7 @@ lexical:{
         num: [0-9];
         letter: [a-z]|[A-Z];
     }
-    id: id(+5): (<letter> | _) (<letter> | _ | num)+;
+    id: id(+5): (<letter> | _) (<letter> | _ | <num>)+;
     void: hexa: [0-9] | [a-f] | [A-F];
 }
 grammar: TEXT:
@@ -81,13 +81,13 @@ grammar: TEXT:
 ### 5.  完整的输入文件例子
 ```
 lexical:{
-    void: 
+    void:
     {
         num: [0-9];
         letter: [a-z]|[A-Z];
     }
-    id: id(+5): (<letter> | _) (<letter> | _ | num)+;
-    number: {integer: (-|+)?<num>+;}
+    id: id(+5): (<letter> | _) (<letter> | _ | <num>)+;
+    number: {integer: ('-'|'+')?<num>+;}
     operator:
     {
         sum: '+';
@@ -102,24 +102,25 @@ lexical:{
 };
 grammar: EXP:
 {
-    LEFT：id;
-    EXP: LEFT value RIGHT; 
-    RIGHT：{
+    LEFT: id;
+    EXP: LEFT value RIGHT;
+    RIGHT:{
         single: MULTI;
         multi: RIGHT sum MULTI; //(MULTI * UNIT)
     }
-    MULTI: 
+    MULTI:
     {
         single: UNIT;
         multi: MULTI multi UNIT; //(MULTI * UNIT)
     }
-    UNIT: 
+    UNIT:
     {
         const: integer;
-        xyz： id;
+        xyz: id;
         alot: left RIGHT right;//(RIGHT)
     }
 }
+
 ```
 ### 6.  词法分析输入格式
 #### 正则表达式的命名       
@@ -294,7 +295,7 @@ struct <nameL>
 ```
 其中枚举类型`regular`可以帮助将定义的正则表达式名字和它们的编号对应起来，枚举类型`group`可以帮助将定义的正则表达式种类和它们的编号对应起来。两个编号都从1开始。在代码中使用枚举类型代替具体的编号有更好的可读性和可维护性。`static int next(int state, const char c)`则是正则表达式对应的DFA的状态转移函数。它接受当前状态和一个字符，返回DFA的下一个状态。`static int action(int state);`的输入是DFA的状态，返回值是当前DFA的接受状态，如果当前状态没有识别出任何东西则返回0。除了0其余返回值和`enum regular`相对应。`static int GroupGet(int state);`输入一个接受状态，换言之一个`enum regular`，返回当前此法单元对应的群组。三个成员函数内部都无`static`类型变量不申请堆内存，是”纯函数“。
 
-如果`InputPanel`没有正确的完成对输入文件的解析，调用返回-1，其余返回0。
+如果`InputPanel`没有正确的完成对输入文件的解析，调用`int printL`返回-1，如果优先级设置问题则返回-2其余返回0。
 
 ### 2.  文法分析表输出格式
 InputPanel的成员函数`int printG(FILE* output, FILE* infor, const char* nameG)const;`输出的文法分析器驱动表是一个结构体`struct nameG`，的声明和定义，声明格式如下:
@@ -449,7 +450,7 @@ int sample(input)
 ### 代码中的垃圾
   由于无名生成器分析用户文件所用的词法分析器和文法分析器也是由无名生成器自动生成的。为了完成这一自举，代码中留下了很多无用的脚手架。
 ### 已知问题
-目前版本为1.0也就是刚刚可以用的地步。目前有一个小bug没有修：空产生式会导致打印的文法分析表的产生式长度一项有一些异常。下个小版本修理这两个东西。
+目前版本为1.0也就是刚刚可以用的地步。目前有一个小bug没有修：空产生式会导致打印的文法分析表的产生式长度一项有一些异常。下个小版本修理这个东西。
 ### 异常与内存管理
 本软件不抛出任何异常。内部混合使用malloc与new，并且使用时不检查返回值是否为NULL。可以做到malloc与free绑定，new与delete绑定。
 

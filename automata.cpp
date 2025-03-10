@@ -1448,6 +1448,12 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		fprintf(fp, "missingIdinRegdef: need definition of regular expression: %s.\n", errorInfor3);
 		fprintf(fp, "\n");
 		break;
+	case InputPanel::ErrorinputLEXICAL:
+		fprintf(fp, "ErrorinputLEXICAL: \n");
+		break;
+	case InputPanel::ErrorinputGrammar:
+		fprintf(fp, "ErrorinputGrammar: \n");
+		break;
 	case InputPanel::buildUndone:
 		fprintf(fp, "buildUndone: has not been built.\n");
 		fprintf(fp, "\n");
@@ -1668,9 +1674,17 @@ int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 int InputPanel::build(FILE* fp)
 {
 	Morpheme eme;
-	eme.Build<Reg>(fp);
+	int error;
+	clear();
+	initial();
+	error = eme.Build<Reg>(fp);
+	if (error != 0) return error;
 	NeglectNullToken(eme);
-	return buildGanalysis(eme);
+	//eme.Demo(stdout);
+	error = buildGanalysis(eme);
+	if (error != 0) return error;
+	errorCode = NoError;
+	return 0;
 }
 int InputPanel::build(const char* input)
 {
@@ -1679,7 +1693,11 @@ int InputPanel::build(const char* input)
 	clear();
 	initial();
 	error = eme.Build<Reg>(input);
-	if (error != 0) return error;
+	if (error != 0)
+	{
+		errorCode = ErrorinputLEXICAL;
+		return error;
+	}
 	NeglectNullToken(eme);
 	//eme.Demo(stdout);
 	error = buildGanalysis(eme);
@@ -1692,7 +1710,11 @@ int InputPanel::buildGanalysis(const Morpheme& eme)
 	int error;
 	GrammarTree Tree;
 	error = Tree.build<Panel>(eme);
-	if (error != 0) return error;
+	if (error != 0)
+	{
+		errorCode = ErrorinputGrammar;
+		return error;
+	}
 	//printf("Here?!\n");
 	//Tree.Demo(stdout, eme, Panel::RulesName);
 	//printf("Here?!\n");

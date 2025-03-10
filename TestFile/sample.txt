@@ -1,0 +1,40 @@
+lexical:{
+    void: 
+    {
+        num: [0-9];
+        letter: [a-z]|[A-Z];
+    }
+    id: id(+5): (<letter> | _) (<letter> | _ | <num>)+;
+    number: {integer: ('-'|'+')?<num>+;}
+    operator:
+    {
+        sum: '+';
+        multi: '*';
+    }
+    value: value: '=';
+    braket:
+    {
+        left:'(';
+        right: ')';
+    };
+};
+grammar: EXP:
+{
+    LEFT: id;
+    EXP: LEFT value RIGHT; 
+    RIGHT:{
+        single: MULTI;
+        multi: RIGHT sum MULTI; //(MULTI * UNIT)
+    }
+    MULTI: 
+    {
+        single: UNIT;
+        multi: MULTI multi UNIT; //(MULTI * UNIT)
+    }
+    UNIT: 
+    {
+        const: integer;
+        xyz: id;
+        alot: left RIGHT right;//(RIGHT)
+    }
+}

@@ -629,6 +629,8 @@ namespace hyperlex
 			ErrorNonTernimal,
 			WorngRuleBody,
 			missingIdinRegdef,
+			ErrorinputLEXICAL,
+			ErrorinputGrammar,
 			buildUndone,
 		};
 		friend class NFA;
