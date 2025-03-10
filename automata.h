@@ -480,7 +480,7 @@ namespace hyperlex
 
 		template<typename T> int Build(const char* reg);
 		template<typename T> int Build(FILE* fp);
-	private:
+	protected:
 		size_t count;
 		//list<size_t> begin;
 		//list<size_t> length;
@@ -511,7 +511,7 @@ namespace hyperlex
 		template<typename T> int build(const Morpheme& input);
 
 		tree<TreeInfor>* GT;
-	private:
+	protected:
 	};
 	class RegularExp
 	{

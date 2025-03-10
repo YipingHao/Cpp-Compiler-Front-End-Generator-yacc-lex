@@ -368,7 +368,80 @@ case <nameG>::reduce:
 }
 ```
 ### 3. `class Morpheme` 使用简介
+在得到程序输出的DFA之后可以使用`class Morpheme`对输入的文件或者字符串进行简单的词法分析。
+#### 1. 定义概览
+在automata.h定义如下:
+```
+class Morpheme
+{
+public:
+	struct result
+	{
+		int accept;
+		int category;
+		size_t length;
+		size_t begin;
+	};
+	Morpheme();
+	~Morpheme();
+	char* Copy(size_t site) const;
+	void append(const BufferChar& input, int accept, int category);
+	void AppendEnd(int TerminalCount);
+	void UnitMove(size_t from, size_t to);
+	void CountReset(size_t count);
+	void Demo(FILE* fp) const;
+	size_t GetCount(void) const;
+	const char* GetWord(size_t site) const;
+	const result& operator[](const size_t target) const;
 
+	char GetChar(size_t site) const;
+
+	template<typename T> int Build(const char* reg);
+	template<typename T> int Build(FILE* fp);
+protected:
+	size_t count;
+	//list<size_t> begin;
+	//list<size_t> length;
+	vector<result> lex;
+	vector<char> storage;
+	template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
+};
+```
+其中 `struct result` 是每一个词法单元的信息， `int accept`是词法单元的编号，对应`struct <nameL>`中的`enum regular`， `category`是词法单元的种类，对应`struct <nameL>`中的`enum group`。 `size_t length`是词法单元的字符串长度， `size_t begin`是它在存储中首地址的偏移。所有的词法单元对应的字符串按输入文件的顺序存储在`protected:vector<char> storage`中。
+其中每一个词法单元对应的字符串末尾都添加了`'\0'`。`size_t count;`是识别到的词法单元数目，等于`lex.count()`。`lex`存储全体词法单元信息。
+#### 2. 对输入进行词法分析
+```
+template<typename T> int Build(const char* reg);
+template<typename T> int Build(FILE* fp);
+```
+它拥有两个成员函数，分别接受待词法分析输入文件的文件指针或者直接输入一个待词法分析的串。`typename T`即是`printL`打印的类`struct <nameL>`。
+调用例子如下:
+```
+struct Reg
+{
+	enum regular{/*definations*/};
+	enum group{/*definations*/};
+	static int next(int state, const char c);
+	static int action(int state);
+	static int GroupGet(int state);
+};
+int sample(input)
+{
+    Morpheme eme;
+    int error;
+    error = eme.Build<Reg>(input);
+    eme.Demo(stdout);
+    return error;
+}
+```
+
+#### 3. 常用成员函数
+
+`void Demo(FILE* fp) const;`展示词法分析的结果。
+`const result& operator[](const size_t target) const;`返回第`target`个词法单元信息，合法范围是从`0`到`count-1`。不做范围检测。
+`const char* GetWord(size_t site) const;`返回第`target`个词法单元对应的字符串在`all`中的首地址。`target`合法范围是从`0`到`count-1`。不做范围检测。不可以对返回的指针释放内存。
+`char* Copy(size_t site) const;`返回第`target`个词法单元对应的字符串。`target`合法范围是从`0`到`count-1`。不做范围检测。使用结束后应该对返回的指针释放内存。此成员函数返回的字符串指针的内存由`malloc`分配。
+`size_t GetCount(void) const;` 返回成员变量`size_t count;`的值。
 ### 4. `class GrammarTree` 使用简介
 
 ## 软件架构简介与版本
