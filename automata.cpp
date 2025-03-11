@@ -16,31 +16,10 @@ static void strfree(const char** strs, size_t length);
 static void inverse(list<size_t>& out, const list<size_t>& in);
 static int PostfixSwitch_small(char c);
 
-long int static IntGet(const char* list, size_t end, size_t& head)
-{
-	char c, state;
-	long int number;
-	long int Sign = 1;
-	number = 0;
-	state = 0;
-	do
-	{
-		c = dequeue(list, end, head);
-		switch (state)
-		{
-		case 0:
-			if (c >= '0' && c <= '9') number = c - '0';
-			else if (c == '-') Sign = -1;
-			state = 1;
-			break;
-		case 1:
-			if (c >= '0' && c <= '9') number = number * 10 + c - '0';
-			else state = 2;
-			break;
-		}
-	} while (state != 2);
-	return number * Sign;
-}
+static bool isIdBegin(char c);
+static bool isIdNumber(char c);
+
+
 BufferChar::BufferChar()
 {
 }
@@ -61,6 +40,171 @@ void BufferChar::operator=(const char* input)
 	append('\0');
 	Rear -= 1;
 }
+void BufferChar::operator=(const BufferChar& in)
+{
+	clear();
+	append(in);
+}
+void BufferChar::operator+=(const char* input)
+{
+	size_t i;
+	for (i = 0; input[i] != '\0'; i++) append(input[i]);
+	append('\0');
+	Rear -= 1;
+}
+void BufferChar::operator+=(long int source)
+{
+	size_t i;
+	long long int r, ele, top;
+	char stack[32];
+	ele = source;
+	if (source < 0)
+	{
+		ele = -ele;
+		append('-');
+	}
+	if (ele == 0) append('0');
+	top = 0;
+	while (ele != 0)
+	{
+		r = ele % 10;
+		ele = ele / 10;
+		stack[top] = ((char)r) + '0';
+		top += 1;
+	}
+	while (top != 0)
+	{
+		top -= 1;
+		append(stack[top]);
+	}
+}
+void BufferChar::operator+=(const BufferChar& in)
+{
+	append(in);
+}
+void BufferChar::operator+=(double source)
+{
+	double x = 123.456;
+	double mantissa;
+	int exponent, top, r;
+	char stack[32];
+	mantissa = std::frexp(source, &exponent);
+	if (mantissa < 0)
+	{
+		mantissa = -mantissa;
+		append('-');
+	}
+	append((char)((int)mantissa) + '0');
+	mantissa = (mantissa - (double)((int)mantissa)) * 10.0;
+	append('.');
+	for (top = 0; top < 16; top++)
+	{
+		append((char)((int)mantissa) + '0');
+		mantissa = (mantissa - (double)((int)mantissa)) * 10.0;
+	}
+	*this += " * 2^{";
+	if (exponent < 0)
+	{
+		exponent = -exponent;
+		append('-');
+	}
+	if (exponent == 0) append('0');
+	top = 0;
+	while (exponent != 0)
+	{
+		r = exponent % 10;
+		exponent = exponent / 10;
+		stack[top] = ((char)r) + '0';
+		top += 1;
+	}
+	while (top != 0)
+	{
+		top -= 1;
+		append(stack[top]);
+
+	}
+	append('}');
+}
+
+void BufferChar::operator<<(char c)
+{
+	append(c);
+	return;
+}
+void BufferChar::operator<<(const char* c)
+{
+	Append(c);
+}
+void BufferChar::operator<<(double e)
+{
+	char temp[32];
+	sprintf(temp, "%+24.16e", e);
+	Append(temp);
+	return;
+}
+void BufferChar::operator<<(int e)
+{
+	char temp[32];
+	sprintf(temp, "%d", e);
+	Append(temp);
+	return;
+}
+void BufferChar::operator<<(long long int e)
+{
+	char temp[32];
+	sprintf(temp, "%lld", e);
+	Append(temp);
+	return;
+}
+void BufferChar::operator<<(BufferChar& in)
+{
+	append(in);
+	in.clear();
+	return;
+}
+
+bool BufferChar::operator==(const BufferChar& in)
+{
+	size_t i;
+	const char* L, * R;
+	if ((Rear - Head) != (in.Rear - in.Head)) return false;
+	L = content + Head;
+	R = in.content + in.Head;
+	for (i = 0; i < (Rear - Head); i++)
+		if (L[i] != R[i]) return false;
+	return true;
+}
+bool BufferChar::operator!=(const BufferChar& in)
+{
+	size_t i;
+	const char* L, * R;
+	if ((Rear - Head) != (in.Rear - in.Head)) return true;
+	L = content + Head;
+	R = in.content + in.Head;
+	for (i = 0; i < (Rear - Head); i++)
+		if (L[i] != R[i]) return true;
+	return false;
+}
+bool BufferChar::operator==(size_t length)
+{
+	return length == count();
+}
+bool BufferChar::operator!=(size_t length)
+{
+	return length != count();
+}
+void BufferChar::Append(const char* c)
+{
+	size_t i;
+	for (i = 0; i < c[i] != '\0'; i++)
+	{
+		append(c[i]);
+	}
+	append('\0');
+	Rear -= 1;
+}
+
+
 char* BufferChar::ptr(void)
 {
 	append('\0');
@@ -88,12 +232,92 @@ size_t BufferChar::CopyVector(vector<char>& storage, size_t& length) const
 	return Newchar;
 }
 
+
+
+
+
 long int BufferChar::DequeueInt(void)
 {
 	return IntGet(content, Rear, Head);
 }
+double BufferChar::DequeueReal(void)
+{
+	int state;
+	return RealGet(state, content, Rear, Head);
+}
+char BufferChar::DequeueChar(void)
+{
+	return CharGet(content, Rear, Head);
+}
+char* BufferChar::DequeueString(void)
+{
+	BufferChar middle;
+	char* temp, c, index;
+	int state, error;
+	state = 0;
+	do
+	{
+		switch (state)
+		{
+		case 0:
+			dequeue(index);
+			if (index == '\"') state = 1;
+			else if (index == (char)EOF) state = -1;
+			break;
+		case 1:
+			index = QueueHead();
+			if (index == '\"') state = -2;
+			else if (index == (char)EOF) state = -3;
+			else
+			{
+				c = CharGet(error, content, Rear, Head);
+				if (c != (char)EOF) middle << c;
+			}
+			break;
+		}
+	} while (state >= 0);
+	temp = middle.CopyVector();
+	return temp;
+}
+char* BufferChar::DequeueId(void)
+{
+	BufferChar middle;
+	char* temp, c;
+	int state, error;
+	state = 0;
+	do
+	{
+		switch (state)
+		{
+		case 0:
+			dequeue(c);
+			if (isIdBegin(c))
+			{
+				state = 1;
+				middle << c;
+			}
+			else if (c == (char)EOF) state = -2;
+			break;
+		case 1:
+			dequeue(c);
+			if (isIdBegin(c) || isIdNumber(c))
+			{
+				state = 1;
+				middle << c;
+			}
+			else state = -1;
+			break;
+		}
+	} while (state >= 0);
+	temp = middle.CopyVector();
+	return temp;
+}
 
-
+char BufferChar::QueueHead(void)
+{
+	if (Head >= Rear) return EOF;
+	return content[Head];
+}
 
 Morpheme::Morpheme()
 {
@@ -5540,8 +5764,133 @@ char hyperlex::CharGet(int& error, const char* list, size_t end, size_t& head)
 	return result;
 }
 
+long int hyperlex::IntGet(const char* list, size_t end, size_t& head)
+{
+	char c, state;
+	long int number;
+	long int Sign = 1;
+	number = 0;
+	state = 0;
+	do
+	{
+		c = dequeue(list, end, head);
+		switch (state)
+		{
+		case 0:
+			if (c >= '0' && c <= '9') number = c - '0';
+			else if (c == '-') Sign = -1;
+			state = 1;
+			break;
+		case 1:
+			if (c >= '0' && c <= '9') number = number * 10 + c - '0';
+			else state = 2;
+			break;
+		}
+	} while (state != 2);
+	return number * Sign;
+}
+double hyperlex::RealGet(int& state, const char* list, size_t end, size_t& head)
+{
+	char c;
+	double number, digit;
+	int num_sign = 1;
+	int index;
+	int index_sign;
+	number = 0.0;
+	digit = 1.0;
+	num_sign = 1.0;
+	index_sign = 1;
+	index = 0;
+	state = 0;
+	do
+	{
+		c = dequeue(list, end, head);
+		switch (state)
+		{
+		case 0:
+			if (c == '-') { num_sign = 0; state = 1; }
+			else if (c == '+') { num_sign = 1; state = 1; }
+			else if (c == '.') state = 2;
+			else if (c >= '0' && c <= '9') { number = (double)(c - '0'); state = 3; }
+			else state = -1;
+			break;
+		case 1:
+			if (c >= '0' && c <= '9') { number = (double)(c - '0'); state = 3; }
+			else if (c == '.') state = 2;
+			else state = -1;
+			break;
+		case 2:
+			if (c >= '0' && c <= '9')
+			{
+				digit *= 0.1;
+				number = number + digit * (double)(c - '0');
+				state = 4;
+			}
+			else if (c == 'e' || c == 'E') state = 5;
+			else state = -1;
+			break;
+		case 3:
+			if (c >= '0' && c <= '9') { number = number * 10.0 + (double)(c - '0'); state = 3; }
+			else if (c == '.') state = 2;
+			else state = -1;
+			break;
+		case 4:
+			if (c >= '0' && c <= '9')
+			{
+				digit *= 0.1;
+				number = number + digit * (double)(c - '0');
+				state = 4;
+			}
+			else if (c == 'e' || c == 'E') state = 5;
+			else state = -1;
+			break;
+		case 5:
+			if (c == '-') { index_sign = -1; state = 6; }
+			else if (c == '+') { index_sign = 1; state = 6; }
+			else if (c >= '0' && c <= '9') { index = (int)(c - '0'); state = 7; }
+			else state = -1;
+			break;
+		case 6:
+			if (c >= '0' && c <= '9') { index = (int)(c - '0'); state = 7; }
+			else state = -1;
+			break;
+		case 7:
+			if (c >= '0' && c <= '9') { index = index * 10 + (int)(c - '0'); state = 7; }
+			else state = -1;
+			break;
+		}
+	} while (state != -1);
+	number = num_sign ? number : -number;
+	digit = (index_sign == 1 ? 10.0 : 0.1);
+	while (index != 0)
+	{
+		index--;
+		number *= digit;
+	}
+	return number;
+}
+char hyperlex::CharGet(const char* list, size_t end, size_t& head)
+{
+	char c, result;
+	int error;
+	result = EOF;
+	c = dequeue(list, end, head);
+	error = 10;
+	if (c == '\'') result = CharGet(error, list, end, head);
+	else return EOF;
+	c = dequeue(list, end, head);
+	if (c == '\'') return result;
+	else return EOF;
+}
 
-
+static bool isIdBegin(char c)
+{
+	return (c >= 'a' && c <= 'z') || c == '_' || (c >= 'A' && c <= 'Z');
+}
+static bool isIdNumber(char c)
+{
+	return c >= '0' && c <= '9';
+}
 
 
 const size_t Panel::StateCount = 95;

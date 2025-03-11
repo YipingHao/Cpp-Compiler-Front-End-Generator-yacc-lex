@@ -196,11 +196,37 @@ namespace hyperlex
 		char* ptr(void);
 		char* CopyVector(void) const;
 		size_t CopyVector(vector<char>& storage, size_t& length) const;
+		
+		void Append(const char* c);
+
 		void operator=(const char* input);
+		void operator=(const BufferChar& in);
+
+		void operator+=(const char* source);
+		void operator+=(long int source);
+		void operator+=(double source);
+		void operator+=(const BufferChar& in);
+
+		void operator<<(char c);
+		void operator<<(const char* c);
+		void operator<<(double e);
+		void operator<<(int e);
+		void operator<<(long long int e);
+		void operator<<(BufferChar& in);
+		void operator<<(FILE* fp);
+
+		bool operator==(size_t length);
+		bool operator!=(size_t length);
+		bool operator==(const BufferChar& in);
+		bool operator!=(const BufferChar& in);
+
 		long int DequeueInt(void);
-
+		double DequeueReal(void);
+		char DequeueChar(void);
+		char* DequeueString(void);
+		char* DequeueId(void);
 	private:
-
+		char QueueHead(void);
 	};
 }
 namespace hyperlex
@@ -2582,7 +2608,14 @@ namespace hyperlex
 	bool IfHexa(char c);
 	int SwitchHexa(char c);
 	int SwitchOcta(char c);
+
+
 	char dequeue(const char* list, size_t end, size_t& head);
+
+	long int IntGet(const char* list, size_t end, size_t& head);
+	double RealGet(int& state, const char* list, size_t end, size_t& head);
+	char CharGet(const char* list, size_t end, size_t& head);
+
 	char CharGet(int& error, const char* list, size_t end, size_t& head);
 }
 
