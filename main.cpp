@@ -621,7 +621,7 @@ static int test_03(const char* output_path, ParaFile& pf)
 using namespace hyperlex;
 static int test_04(const char* output_path, ParaFile& pf)
 {
-    Bitree<int> tree;
+    /*Bitree<int> tree;
     Bitree<int>::node* temp;
     hyperlex::buffer<size_t> output;
 
@@ -672,11 +672,12 @@ static int test_04(const char* output_path, ParaFile& pf)
     {
         std::cout << "No.[" << i << "].content = " << tree[output[i]].content << ";" << std::endl;
     }
-    tree.SetHead(1);
+    tree.SetHead(1);*/
+    return 0;
 }
 static int test_05(const char* output_path, ParaFile& pf)
 {
-    RegTree RT, Id, res;
+    /*RegTree RT, Id, res;
     std::cout << "RegTree RT; " << std::endl;
     RT.Int();
     std::cout << "T.Int(); " << std::endl;
@@ -741,11 +742,12 @@ static int test_05(const char* output_path, ParaFile& pf)
     std::cout << "res.IdentifierInner(); " << std::endl;
     res.IdentifierInner();
     res.Demo(stdout);
-    std::cout << std::endl;
+    std::cout << std::endl;*/
+    return 0;
 }
 static int test_06(const char* output_path, ParaFile& pf)
 {
-    RegTree RT, Id, res;
+    /*RegTree RT, Id, res;
     //sNFA nfa, nfa2;
     NFA* ff;
     sNFA* nfa[2];
@@ -789,11 +791,12 @@ static int test_06(const char* output_path, ParaFile& pf)
     std::cout << "delete dfa; " << std::endl;
     delete dfa;
     std::cout << "delete ddfa; " << std::endl;
-    delete ddfa;
+    delete ddfa;*/
+    return 0;
 }
 static int test_07(const char* output_path, ParaFile& pf)
 {
-    RegTree RT, Id, res;
+    /*RegTree RT, Id, res;
     //sNFA nfa, nfa2;
     NFA* ff;
     sNFA* nfa[3];
@@ -805,7 +808,7 @@ static int test_07(const char* output_path, ParaFile& pf)
     res.Demo(stdout);
     std::cout << std::endl;
     nfa[0] = new sNFA();
-    nfa[0]->build(&res);
+    //nfa[0]->build(&res);
     nfa[0]->Demo(stdout);
 
     std::cout << "RegTree RT; " << std::endl;
@@ -848,17 +851,18 @@ static int test_07(const char* output_path, ParaFile& pf)
     std::cout << "delete dfa; " << std::endl;
     delete dfa;
     std::cout << "delete ddfa; " << std::endl;
-    delete ddfa;
+    delete ddfa;*/
+    return 0;
 }
 static int test_08(const char* output_path, ParaFile& pf)
 {
-    lexicalPanel lP;
+    /* lexicalPanel lP;
     NFA* nfa;
     sheetDFA* dfa;
     DFA* ddfa;
     lP.SetGrammer();
     lP.Demo(stdout);
-    nfa = new NFA(lP);
+   // nfa = new NFA(lP);
     std::cout << "==============================================" << std::endl;
     nfa->Demo(stdout);
     std::cout << "==============================================" << std::endl;
@@ -879,7 +883,8 @@ static int test_08(const char* output_path, ParaFile& pf)
     std::cout << "delete dfa; " << std::endl;
     delete dfa;
     std::cout << "delete ddfa; " << std::endl;
-    delete ddfa;
+    delete ddfa; */
+    return 0;
 }
 static int test_09(const char* output_path, ParaFile& pf)
 {
@@ -1163,7 +1168,7 @@ static int test_16(const char* output_path, ParaFile& pf)
 
 static int test_17(const char* output_path, ParaFile& pf)
 {
-    lexicalPanel lP;
+    /*lexicalPanel lP;
     NFA* nfa;
     sheetDFA* dfa;
     DFA* ddfa;
@@ -1210,12 +1215,12 @@ static int test_17(const char* output_path, ParaFile& pf)
         lP.Demo(stdout);
        
     }
-    //lP.Demo(stdout);
+    //lP.Demo(stdout);*/
     return 0;
 }
 static int test_18(const char* output_path, ParaFile& pf)
 {
-    RegTree RT;
+    /* RegTree RT;
     RT.EscapeChar();
     RT.Demo(stdout);
     std::cout << std::endl;
@@ -1233,8 +1238,8 @@ static int test_18(const char* output_path, ParaFile& pf)
 
     lexicalPanel lP;
     lP.SetReg();
-    lP.Demo(stdout);
-    return 0;
+    lP.Demo(stdout);*/
+    return 0; 
 }
 
 struct aa1
@@ -1348,7 +1353,7 @@ static int test_19(const char* output_path, ParaFile& pf)
 
     std::cout << "sizeof(aa2): " << sizeof(aa2) << std::endl;
     std::cout << "sizeof(aa3): " << sizeof(aa3) << std::endl;
-
+    /*
     RegTree RTTE, RTTF, RTTD;
     RTTE.build("([a-z]|[A-Z]|_)([a-z]|[A-Z]|_|[0-9])*");
     
@@ -1375,7 +1380,7 @@ static int test_19(const char* output_path, ParaFile& pf)
 
     RTTE.build("\'/\'\'*\'([\'\\0\'-\'\\177\'])*\'*\'+\'/\'");
     RTTE.Demo(stdout);
-    std::cout << std::endl;
+    std::cout << std::endl;*/
 
     return 0;
 }
@@ -4986,6 +4991,2878 @@ void MatFile::MatrixSet(const double* mat, size_t ld, size_t row, size_t column,
     }
     return;
 }
+
+
+
+#define SizeMax ((size_t)0xffffffffffffffff)
+#define CharSize ((size_t)(1 << (sizeof(char) * 8 - 1)))
+
+template <class T> class bitree
+{
+    bitree<T>* left;
+    bitree<T>* right;
+    T content;
+public:
+    bitree();
+    ~bitree();
+    const bitree<T>*& L(void) const;
+    const bitree<T>*& R(void) const;
+    bitree<T>*& L(void);
+    bitree<T>*& R(void);
+    const T& C(void) const;
+    T& C(void);
+    void postorderTraversal(buffer<size_t>& output, list<size_t>& s) const;
+    void postorderTraversal(buffer<size_t>& output) const;
+    void inorderTraversal(buffer<size_t>& output, list<size_t>& s) const;
+    void inorderTraversal(buffer<size_t>& output) const;
+    bool IfLeaf(size_t site)const;
+};
+template <class T> class Bitree
+{
+public:
+    struct node
+    {
+        size_t left;
+        size_t right;
+        T content;
+    };
+    Bitree();
+    ~Bitree();
+    void move(Bitree<T>& source);
+    void clear(void);
+    void SetHead(size_t head);
+    size_t NewNodeOffset(void);
+    node* NewNode(void);
+    node* Node(size_t site)const;
+    node* LeftChild(const node* now)const;
+    node* RightChild(const node* now)const;
+    const node& operator[](size_t target) const;
+    node& operator[](size_t target);
+    void postorderTraversal(buffer<size_t>& output, list<size_t>& s) const;
+    void postorderTraversal(buffer<size_t>& output) const;
+    void inorderTraversal(buffer<size_t>& output, list<size_t>& s) const;
+    void inorderTraversal(buffer<size_t>& output) const;
+    bool IfLeaf(size_t site)const;
+    void Demo(FILE* fp)const;
+
+
+    void removal(size_t site);
+    void removal(size_t site, buffer<size_t>& output, list<size_t>& s);
+    void append(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s, size_t& NewSite);
+
+    void append(const Bitree<T>& left, size_t parent);
+    void append(const Bitree<T>& left, const Bitree<T>& right, size_t parent);
+
+    //size_t append_t(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s, bool key);
+    //void append_t(const Bitree<T>& left, const Bitree<T>& right, size_t parent, bool key);
+    size_t Head;
+private:
+
+    size_t Size;
+    size_t Count;
+    size_t FirstEmpty;
+    node* Nodes;
+};
+
+template <class T> class StaticTree
+{
+public:
+    struct node
+    {
+        size_t offset;
+        size_t degree;
+        T content;
+    };
+    StaticTree();
+    ~StaticTree();
+    void clear(void);
+    void build(tree<T>* input);
+private:
+    size_t Head;
+    list<node> Nodes;
+    list<size_t> next;
+};
+template <class T> class Tree
+{
+public:
+    struct node
+    {
+        vec<node*> childs;
+        T content;
+        node() {}
+        ~node() {}
+        void build(list<Tree>& input);
+    };
+    Tree();
+    ~Tree();
+    void move(Tree<T>& source);
+    void clear(void);
+    void build(list<Tree>& input);
+    void PostOrderTraversal(list<node*>& output) const;
+    T& head(void);
+    const T& head(void) const;
+private:
+    node* Head;
+    void RuinSelf(void);
+};
+template <class T> bitree<T>::bitree()
+{
+    left = NULL;
+    right = NULL;
+}
+template <class T> bitree<T>::~bitree()
+{
+
+}
+template <class T> const bitree<T>*& bitree<T>::L(void) const
+{
+    return left;
+}
+template <class T> const bitree<T>*& bitree<T>::R(void) const
+{
+    return right;
+}
+template <class T> bitree<T>*& bitree<T>::L(void)
+{
+    return left;
+}
+template <class T> bitree<T>*& bitree<T>::R(void)
+{
+    return right;
+}
+template <class T> const T& bitree<T>::C(void) const
+{
+    return content;
+}
+template <class T> T& bitree<T>::C(void)
+{
+    return content;
+}
+template <class T> void bitree<T>::postorderTraversal(buffer<size_t>& output, list<size_t>& s) const
+{
+
+}
+template <class T> void bitree<T>::postorderTraversal(buffer<size_t>& output) const
+{
+    list<size_t> s;
+    postorderTraversal(output, s);
+}
+template <class T> void bitree<T>::inorderTraversal(buffer<size_t>& output, list<size_t>& s) const
+{
+    bitree<T>* LeftMost;
+    bitree<T>* now;
+    now = this;
+    while (now != NULL || s.count() != 0)
+    {
+        while (now != NULL)
+        {
+            s.append(now);
+            now = now->left;
+        }
+        s.pop(LeftMost);
+        output.append(LeftMost);
+        now = LeftMost->right;
+    }
+}
+template <class T> void bitree<T>::inorderTraversal(buffer<size_t>& output) const
+{
+    list<size_t> s;
+    inorderTraversal(output, s);
+}
+template <class T> bool bitree<T>::IfLeaf(size_t site)const
+{
+    return left == NULL && right == NULL;
+}
+
+
+
+template <class T> Bitree<T>::Bitree()
+{
+    Nodes = NULL;
+    Count = 0;
+    Size = 0;
+    Head = SizeMax;
+    FirstEmpty = SizeMax;
+}
+template <class T> Bitree<T>::~Bitree()
+{
+    free(Nodes);
+    Nodes = NULL;
+    Count = 0;
+    Size = 0;
+    Head = SizeMax;
+    FirstEmpty = SizeMax;
+}
+template <class T> void Bitree<T>::move(Bitree<T>& source)
+{
+    Nodes = source.Nodes;
+    Count = source.Count;
+    Size = source.Size;
+    Head = source.Head;
+    FirstEmpty = source.FirstEmpty;
+
+    source.Nodes = NULL;
+    source.Count = 0;
+    source.Size = 0;
+    source.Head = SizeMax;
+    source.FirstEmpty = SizeMax;
+}
+template <class T> void Bitree<T>::clear(void)
+{
+    size_t i;
+    if (Nodes == NULL)return;
+    Head = SizeMax;
+    Count = 0;
+    FirstEmpty = 0;
+    for (i = 0; i < Size; i++)
+    {
+        Nodes[i].right = SizeMax;
+        Nodes[i].left = i + 1;
+    }
+    Nodes[Size - 1].left = SizeMax;
+}
+template <class T> void Bitree<T>::SetHead(size_t head)
+{
+    Head = head;
+}
+template <class T> typename Bitree<T>::node* Bitree<T>::NewNode(void)
+{
+    return Nodes + NewNodeOffset();
+}
+template <class T> size_t Bitree<T>::NewNodeOffset(void)
+{
+    size_t result, NewSize__, i;
+    if (FirstEmpty == SizeMax)
+    {
+        NewSize__ = (Size + Size / 4 + 8);
+        Nodes = (node*)realloc(Nodes, NewSize__ * sizeof(node));
+        for (i = Size; i < NewSize__; i++)
+        {
+            Nodes[i].right = SizeMax;
+            Nodes[i].left = i + 1;
+        }
+        Nodes[NewSize__ - 1].left = SizeMax;
+        FirstEmpty = Size;
+        Size = NewSize__;
+    }
+    result = FirstEmpty;
+    FirstEmpty = Nodes[FirstEmpty].left;
+    Nodes[result].left = SizeMax;
+    Count += 1;
+    //if (result == 0) Head = 0;
+    return result;
+}
+template <class T> typename Bitree<T>::node* Bitree<T>::Node(size_t site)const
+{
+    return Nodes + site;
+}
+template <class T> typename Bitree<T>::node* Bitree<T>::LeftChild(const Bitree<T>::node* now)const
+{
+    return Nodes + now->left;
+}
+template <class T> typename Bitree<T>::node* Bitree<T>::RightChild(const Bitree<T>::node* now)const
+{
+    return Nodes + now->right;
+}
+template <class T> void Bitree<T>::postorderTraversal(buffer<size_t>& output) const
+{
+    list<size_t> s;
+    postorderTraversal(output, s);
+}
+template <class T> void Bitree<T>::postorderTraversal(buffer<size_t>& output, list<size_t>& s) const
+{
+    size_t previous;
+    size_t LeftMost;
+    size_t now;
+    now = Head;
+    previous = SizeMax;
+    while (now != SizeMax || s.count() != 0)
+    {
+        while (now != SizeMax)
+        {
+            s.append(now);
+            now = (Nodes + now)->left;
+        }
+        LeftMost = s.top();
+        if (Nodes[LeftMost].right == SizeMax || Nodes[LeftMost].right == previous)
+        {
+            output.append(LeftMost);
+            previous = LeftMost;
+            s.pop();
+        }
+        else
+            now = Nodes[LeftMost].right;
+    }
+}
+template <class T> const typename Bitree<T>::node& Bitree<T>::operator[](size_t target) const
+{
+    return Nodes[target];
+}
+template <class T> typename Bitree<T>::node& Bitree<T>::operator[](size_t target)
+{
+    return Nodes[target];
+}
+template <class T> void Bitree<T>::inorderTraversal(buffer<size_t>& output, list<size_t>& s) const
+{
+    size_t LeftMost;
+    size_t now;
+    now = Head;
+    LeftMost = Head;
+    while (now != SizeMax || s.count() != 0)
+    {
+        while (now != SizeMax)
+        {
+            s.append(now);
+            now = (Nodes + now)->left;
+        }
+        s.pop(LeftMost);
+        output.append(LeftMost);
+        now = Nodes[LeftMost].right;
+    }
+}
+template <class T> void Bitree<T>::inorderTraversal(buffer<size_t>& output) const
+{
+    list<size_t> s;
+    inorderTraversal(output, s);
+}
+template <class T> bool Bitree<T>::IfLeaf(size_t site)const
+{
+    return Nodes[site].left == SizeMax && Nodes[site].right == SizeMax;
+}
+template <class T> void Bitree<T>::Demo(FILE* fp)const
+{
+    size_t i;
+    fprintf(fp, "Head = %zu\n", Head);
+    fprintf(fp, "Size = %zu\n", Size);
+    fprintf(fp, "Count = %zu\n", Count);
+    fprintf(fp, "FirstEmpty = %zu\n", FirstEmpty);
+    if (Nodes == NULL)
+    {
+        fprintf(fp, "Nodes == NULL\n");
+        return;
+    }
+    for (i = 0; i < Size; i++)
+    {
+        fprintf(fp, "Nodes[%zu].left = %22zu, ", i, Nodes[i].left);
+        fprintf(fp, "Nodes[%zu].right = %22zu  ", i, Nodes[i].right);
+        Nodes[i].content.Demo(fp);
+        //fprintf(fp, "\n");
+    }
+}
+
+
+template <class T> void Bitree<T>::removal(size_t site)
+{
+    buffer<size_t>& output;
+    list<size_t>& s;
+    removal(site, output, s);
+}
+template <class T> void Bitree<T>::removal(size_t site, buffer<size_t>& output, list<size_t>& s)
+{
+    if (site == SizeMax) return;
+    size_t now;
+    s.refresh();
+    output.clear();
+    inorderTraversal(output, s);
+    while (output.dequeue(now))
+    {
+        Count -= 1;
+        (Nodes + now)->right = SizeMax;
+        (Nodes + now)->left = FirstEmpty;
+        FirstEmpty = now;
+    }
+}
+template <class T> void Bitree<T>::append(const Bitree<T>& source, buffer<size_t>& output, list<size_t>& s, size_t& NewSite)
+{
+    //size_t newHead;
+    size_t now, new_node, temp;
+    s.refresh();
+    output.clear();
+    new_node = SizeMax;
+    source.postorderTraversal(output, s);
+    s.refresh();
+    s.renew(source.Size);
+    while (output.dequeue(now))
+    {
+        new_node = NewNodeOffset();
+        //std::cout << "new_node: " << new_node << std::endl;
+        //std::cout << "now: " << now << std::endl;
+        temp = source.Nodes[now].left;
+        (Nodes + new_node)->left = (temp == SizeMax ? SizeMax : s[temp]);
+        //std::cout << "source.Nodes[now].left: " << temp << std::endl;
+        //std::cout << "(Nodes + new_node)->left: " << (Nodes + new_node)->left << std::endl;
+        temp = source.Nodes[now].right;
+        (Nodes + new_node)->right = (temp == SizeMax ? SizeMax : s[temp]);
+        //std::cout << "source.Nodes[now].right: " << temp << std::endl;
+        //std::cout << "(Nodes + new_node)->right: " << (Nodes + new_node)->right << std::endl;
+        (Nodes + new_node)->content = source.Nodes[now].content;
+        s[now] = new_node;
+        //if (newHead == SizeMax) newHead = new_node;
+        //newHead = new_node;
+    }
+    //std::cout << "newHead: " << new_node << std::endl;
+    //std::cout << "newHead: " << newHead << std::endl;
+
+    NewSite = new_node;
+    //std::cout << "return NewSite: " << NewSite << "\n\n" << std::endl;
+}
+template <class T> void Bitree<T>::append(const Bitree<T>& L, size_t parent)
+{
+    buffer<size_t> output;
+    list<size_t> s;
+    size_t NewSite;
+    removal((Nodes + parent)->left, output, s);
+    append(L, output, s, NewSite);
+    (Nodes + parent)->left = NewSite;
+}
+template <class T> void Bitree<T>::append(const Bitree<T>& L, const Bitree<T>& R, size_t parent)
+{
+    buffer<size_t> output;
+    list<size_t> s;
+    size_t NewSite;
+    //size_t temp;
+    //size_t as[15];
+    removal((Nodes + parent)->left, output, s);
+    removal((Nodes + parent)->right, output, s);
+    //std::cout << "parent: " << parent << std::endl;
+    //std::cout << "(Nodes + parent)->left: " << (Nodes + parent)->left << std::endl;
+    append(L, output, s, NewSite);
+    (Nodes + parent)->left = NewSite;
+    //std::cout << "parent: " << parent << std::endl;
+    //temp = (Nodes + parent)->right;
+    //std::cout << "(Nodes + parent)->left: " << (Nodes + parent)->left << std::endl;
+    //std::cout << "(Nodes + parent)->right: " << temp << std::endl;
+    //(Nodes + parent)->right = 10007;
+    //std::cout << "(Nodes + parent)->right: " << (Nodes + parent)->right << std::endl;
+    //std::cout << "temp ptr: " << &temp << std::endl;
+    //std::cout << "(Nodes + parent) ptr: " << (Nodes + parent) << std::endl;
+    //std::cout << "(Nodes + parent)->left ptr: " << (size_t) & ((Nodes + parent)->left) << std::endl;
+    //std::cout << "(Nodes + parent)->right ptr: " << &((Nodes + parent)->right) << std::endl;
+
+    append(R, output, s, NewSite);
+    (Nodes + parent)->right = NewSite;// the style that produced the bug.
+    //temp = append(R, output, s);// the style that produced no bug.
+    //Nodes[parent].right = temp;// the style that produced no bug. 
+
+    //std::cout << "parent: " << parent << std::endl;
+    //std::cout << "(Nodes + parent)->right: " << (Nodes + parent)->right << std::endl;
+}
+
+
+template <class T> StaticTree<T>::StaticTree()
+{
+
+}
+template <class T> StaticTree<T>::~StaticTree()
+{
+
+}
+template <class T> void StaticTree<T>::clear(void)
+{
+
+}
+template <class T> void StaticTree<T>::build(tree<T>* input)
+{
+
+}
+
+template <class T> Tree<T>::Tree()
+{
+    Head = NULL;
+}
+template <class T> Tree<T>::~Tree()
+{
+    RuinSelf();
+}
+template <class T> void Tree<T>::RuinSelf(void)
+{
+    list<node*> deleted;
+    size_t i;
+    if (Head == NULL) return;
+    PostOrderTraversal(deleted);
+    for (i = 0; i < deleted.count(); i++)
+        delete deleted[i];
+    Head = NULL;
+}
+template <class T> void Tree<T>::move(Tree<T>& source)
+{
+    Head = source.Head;
+    source.Head = NULL;
+}
+template <class T> void Tree<T>::clear(void)
+{
+    RuinSelf();
+}
+template <class T> void Tree<T>::PostOrderTraversal(list<node*>& output) const
+{
+    /*struct infor
+    {
+        node* site;
+        bool state;
+    };
+    list<infor> stack;
+    infor now;
+    node* here;
+    size_t i;
+    now.site = Head;
+    now.state = false;
+    stack.append(now);
+    while (stack.pop(now) != 0)
+    {
+        here = now.site;
+        if (here == NULL) continue;
+        if (now.state) output.append(here);
+        else
+        {
+            now.state = true;
+            stack.append(now);
+            now.state = false;
+            for (i = 0; i < here->childs.size(); i++)
+            {
+                now.site = here->childs[i];
+                stack.append(now);
+            }
+        }
+    }
+*/
+}
+template <class T> void Tree<T>::build(list<Tree>& input)
+{
+    size_t i;
+    clear();
+    Head = new node();
+    Head->childs.Realloc(input.count());
+    for (i = 0; i < input.count(); i++)
+    {
+        Head->childs[i] = input[i].Head;
+        input[i].Head = NULL;
+    }
+}
+template <class T> void Tree<T>::node::build(list<Tree>& input)
+{
+    size_t i;
+    node* now;
+    Tree<T> temp;
+    for (i = 0; i < childs.size(); i++)
+    {
+        temp.Head = childs[i];
+        temp.clear();
+    }
+    childs.Realloc(input.count());
+    for (i = 0; i < input.count(); i++)
+    {
+        childs[i] = input[i].Head;
+        input[i].Head = NULL;
+    }
+}
+template <class T> T& Tree<T>::head(void)
+{
+    return Head->content;
+}
+template <class T> const T& Tree<T>::head(void) const
+{
+    return Head->content;
+}
+class DirectedGraph
+{
+public:
+    DirectedGraph();
+    ~DirectedGraph();
+    struct vortex
+    {
+        size_t first;
+        size_t rear;
+        //size_t site;
+    };
+    struct arc
+    {
+        size_t from;
+        size_t to;
+        size_t next;
+        size_t site;
+    };
+    void refresh(void);
+    void refresh(size_t newlength);
+    size_t append(size_t from, size_t to, size_t site);
+    void append(DirectedGraph& right, size_t VerticeOffset, size_t ArcsOffset, size_t siteOffset);
+    list<vortex> vertice;
+    buffer<arc> arcs;
+private:
+};
+
+class RegTree
+{
+public:
+    friend class sNFA;
+    enum NodeType
+    {
+        Concatenation = 0,
+        Alternation = 1,
+        ZeroOrMore = 2,
+        OneOrMore = 3,
+        ZeroOrOne = 4,
+        Range = 5,
+    };
+    struct info
+    {
+        char upper;
+        char lower;
+        NodeType type;
+        void Demo(FILE* fp)const;
+    };
+
+    static int next_Reg(int state, const char c);
+    static int action_Reg(int state);
+    static int GroupGet_Reg(int accept);
+private:
+    Bitree<info> tree;
+    struct traverse
+    {
+        int state;
+        size_t site;
+    };
+public:
+    RegTree();
+    ~RegTree();
+    void build(const char* reg);
+    void build(BufferChar& input);
+    bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
+
+
+    void grow(const RegTree* reg, NodeType T);
+    void grow(const RegTree* regL, const RegTree* regR, NodeType T);
+    //void grow_t(const RegTree* regL, const RegTree* regR, NodeType T, bool key);
+    void grow(char L, char U);
+    void grow(char C);
+    void value(const RegTree* regL);
+
+    void Reserved(const char* res);
+    void Int(void);
+    void Identifier(void);
+    void IdentifierHead(void);
+    void IdentifierInner(void);
+    void ConstChar(void);
+    void CommonChar(void);
+    void EscapeAll(void);
+    void EscapeChar(void);
+    void HexaChar(void);
+    void OctaChar(void);
+    void spaces(void);
+    void LineFeeds(void);
+
+    static void swap(const RegTree*& regL, const RegTree*& regR);
+    void Demo(FILE* fp) const;
+    static void Demo(FILE* fp, NodeType T);
+    static void Demo(FILE* fp, char L, char U);
+private:
+    void value(size_t site, char LU);
+    void value(size_t site, char L, char U);
+    void link(size_t site, size_t L, size_t R, NodeType T);
+    void link(size_t site, size_t L, NodeType T);
+};
+class lexicalPanel
+{
+public:
+    class infor
+    {
+    public:
+        size_t priority;
+        //When two distinct regular expressions match simultaneously, 
+        //the regular expression with the higher priority number is accepted.
+        RegTree* reg;
+        const char* name;
+        const char* attribute;
+        size_t group;
+        infor();
+        ~infor();
+        void Demo(FILE* fp);
+        void SetName(const char* input);
+        void SetAttribute(const char* input);
+    };
+    friend class NFA;
+    lexicalPanel();
+    ~lexicalPanel();
+
+    void build(void);
+    void BuildDemo(FILE* fp);
+
+    void Cprint(FILE* fp, const char* name);
+    void CppPrint(FILE* fp, const char* name);
+
+    void SetGrammer(void);
+    void SetReg(void);
+    void SetRegS(void);
+    void SetRegFinal(void);
+    void append(infor* II);
+
+    void Demo(FILE* fp) const;
+
+    const char** GetName(void)const;
+    const char** GetAttribute(void)const;
+    //void append(const char* Name, const char* Attri, RegTree* Reg, size_t Priority);
+    //void expand(void);
+private:
+    list<infor*> regular;
+    void SetAll(void);
+    //size_t AttributeCount;
+    list<const char*> attribute;
+    //size_t count;
+    //size_t capacity;
+    //RegTree** reg;
+    //const char**name;
+    //const char**attribute;
+    //size_t* priority;
+
+    NFA* nfa;
+    sheetDFA* DFAsheet;
+    DFA* DFAgraph;
+    void Cgroup(FILE* fp, const char* name)const;
+    void CppGroup(FILE* fp, const char* name)const;
+    void CppGroupCore(FILE* fp, const char* name)const;
+};
+
+DirectedGraph::DirectedGraph()
+{
+}
+DirectedGraph::~DirectedGraph()
+{
+}
+void DirectedGraph::refresh(void)
+{
+    vertice.refresh();
+    arcs.clear();
+}
+void DirectedGraph::refresh(size_t newlength)
+{
+    size_t i;
+    vertice.refresh(newlength);
+    arcs.clear();
+    for (i = 0; i < vertice.count(); i++)
+    {
+        vertice[i].first = SizeMax;
+        vertice[i].rear = SizeMax;
+    }
+}
+size_t DirectedGraph::append(size_t from, size_t to, size_t site)
+{
+    size_t should;
+    should = arcs.expand();
+    arcs[should].from = from;
+    arcs[should].to = to;
+    arcs[should].site = site;
+    arcs[should].next = SizeMax;
+    if (vertice[from].first == SizeMax)
+    {
+        vertice[from].first = should;
+        vertice[from].rear = should;
+    }
+    else
+    {
+        arcs[vertice[from].rear].next = should;
+        vertice[from].rear = should;
+    }
+    return should;
+}
+void DirectedGraph::append(DirectedGraph& right, size_t VerticeOffset, size_t ArcsOffset, size_t siteOffset)
+{
+    size_t i, length, temp, begin;
+    length = right.vertice.count();
+    for (i = 0; i < length; i++)
+    {
+        temp = (right.vertice[i].first == SizeMax ? SizeMax : right.vertice[i].first + ArcsOffset);
+        vertice[i + VerticeOffset].first = temp;
+        temp = (right.vertice[i].rear == SizeMax ? SizeMax : right.vertice[i].rear + ArcsOffset);
+        vertice[i + VerticeOffset].rear = temp;
+    }
+    begin = arcs.rear();
+    arcs.append(right.arcs);
+    //arcs.expand(right.arcs.count());
+    length = right.arcs.count();
+    for (i = begin; i < length; i++)
+    {
+        arcs[i].from += VerticeOffset;
+        arcs[i].to += VerticeOffset;
+        arcs[i].site += siteOffset;
+        temp = (arcs[i].next == SizeMax ? SizeMax : arcs[i].next + ArcsOffset);
+        arcs[i].next = temp;
+    }
+}
+
+
+
+
+RegTree::RegTree()
+{
+}
+RegTree::~RegTree()
+{
+}
+
+int RegTree::next_Reg(int state, const char c)
+{
+    switch (state)
+    {
+    case 0:
+        if (c == '\'') return 14;
+        else if (c == '(') return 1;
+        else if (c == ')') return 2;
+        else if (c == '*') return 6;
+        else if (c == '+') return 7;
+        else if (c == '-') return 5;
+        else if ('0' <= c && c <= '9') return 9;
+        else if (c == '\?') return 8;
+        else if ('A' <= c && c <= 'Z') return 9;
+        else if (c == '[') return 3;
+        else if (c == ']') return 4;
+        else if (c == '_') return 9;
+        else if ('a' <= c && c <= 'z') return 9;
+        else if (c == '|') return 11;
+        else return 0;
+    case 1:
+        return 0;
+    case 2:
+        return 0;
+    case 3:
+        return 0;
+    case 4:
+        return 0;
+    case 5:
+        return 0;
+    case 6:
+        return 0;
+    case 7:
+        return 0;
+    case 8:
+        return 0;
+    case 9:
+        return 0;
+    case 10:
+        return 0;
+    case 11:
+        return 0;
+    case 12:
+        if (c == '\'') return 10;
+        else return 0;
+    case 13:
+        if (c == (char)0) return 12;
+        else if (c == '\"') return 12;
+        else if (c == '\'') return 12;
+        else if ('0' <= c && c <= '7') return 16;
+        else if (c == '\?') return 12;
+        else if (c == 'X') return 15;
+        else if (c == '\\') return 12;
+        else if ('a' <= c && c <= 'b') return 12;
+        else if (c == 'f') return 12;
+        else if (c == 'n') return 12;
+        else if (c == 'r') return 12;
+        else if (c == 't') return 12;
+        else if (c == 'v') return 12;
+        else if (c == 'x') return 15;
+        else return 0;
+    case 14:
+        if (' ' <= c && c <= '!') return 12;
+        else if ('#' <= c && c <= '&') return 12;
+        else if ('(' <= c && c <= '[') return 12;
+        else if (c == '\\') return 13;
+        else if (']' <= c && c <= '~') return 12;
+        else return 0;
+    case 15:
+        if ('0' <= c && c <= '9') return 17;
+        else if ('A' <= c && c <= 'F') return 17;
+        else if ('a' <= c && c <= 'f') return 17;
+        else return 0;
+    case 16:
+        if (c == '\'') return 10;
+        else if ('0' <= c && c <= '7') return 18;
+        else return 0;
+    case 17:
+        if (c == '\'') return 10;
+        else if ('0' <= c && c <= '9') return 12;
+        else if ('A' <= c && c <= 'F') return 12;
+        else if ('a' <= c && c <= 'f') return 12;
+        else return 0;
+    case 18:
+        if (c == '\'') return 10;
+        else if ('0' <= c && c <= '7') return 12;
+        else return 0;
+    }
+    return 0;
+}
+int RegTree::action_Reg(int state)
+{
+    switch (state)
+    {
+    case 1:
+        return 1;//braket: left
+    case 2:
+        return 2;//braket: right
+    case 3:
+        return 3;//braket: begin
+    case 4:
+        return 4;//braket: end
+    case 5:
+        return 5;//braket: range
+    case 6:
+        return 6;//superscript: star
+    case 7:
+        return 7;//superscript: plus
+    case 8:
+        return 8;//superscript: ZeroOrOne
+    case 9:
+        return 9;//char: reserved
+    case 10:
+        return 10;//char: CommonChar
+    case 11:
+        return 11;//Or: Or
+    }
+    return 0;
+}
+int RegTree::GroupGet_Reg(int accept)
+{
+    switch (accept)
+    {
+    case 1:
+        return 0;//braket: left
+    case 2:
+        return 0;//braket: right
+    case 3:
+        return 0;//braket: begin
+    case 4:
+        return 0;//braket: end
+    case 5:
+        return 0;//braket: range
+    case 6:
+        return 1;//superscript: star
+    case 7:
+        return 1;//superscript: plus
+    case 8:
+        return 1;//superscript: ZeroOrOne
+    case 9:
+        return 2;//char: reserved
+    case 10:
+        return 2;//char: CommonChar
+    case 11:
+        return 3;//Or: Or
+    }
+    return -1;
+}
+
+struct Retree
+{
+    enum type
+    {
+        accept = 0,
+        error = 1,
+        push = 2,
+        reduce = 3,
+    };
+    static const size_t StateCount;
+    static const size_t NonTerminalCount;
+    static const size_t TerminalCount;
+    static const size_t RulesCount;
+    static const int GOTO[23][7];
+    static const int ACTION[23][12];
+    static const int RulesToSymbol[15];
+    static const int RulesLength[15];
+};
+const size_t Retree::StateCount = 23;
+const size_t Retree::NonTerminalCount = 7;
+const size_t Retree::TerminalCount = 11;
+const size_t Retree::RulesCount = 15;
+const int Retree::GOTO[23][7] = { \
+{1, 6, 10, 14, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 78, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 62, 10, 14, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 46}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 54}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 74, 14, 18, 22, 26}, \
+{1, 1, 1, 78, 18, 22, 26}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1} };
+//==============================
+const int Retree::ACTION[23][12] = { \
+{30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 70, 0}, \
+{30, 7, 34, 1, 1, 1, 1, 1, 38, 42, 7, 7}, \
+{15, 15, 15, 1, 1, 82, 86, 90, 15, 15, 15, 15}, \
+{23, 23, 23, 1, 1, 23, 23, 23, 23, 23, 23, 23}, \
+{39, 39, 39, 1, 1, 39, 39, 39, 39, 39, 39, 39}, \
+{47, 47, 47, 1, 1, 47, 47, 47, 47, 47, 47, 47}, \
+{30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55}, \
+{59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59}, \
+{1, 1, 1, 1, 50, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{1, 1, 1, 58, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{51, 51, 51, 1, 1, 51, 51, 51, 51, 51, 51, 51}, \
+{1, 66, 1, 1, 1, 1, 1, 1, 1, 1, 70, 1}, \
+{43, 43, 43, 1, 1, 43, 43, 43, 43, 43, 43, 43}, \
+{30, 1, 34, 1, 1, 1, 1, 1, 38, 42, 1, 1}, \
+{30, 11, 34, 1, 1, 1, 1, 1, 38, 42, 11, 11}, \
+{19, 19, 19, 1, 1, 82, 86, 90, 19, 19, 19, 19}, \
+{31, 31, 31, 1, 1, 31, 31, 31, 31, 31, 31, 31}, \
+{27, 27, 27, 1, 1, 27, 27, 27, 27, 27, 27, 27}, \
+{35, 35, 35, 1, 1, 35, 35, 35, 35, 35, 35, 35} };
+//==============================
+const int Retree::RulesToSymbol[15] = { \
+0,\
+1,\
+1,\
+2,\
+2,\
+3,\
+3,\
+3,\
+3,\
+4,\
+4,\
+5,\
+5,\
+6,\
+6 };
+//==============================
+const int Retree::RulesLength[15] = { \
+1,\
+1,\
+3,\
+1,\
+2,\
+1,\
+2,\
+2,\
+2,\
+1,\
+3,\
+1,\
+5,\
+1,\
+1 };
+
+
+void RegTree::build(const char* reg)
+{
+    BufferChar input;
+    input = reg;
+    build(input);
+}
+void RegTree::build(BufferChar& input)
+{
+    BufferChar result;
+    //BufferChar input;
+    BufferChar intermediate;
+    Morpheme eme;
+    size_t head;
+    list<int> stack;
+    list<RegTree*> SrcTree;
+    RegTree* L, * R, * M;
+    int top;
+    int information, temp;
+    Retree::type type;
+    size_t length, i, begin_;
+    int accept, symbol;
+    bool DoNext;
+    char now;
+    int GoFull, GoD, GoI;
+    bool demo_buttom;
+    demo_buttom = false;
+    tree.clear();
+    while (RunBuild(accept, result, input, intermediate))
+    {
+        if (accept != 0) eme.append(result, accept, GroupGet_Reg(accept));
+        else
+        {
+            input.dequeue(now);
+            result.append(now);
+            eme.append(result, 0, GroupGet_Reg(0));
+        }
+    }
+    eme.AppendEnd(Retree::TerminalCount + 1);
+    if (demo_buttom)  eme.Demo(stdout);
+    stack.append(0);
+    SrcTree.append(NULL);
+    head = 0;
+    DoNext = true;
+    do
+    {
+        top = stack.top();
+        temp = Retree::ACTION[top][eme[head].accept - 1];
+        information = temp / 4;
+        type = (Retree::type)(temp % 4);
+
+        if (demo_buttom)fprintf(stdout, "\n\nT = %5d, top = %5d, information = %5d, type = %5d, ", eme[head].accept - 1, top, information, (int)type);
+        if (demo_buttom)fprintf(stdout, "head = %5zu, lex = %s, ", head, eme.GetWord(head));
+        if (demo_buttom)fprintf(stdout, "stack.count() = %5zu, top = %5zu\n//================================\n", stack.count(), SrcTree.count());
+        for (i = 0; (i < stack.count()) && demo_buttom; i++)
+        {
+            fprintf(stdout, "%5d, ", stack[i]);
+            if (SrcTree[i] == NULL)
+                fprintf(stdout, "SrcTree[%5zu]: NULL\n", i);
+            else
+            {
+                fprintf(stdout, "SrcTree[%5zu]: ", i);
+                SrcTree[i]->Demo(stdout);
+                fprintf(stdout, "\n");
+            }
+        }
+        switch (type)
+        {
+        case Retree::accept:
+            if (demo_buttom)SrcTree[SrcTree.count() - 1]->Demo(stdout);
+            tree.move(SrcTree[SrcTree.count() - 1]->tree);
+            for (i = 0; i < SrcTree.count(); i++) delete SrcTree[i];
+            DoNext = false;
+            break;
+        case Retree::error:
+            DoNext = false;
+            break;
+        case Retree::push:
+            stack.append(information);
+            M = new RegTree;
+            M->grow(eme.GetChar(head));
+            SrcTree.append(M);
+            if (demo_buttom) fprintf(stdout, "\tchar = %c\n", eme.GetChar(head));
+            head += 1;
+            break;
+        case Retree::reduce:
+            symbol = Retree::RulesToSymbol[information];
+            length = Retree::RulesLength[information];
+            begin_ = SrcTree.count() - length;
+            if (demo_buttom) fprintf(stdout, "\tsymbol = %5d, length = %5zu, begin_ = %5zu\n", symbol, length, begin_);
+            switch (information)
+            {
+                //No[0], case Ep: prefix: 0, degeneracy: 1
+            case 0: //0: Ep, No[0] production rules: Ep->RegOr
+                M = SrcTree[begin_];
+                SrcTree[begin_] = NULL;
+                break;
+                //No[1], case RegOr: prefix: 1, degeneracy: 2
+            case 1: //1: RegOr, No[0] production rules: RegOr->Reg
+                M = SrcTree[begin_];
+                SrcTree[begin_] = NULL;
+                break;
+            case 2: //1: RegOr, No[1] production rules: RegOr->Reg Or Reg
+                M = new RegTree;
+                M->grow(SrcTree[begin_], SrcTree[begin_ + 2], RegTree::Alternation);
+                break;
+                //No[2], case Reg: prefix: 3, degeneracy: 2
+            case 3: //2: Reg, No[0] production rules: Reg->Complex
+                M = SrcTree[begin_];
+                SrcTree[begin_] = NULL;
+                break;
+            case 4: //2: Reg, No[1] production rules: Reg->Complex Reg
+                M = new RegTree;
+                M->grow(SrcTree[begin_], SrcTree[begin_ + 1], RegTree::Concatenation);
+                break;
+                //No[3], case Complex: prefix: 5, degeneracy: 4
+            case 5: //3: Complex, No[0] production rules: Complex->Node
+                M = SrcTree[begin_];
+                SrcTree[begin_] = NULL;
+                break;
+            case 6: //3: Complex, No[1] production rules: Complex->Complex plus
+                M = new RegTree;
+                M->grow(SrcTree[begin_], RegTree::OneOrMore);
+                break;
+            case 7: //3: Complex, No[2] production rules: Complex->Complex star
+                M = new RegTree;
+                M->grow(SrcTree[begin_], RegTree::ZeroOrMore);
+                break;
+            case 8: //3: Complex, No[3] production rules: Complex->Complex ZeroOrOne
+                M = new RegTree;
+                M->grow(SrcTree[begin_], RegTree::ZeroOrOne);
+                break;
+                //No[4], case Node: prefix: 9, degeneracy: 2
+            case 9: //4: Node, No[0] production rules: Node->Range
+                M = SrcTree[begin_];
+                SrcTree[begin_] = NULL;
+                break;
+            case 10: //4: Node, No[1] production rules: Node->left RegOr right
+                M = SrcTree[begin_ + 1];
+                SrcTree[begin_ + 1] = NULL;
+                break;
+                //No[5], case Range: prefix: 11, degeneracy: 2
+            case 11: //5: Range, No[0] production rules: Range->Char
+                M = SrcTree[begin_];
+                SrcTree[begin_] = NULL;
+                break;
+            case 12: //5: Range, No[1] production rules: Range->begin Char range Char end
+                M = new RegTree;
+                L = SrcTree[begin_ + 1];
+                R = SrcTree[begin_ + 3];
+                M->grow(L->tree[L->tree.Head].content.lower, R->tree[R->tree.Head].content.upper);
+                break;
+                //No[6], case Char: prefix: 13, degeneracy: 2
+            case 13: //6: Char, No[0] production rules: Char->reserved
+                M = SrcTree[begin_];
+                SrcTree[begin_] = NULL;
+                break;
+            case 14: //6: Char, No[1] production rules: Char->CommonChar
+                M = SrcTree[begin_];
+                SrcTree[begin_] = NULL;
+                break;
+            }
+            for (i = 0; i < length; i++) stack.pop();
+            for (i = 0; i < length; i++) delete SrcTree[begin_ + i];
+            for (i = 0; i < length; i++) SrcTree.pop();
+            GoFull = Retree::GOTO[stack.top()][symbol];
+            GoD = GoFull / 4;
+            GoI = GoFull % 4;
+            stack.append(GoD);
+            SrcTree.append(M);
+            if (demo_buttom)fprintf(stdout, "\tGOTO[%5d][%5d] = (%5d, %5d)\n", stack.top(), symbol, GoD, GoI);
+            break;
+        }
+    } while (DoNext);
+
+    //for (i = 0; i < eme.GetCount(); i++)
+    //{
+    //	top;
+    //}
+    //size_t i;
+    //fprintf(stdout, "count = %zu\n", eme.GetCount());
+    //for (i = 0; i < eme.GetCount(); i++)
+    //{
+    //	fprintf(stdout, "<%d : %d, %s>\n", eme.GetCategory(i), eme.GetAccept(i), eme.GetWord(i));
+    //}
+}
+bool RegTree::RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate)
+{
+    /*
+    example:
+    1 aa
+    2 aaBB
+    3 Bcc
+    input: aaBcc
+    */
+    char now;
+    //char cc;
+    int state, acc;
+    int action;
+    intermediate.clear();
+    state = 0;
+    acc = 0;
+    action = 0;
+    accept = 0;
+    result.clear();
+    while (input.dequeue(now))
+    {
+        /*state switch*/
+        /*change here to get a different automata*/
+        state = next_Reg(state, now);
+        acc = action_Reg(state);
+        /*change here to get a different automata*/
+        accept = acc != 0 ? acc : accept;
+        switch (action)
+        {
+        case 0://initial
+            if (state != 0 && acc == 0)
+            {
+                intermediate.append(now);
+                action = 1;
+            }
+            else if (state != 0 && acc != 0)
+            {
+                result.append(now);
+                action = 2;
+            }
+            else
+            {
+                input.backspace(now);
+                return true;
+            }
+            break;
+        case 1://run and waiting for accept
+            if (state == 0)
+            {
+                input.backspace(now);
+                input.backspace(intermediate);
+                return true;
+            }
+            else if (acc != 0)
+            {
+                result.append(intermediate);
+                result.append(now);
+                intermediate.clear();
+                action = 2;
+            }
+            else intermediate.append(now);//continue 
+            break;
+        case 2://accept
+            if (state == 0)//accept
+            {
+                input.backspace(now);
+                //accept = last;
+                return true;
+            }
+            else if (acc == 0)
+            {
+                intermediate.append(now);
+                action = 1;
+            }
+            else result.append(now);
+            break;
+        }
+    }
+    if (action == 1)
+        input.backspace(intermediate);
+    return action != 0;
+}
+
+void RegTree::grow(const RegTree* reg, NodeType T)
+{
+    size_t site;
+    tree.clear();
+    site = tree.NewNodeOffset();
+    tree.SetHead(site);
+    tree.append(reg->tree, site);
+    tree[site].content.type = T;
+}
+void RegTree::grow(const RegTree* regL, const RegTree* regR, NodeType T)
+{
+    size_t site;
+    tree.clear();
+    site = tree.NewNodeOffset();
+    tree.SetHead(site);
+    tree.append(regL->tree, regR->tree, site);
+    tree[site].content.type = T;
+}
+void RegTree::grow(char C)
+{
+    grow(C, C);
+}
+void RegTree::grow(char L, char U)
+{
+    size_t site;
+    tree.clear();
+    site = tree.NewNodeOffset();
+    tree.SetHead(site);
+    value(site, L, U);
+}
+void RegTree::value(const RegTree* reg)
+{
+    size_t site;
+    buffer<size_t> output;
+    list<size_t> s;
+
+    //std::cout << "\n\n====++++++====== " << std::endl;
+    //reg->Demo(stdout);
+    //std::cout << "\ntree.clear();" << std::endl;
+    tree.clear();
+    //std::cout << "site = tree.append(reg->tree, output, s);" << std::endl;
+    tree.append(reg->tree, output, s, site);
+    //std::cout << "tree.SetHead(site);" << std::endl;
+    tree.SetHead(site);
+
+    //std::cout << "\nsite: "<< site << std::endl;
+    //Demo(stdout);
+    //std::cout << "\n=============== \n" << std::endl;
+}
+
+void RegTree::Reserved(const char* res)
+{
+    size_t i, length, inner, remain, L, R, parent;
+    tree.clear();
+    tree.SetHead(0);
+    for (length = 0; res[length] != '\0'; length++);
+    for (i = 0; i < length * 2 - 1; i++)
+        tree.NewNodeOffset();
+    parent = length - 1;
+    for (i = 0; i < length; i++)
+        value(i + parent, res[i]);
+    inner = 0;
+    remain = parent;
+    while (remain > 1)
+    {
+        remain >>= 1;
+        inner <<= 1;
+        inner += 1;
+    }
+    remain = parent - inner;
+    //std::cout << "void RegTree::Reserved(" << res << ");" << std::endl;
+    //std::cout << "Binary representation of parent = " << parent << " is: ";
+    //std::cout << std::bitset<sizeof(parent) * 8> (parent) << std::endl;
+    //std::cout << "Binary representation of inner = " << inner << " is: ";
+    //std::cout << std::bitset<sizeof(inner) * 8>(inner) << std::endl;
+    //std::cout << "remain = " << remain << std::endl;
+    for (i = 0; i < parent; i++)
+    {
+        //site = length - 2 - i;
+        //link(site, last - 1, last, Concatenation);
+        //last -= 2;
+        L = 2 * i + 1;
+        R = 2 * i + 2;
+        if (R < parent)
+            link(i, L, R, Concatenation);
+        else if (R == parent) link(i, L, R + remain * 2, Concatenation);
+        else if (i < inner) link(i, L + remain * 2, R + remain * 2, Concatenation);
+        else link(i, 2 * (i - inner) + parent, 2 * (i - inner) + length, Concatenation);
+    }
+}
+void RegTree::Int(void)
+{
+    size_t i;
+    tree.clear();
+    tree.SetHead(0);
+    for (i = 0; i < 7; i++)
+        tree.NewNodeOffset();
+    tree[0].left = 1;
+    tree[0].right = 2;
+    tree[1].left = 3;
+    tree[2].left = 6;
+
+    tree[3].left = 4;
+    tree[3].right = 5;
+
+    tree[0].content.type = Concatenation;
+    tree[1].content.type = ZeroOrOne;
+    tree[2].content.type = OneOrMore;
+    tree[3].content.type = Alternation;
+
+    value(4, '-');
+    value(5, '+');
+    value(6, '0', '9');
+}
+void RegTree::value(size_t site, char LU)
+{
+    value(site, LU, LU);
+}
+void RegTree::value(size_t site, char L, char U)
+{
+    tree[site].content.type = Range;
+    tree[site].content.lower = L;
+    tree[site].content.upper = U;
+}
+void RegTree::link(size_t site, size_t L, size_t R, RegTree::NodeType T)
+{
+    tree[site].left = L;
+    tree[site].right = R;
+    tree[site].content.type = T;
+}
+void RegTree::link(size_t site, size_t L, NodeType T)
+{
+    tree[site].left = L;
+    tree[site].right = SizeMax;
+    tree[site].content.type = T;
+}
+void RegTree::Identifier(void)
+{
+    size_t i;
+    tree.clear();
+    tree.SetHead(0);
+    for (i = 0; i < 14; i++)
+        tree.NewNodeOffset();
+    link(0, 1, 6, Concatenation);
+    link(1, 2, 5, Alternation);
+    link(2, 3, 4, Alternation);
+    value(3, 'a', 'z');
+    value(4, 'A', 'Z');
+    value(5, '_');
+
+    link(6, 7, ZeroOrMore);
+    link(7, 8, 9, Alternation);
+    link(8, 10, 11, Alternation);
+    link(9, 12, 13, Alternation);
+    value(10, 'a', 'z');
+    value(11, 'A', 'Z');
+    value(12, '_');
+    value(13, '0', '9');
+}
+void RegTree::IdentifierHead(void)
+{
+    RegTree* left, * right, * middle;
+    left = new RegTree();
+    left->grow('a', 'z');
+    right = new RegTree();
+    right->grow('A', 'Z');
+    middle = new RegTree();
+    //left->Demo(stdout);
+    //right->Demo(stdout);
+    //std::cout << "\nmiddle = new RegTree();\n" << std::endl;
+    middle->grow(left, right, Alternation);
+    //std::cout << "grow(left, right, Alternation);\n\n" << std::endl;
+    //middle->Demo(stdout);
+    delete left;
+    left = middle;
+    right->grow('_', '_');
+    grow(left, right, Alternation);
+    delete right;
+    delete left;
+}
+void RegTree::IdentifierInner(void)
+{
+    RegTree* left, * right, * middle, * temp;
+    left = new RegTree();
+    left->grow('a', 'z');
+    right = new RegTree();
+    right->grow('A', 'Z');
+    middle = new RegTree();
+    temp = new RegTree();
+    middle->grow(left, right, Alternation);
+    left->grow('_', '_');
+    right->grow('0', '9');
+    temp->grow(left, right, Alternation);
+    grow(middle, temp, Alternation);
+    delete right;
+    delete left;
+    delete temp;
+    delete middle;
+}
+void RegTree::ConstChar(void)
+{
+    RegTree LR, ESC, common__;
+    RegTree temp1, temp2;
+    LR.grow('\'', '\'');
+    ESC.EscapeAll();
+    common__.CommonChar();
+
+    temp2.grow(&ESC, &common__, Alternation);
+    temp1.grow(&LR, &temp2, Concatenation);
+    grow(&temp1, &LR, Concatenation);
+    //temp1.grow('', '');
+}
+void RegTree::CommonChar(void)
+{
+    RegTree range1, range2, range3, range4, range5;
+    RegTree temp1, temp2, temp3;
+    range1.grow(' ', '!');//32, 33 34:"
+    range2.grow('#', '&');//35, 38 39:'
+    range3.grow('(', '/');//40, 47
+    range4.grow('0', '[');//48, 91 92: '\\'
+    range5.grow(']', '~');//93, 126
+
+    temp1.grow(&range1, &range2, Alternation);
+    temp2.grow(&range3, &range4, Alternation);
+    temp3.grow(&temp1, &temp2, Alternation);
+    grow(&temp3, &range5, Alternation);
+}
+void RegTree::EscapeAll(void)
+{
+    RegTree all__, ESC, Octa, Hexa, num;
+    Hexa.HexaChar();
+    Octa.OctaChar();
+    ESC.EscapeChar();
+    num.grow(&Octa, &Hexa, Alternation);
+    all__.grow(&num, &ESC, Alternation);
+    ESC.grow('\\', '\\');
+    grow(&ESC, &all__, Concatenation);
+}
+void RegTree::EscapeChar(void)
+{
+    int ele;
+    bool temp;
+    RegTree temp1, temp2, temp3;
+    temp = false;
+    for (ele = 0; (size_t)ele < CharSize; ele++)
+    {
+        if (PostfixSwitch((char)ele) == -1) continue;
+        //std::cout << "ele: " << ele << std::endl;
+        temp1.grow((char)ele, (char)ele);
+        //std::cout << "ele: " << (char)ele << std::endl;
+        if (temp)
+        {
+            //std::cout << "temp1.Demo(stdout);"  << std::endl;
+            //temp1.Demo(stdout);
+            //std::cout << "\ntemp2.Demo(stdout);" << std::endl;
+            //temp2.Demo(stdout);
+            //std::cout << "\ntemp3.grow(&temp1, &temp2, Alternation);" << std::endl;
+            temp3.grow(&temp1, &temp2, Alternation);
+            //std::cout << "temp3.tree.Demo(stdout);" << std::endl;
+            //temp3.tree.Demo(stdout);
+            //std::cout << "temp3.Demo(stdout);" << std::endl;
+            //temp3.Demo(stdout);
+
+            //std::cout << "\ntemp2.value(&temp3);"  << std::endl;
+            temp2.value(&temp3);
+
+        }
+        else
+        {
+            temp2.value(&temp1);
+            temp = !temp;
+        }
+        //std::cout << "end"<< std::endl;
+    }
+    value(&temp2);
+}
+void RegTree::HexaChar(void)
+{
+    RegTree temp1, temp2, temp3, temp4;
+    temp1.grow('0', '9');
+    temp2.grow('a', 'f');
+    temp3.grow(&temp1, &temp2, Alternation);
+    temp2.grow('A', 'F');
+    temp1.grow(&temp3, &temp2, Alternation);
+    temp3.grow(&temp1, &temp1, Concatenation);
+    temp4.grow(&temp3, &temp1, Alternation);
+    temp1.grow('x', 'x');
+    temp2.grow('X', 'X');
+    temp3.grow(&temp1, &temp2, Alternation);
+    grow(&temp3, &temp4, Concatenation);
+}
+void RegTree::OctaChar(void)
+{
+    RegTree temp1, temp2, temp3, temp4;
+    temp1.grow('0', '7');
+    temp2.grow(&temp1, &temp1, Concatenation);
+    temp3.grow(&temp2, &temp1, Concatenation);
+    temp4.grow(&temp1, &temp2, Alternation);
+    grow(&temp3, &temp4, Alternation);
+}
+void RegTree::swap(const RegTree*& regL, const RegTree*& regR)
+{
+    const RegTree* middle;
+    middle = regL;
+    regL = regR;
+    regR = middle;
+    return;
+}
+void RegTree::spaces(void)
+{
+    size_t i;
+    tree.clear();
+    tree.SetHead(0);
+    for (i = 0; i < 2; i++)
+        tree.NewNodeOffset();
+    link(0, 1, OneOrMore);
+    value(1, ' ');
+}
+void RegTree::LineFeeds(void)
+{
+    size_t i;
+    tree.clear();
+    tree.SetHead(0);
+    for (i = 0; i < 6; i++)
+        tree.NewNodeOffset();
+    link(0, 1, OneOrMore);
+    link(1, 2, 3, Alternation);
+    link(3, 4, 5, Concatenation);
+    value(2, '\n');
+    value(4, '\r');
+    value(5, '\n');
+}
+void RegTree::Demo(FILE* fp) const
+{
+    //tree.inorderTraversal(output);
+    list<traverse> s;
+    traverse temp;
+    NodeType T;
+    char U, L;
+    temp.site = tree.Head;
+    temp.state = 0;
+    if (temp.site != SizeMax)s.append(temp);
+    while (s.count())
+    {
+        switch (s.top().state)
+        {
+        case 0:
+            if (tree[s.top().site].content.type == Alternation && s.top().site != 0)
+                fputc('(', fp);
+            s.top().state = 1;
+            temp.site = tree[s.top().site].left;
+            if (temp.site != SizeMax)
+            {
+                //fprintf(fp, "\n   temp.site: %llu, s.top().site: %llu  \n", temp.site, s.top().site);
+                s.append(temp);
+                break;
+            }
+
+        case 1:
+            T = tree[s.top().site].content.type;
+            if (T == Alternation)
+                fputc('|', fp);
+            else if (T == OneOrMore)
+                fprintf(fp, "^{+}");
+            else if (T == ZeroOrMore)
+                fprintf(fp, "^{*}");
+            else if (T == ZeroOrOne)
+                fputc('?', fp);
+            else if (T == Range)
+            {
+                U = tree[s.top().site].content.upper;
+                L = tree[s.top().site].content.lower;
+                if (U != L)
+                {
+                    if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\'\\%d\'-", (int)L);
+                    else fprintf(fp, "[\'%c\'-", L);
+                    if ((int)U < 32 || (int)U == 127) fprintf(fp, "\'\\%d\']", (int)U);
+                    else fprintf(fp, "\'%c\']", U);
+                }
+                else
+                {
+                    if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\'\\%d\']", (int)L);
+                    else fprintf(fp, "\'%c\'", L);
+                }
+
+            }
+            s.top().state = 2;
+            temp.site = tree[s.top().site].right;
+            if (temp.site != SizeMax)
+            {
+                s.append(temp);
+                break;
+            }
+        case 2:
+            if (tree[s.top().site].content.type == Alternation && s.top().site != 0)
+                fputc(')', fp);
+            s.pop();
+            break;
+        }
+    }
+}
+void RegTree::Demo(FILE* fp, RegTree::NodeType T)
+{
+    switch (T)
+    {
+    case RegTree::Concatenation:
+        fprintf(fp, "Concatenation\n");
+        break;
+    case RegTree::Alternation:
+        fprintf(fp, "Alternation\n");
+        break;
+    case RegTree::ZeroOrMore:
+        fprintf(fp, "ZeroOrMore\n");
+        break;
+    case RegTree::OneOrMore:
+        fprintf(fp, "OneOrMore\n");
+        break;
+    case RegTree::ZeroOrOne:
+        fprintf(fp, "ZeroOrOne\n");
+        break;
+    case RegTree::Range:
+        fprintf(fp, "Range\n");
+        break;
+    default:
+        fprintf(fp, "???????????\n");
+        break;
+    }
+}
+void RegTree::Demo(FILE* fp, char L, char U)
+{
+    if (U != L)
+    {
+        if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\\%d-", (int)L);
+        else fprintf(fp, "[%c-", L);
+        if ((int)U < 32 || (int)U == 127) fprintf(fp, "\\%d]", (int)U);
+        else fprintf(fp, "%c]", U);
+    }
+    else
+    {
+        if ((int)L < 32 || (int)L == 127) fprintf(fp, "[\\%d]", (int)L);
+        else fputc(L, fp);
+    }
+}
+
+void RegTree::info::Demo(FILE* fp) const
+{
+    RegTree::Demo(fp, lower, upper);
+    RegTree::Demo(fp, type);
+}
+
+static bool compare(const char* str1, const char* str2);
+static size_t strlength(const char* str);
+static void strfree(const char** strs, size_t length);
+static void inverse(list<size_t>& out, const list<size_t>& in);
+static int PostfixSwitch_small(char c);
+static const char* Copy(const char* input)
+{
+    char* nnnn;
+    size_t length, i;
+    for (length = 0; input[length] != '\0'; length++);
+    length += 1;
+    nnnn = (char*)malloc(sizeof(char) * length);
+    for (i = 0; i < length; i++) nnnn[i] = input[i];
+    return nnnn;
+}
+lexicalPanel::lexicalPanel()
+{
+    nfa = NULL;
+    DFAsheet = NULL;
+    DFAgraph = NULL;
+    /*
+    count = 0;
+    capacity = 0;
+    reg = NULL;
+    name = NULL;
+    attribute = NULL;
+    priority = NULL;
+    */
+}
+lexicalPanel::~lexicalPanel()
+{
+    size_t i;
+    for (i = 0; i < regular.count(); i++)
+        delete regular[i];
+    delete nfa;
+    delete DFAsheet;
+    delete DFAgraph;
+
+    for (i = 0; i < attribute.count(); i++)
+    {
+        free((void*)attribute[i]);
+    }
+
+    /*
+    for (i = 0; i < count; i++)
+    {
+        delete reg[i];
+        free((void*)name[i]);
+        free((void*)attribute[i]);
+    }
+    free((void*)priority);
+    free((void*)name);
+    free((void*)attribute);
+    free((void*)reg);
+    */
+}
+const char** lexicalPanel::GetName(void) const
+{
+    const char** name;
+    size_t i;
+    name = (const char**)malloc(regular.count() * sizeof(const char*));
+    for (i = 0; i < regular.count(); i++)
+    {
+        name[i] = Copy(regular[i]->name);
+    }
+    return name;
+}
+const char** lexicalPanel::GetAttribute(void) const
+{
+    const char** atrribute;
+    size_t i;
+    atrribute = (const char**)malloc(regular.count() * sizeof(const char*));
+    for (i = 0; i < regular.count(); i++)
+    {
+        atrribute[i] = Copy(regular[i]->attribute);
+    }
+    return atrribute;
+}
+/*
+void lexicalPanel::expand(void)
+{
+    size_t newCapacity;
+
+    newCapacity = (capacity + capacity / 4 + 8);
+
+    priority = (size_t*)realloc(priority, newCapacity * sizeof(size_t));
+    name = (const char**)realloc(name, newCapacity * sizeof(const char*));
+    attribute = (const char**)realloc(attribute, newCapacity * sizeof(const char*));
+    reg = (RegTree**)realloc(reg, newCapacity * sizeof(RegTree*));
+
+    capacity = newCapacity;
+
+}
+void lexicalPanel::append(const char* Name, const char* Attri, RegTree* Reg, size_t Priority)
+{
+    if (count >= capacity) expand();
+    name[count] = Copy(Name);
+    attribute[count] = Copy(Attri);
+    reg[count] = Reg;
+    priority[count] = Priority;
+    count += 1;
+}*/
+lexicalPanel::infor::infor()
+{
+    priority = 0;
+    reg = NULL;
+    name = NULL;
+    attribute = NULL;
+    group = 0;
+}
+lexicalPanel::infor::~infor()
+{
+
+    delete reg;
+    reg = NULL;
+    free((void*)name);
+    free((void*)attribute);
+
+
+}
+void lexicalPanel::infor::SetName(const char* input)
+{
+    name = Copy(input);
+}
+void lexicalPanel::infor::SetAttribute(const char* input)
+{
+    attribute = Copy(input);
+}
+void lexicalPanel::build(void)
+{
+    SetAll();
+    //nfa = new NFA(*this);
+    DFAsheet = new sheetDFA(*nfa);
+    DFAsheet->shrink();
+    DFAgraph = new DFA(DFAsheet);
+
+    //ddfa->Demo(stdout);
+}
+void lexicalPanel::BuildDemo(FILE* fp)
+{
+    SetAll();
+    fprintf(fp, "================nfa = new NFA(*this);=================\n");
+    //nfa = new NFA(*this);
+    nfa->Demo(stdout);
+    fprintf(fp, "===========DFAsheet = new sheetDFA(*nfa);=============\n");
+    DFAsheet = new sheetDFA(*nfa);
+    DFAsheet->Demo(stdout);
+    fprintf(fp, "=================DFAsheet->shrink();==================\n");
+    DFAsheet->shrink();
+    DFAsheet->Demo(stdout);
+    fprintf(fp, "============DFAgraph = new DFA(DFAsheet);=============\n");
+    DFAgraph = new DFA(DFAsheet);
+    DFAgraph->Demo(stdout);
+    size_t i;
+    fprintf(fp, "%s", regular[0]->name);
+    for (i = 1; i < regular.count(); i++)
+    {
+        fprintf(fp, " | %s", regular[i]->name);
+    }
+    fprintf(fp, "\n");
+}
+
+void lexicalPanel::Cprint(FILE* fp, const char* name)
+{
+    const char** Atrribute__;
+    const char** Name__;
+    Name__ = GetName();
+    Atrribute__ = GetAttribute();
+    DFAgraph->Cprint(fp, name);
+    DFAgraph->CprintAccept(fp, name, Atrribute__, Name__);
+
+    Cgroup(fp, name);
+    strfree(Atrribute__, regular.count());
+    strfree(Name__, regular.count());
+}
+void lexicalPanel::CppPrint(FILE* fp, const char* name)
+{
+    size_t i;
+    const char** Atrribute__;
+    const char** Name__;
+    Name__ = GetName();
+    Atrribute__ = GetAttribute();
+    fprintf(fp, "struct %s\n{\n", name);
+    fprintf(fp, "\tenum regular\n\t{\n");
+    //fprintf(fp, "\t\tnull = %zu,", 0);
+    fprintf(fp, "\t\t_%s_ = %zu", regular[0]->name, (size_t)1);
+    for (i = 1; i < regular.count(); i++)
+    {
+        fprintf(fp, ",\n\t\t_%s_ = %zu", regular[i]->name, i + 1);
+    }
+    fprintf(fp, "\n\t};\n");
+    fprintf(fp, "\tenum group\n\t{\n");
+    fprintf(fp, "\t\t_%s___ = %zu", attribute[0], (size_t)1);
+    for (i = 1; i < attribute.count(); i++)
+    {
+        fprintf(fp, ",\n\t\t_%s___ = %zu", attribute[i], i + 1);
+    }
+    fprintf(fp, "\n\t};\n");
+    fprintf(fp, "\tstatic int next(int state, const char c);\n");
+    fprintf(fp, "\tstatic int action(int state);\n");
+    fprintf(fp, "\tstatic int GroupGet(int state);\n");
+    fprintf(fp, "};\n");
+
+
+    DFAgraph->CppPrint(fp, name);
+    DFAgraph->CppPrintAccept(fp, name, Atrribute__, Name__);
+    CppGroup(fp, name);
+    strfree(Atrribute__, regular.count());
+    strfree(Name__, regular.count());
+}
+
+
+void lexicalPanel::SetGrammer(void)
+{
+    infor* II;
+
+    II = new infor;
+    II->SetAttribute("division");
+    II->SetName("|");
+    II->reg = new RegTree();
+    II->reg->Reserved("|");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("division");
+    II->SetName("spaces");
+    II->reg = new RegTree();
+    II->reg->spaces();
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("division");
+    II->SetName("enters");
+    II->reg = new RegTree();
+    II->reg->LineFeeds();
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("arrow");
+    II->SetName("->");
+    II->reg = new RegTree();
+    II->reg->Reserved("->");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("ID");
+    II->SetName("Identifiers");
+    II->reg = new RegTree();
+    II->reg->Identifier();
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("division");
+    II->SetName(";");
+    II->reg = new RegTree();
+    II->reg->Reserved(";");
+    regular.append(II);
+
+
+
+}
+void lexicalPanel::SetReg(void)
+{
+    infor* II;
+
+    II = new infor;
+    II->SetAttribute("braket");
+    II->SetName("left");
+    II->reg = new RegTree();
+    II->reg->Reserved("(");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("braket");
+    II->SetName("right");
+    II->reg = new RegTree();
+    II->reg->Reserved(")");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("braket");
+    II->SetName("begin");
+    II->reg = new RegTree();
+    II->reg->Reserved("[");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("braket");
+    II->SetName("end");
+    II->reg = new RegTree();
+    II->reg->Reserved("]");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("braket");
+    II->SetName("range");
+    II->reg = new RegTree();
+    II->reg->Reserved("-");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("superscript");
+    II->SetName("star");
+    II->reg = new RegTree();
+    II->reg->Reserved("*");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("superscript");
+    II->SetName("plus");
+    II->reg = new RegTree();
+    II->reg->Reserved("+");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("superscript");
+    II->SetName("ZeroOrOne");
+    II->reg = new RegTree();
+    II->reg->Reserved("?");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("char");
+    II->SetName("idchar");
+    II->priority = 1;
+    II->reg = new RegTree();
+    II->reg->IdentifierInner();
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("char");
+    II->SetName("CommonChar");
+    II->reg = new RegTree();
+    II->reg->ConstChar();
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("Or");
+    II->SetName("Or");
+    II->reg = new RegTree();
+    II->reg->Reserved("|");
+    regular.append(II);
+}
+void lexicalPanel::SetRegS(void)
+{
+    infor* II;
+
+    II = new infor;
+    II->SetAttribute("Id");
+    II->SetName("identifier");
+    II->reg = new RegTree();
+    II->reg->Identifier();
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("number");
+    II->SetName("integar");
+    II->reg = new RegTree();
+    II->reg->build("\'+\'?[0-9]+");
+    II->priority = 1;
+    regular.append(II);
+
+    II = new infor;
+    II->SetName("lexical");
+    II->SetAttribute("reserved_word");
+    II->reg = new RegTree();
+    II->reg->build("lexical");
+    II->priority = 1;
+    regular.append(II);
+
+    II = new infor;
+    II->SetName("grammatical");
+    II->SetAttribute("reserved_word");
+    II->reg = new RegTree();
+    II->reg->build("grammatical");
+    II->priority = 1;
+    regular.append(II);
+
+    II = new infor;
+    II->SetName("formula");
+    II->SetAttribute("reserved_word");
+    II->reg = new RegTree();
+    II->reg->build("formula");
+    II->priority = 1;
+    regular.append(II);
+
+    II = new infor;
+    II->SetName("priority");
+    II->SetAttribute("reserved_word");
+    II->reg = new RegTree();
+    II->reg->build("priority");
+    II->priority = 1;
+    regular.append(II);
+
+    II = new infor;
+    II->SetName("void");
+    II->SetAttribute("reserved_word");
+    II->reg = new RegTree();
+    II->reg->build("void");
+    II->priority = 1;
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("division");
+    II->SetName("spaces");
+    II->reg = new RegTree();
+    II->reg->spaces();
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("division");
+    II->SetName("enters");
+    II->reg = new RegTree();
+    II->reg->LineFeeds();
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("division");
+    II->SetName("semicolon");
+    II->reg = new RegTree();
+    II->reg->Reserved(";");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("division");
+    II->SetName("colon");
+    II->reg = new RegTree();
+    II->reg->Reserved(":");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("division");
+    II->SetName("dot");
+    II->reg = new RegTree();
+    II->reg->Reserved(".");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("braket");
+    II->SetName("braceL");
+    II->reg = new RegTree();
+    II->reg->Reserved("{");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("braket");
+    II->SetName("braceR");
+    II->reg = new RegTree();
+    II->reg->Reserved("}");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("annotation");
+    II->SetName("anntationS");
+    II->reg = new RegTree();
+    II->reg->build("\'/\'\'/\'([\'\\0\'-\'\\11\']|[\'\\13\'-\'\\177\'])*\'\\n\'");
+    regular.append(II);
+
+    II = new infor;
+    II->SetAttribute("annotation");
+    II->SetName("anntationM");
+    II->reg = new RegTree();
+    II->reg->build("\'/\'\'*\'([\'\\0\'-\'\\177\'])*\'*\'+\'/\'");/**///
+    regular.append(II);
+
+    SetReg();
+}
+void lexicalPanel::SetRegFinal(void)
+{
+    infor* II;
+    //identifier: identifier
+    {
+        II = new infor;
+        II->SetAttribute("identifier");
+        II->SetName("identifier");
+        II->reg = new RegTree();
+        II->priority = 1;
+        II->reg->Identifier();
+        regular.append(II);
+    }
+    //const: integar, CommonChar, idChar
+    {
+        II = new infor;
+        II->SetAttribute("const");
+        II->SetName("integar");
+        II->reg = new RegTree();
+        II->reg->build("\'+\'[0-9]+");//group (\'+\'|\'-\')?[0-9]+
+        II->priority = 3;
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("const");
+        II->SetName("CommonChar");
+        II->reg = new RegTree();
+        II->reg->ConstChar();
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("const");
+        II->SetName("idChar");
+        II->priority = 2;
+        II->reg = new RegTree();
+        II->reg->IdentifierInner();
+        regular.append(II);
+
+
+    }
+    //reserved: lexical, grammar, void, all
+    {
+        II = new infor;
+        II->SetName("lexical");
+        II->SetAttribute("reserved");
+        II->reg = new RegTree();
+        II->reg->build("lexical");
+        II->priority = 4;
+        regular.append(II);
+
+        II = new infor;
+        II->SetName("grammar");
+        II->SetAttribute("reserved");
+        II->reg = new RegTree();
+        II->reg->build("grammar");
+        II->priority = 4;
+        regular.append(II);
+
+        II = new infor;
+        II->SetName("void");
+        II->SetAttribute("reserved");
+        II->reg = new RegTree();
+        II->reg->build("void");
+        II->priority = 4;
+        regular.append(II);
+
+        II = new infor;
+        II->SetName("all");
+        II->SetAttribute("reserved");
+        II->reg = new RegTree();
+        II->reg->build("all");
+        II->priority = 4;
+        regular.append(II);
+    }
+    //format: spaces, enters, tab
+    {
+        II = new infor;
+        II->SetAttribute("format");
+        II->SetName("spaces");
+        II->reg = new RegTree();
+        II->reg->spaces();
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("format");
+        II->SetName("enters");
+        II->reg = new RegTree();
+        II->reg->LineFeeds();
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("format");
+        II->SetName("tab");
+        II->reg = new RegTree();
+        II->reg->build("\'\\t\'");
+        regular.append(II);
+    }
+    //division: semicolon, colon, dot
+    {
+        II = new infor;
+        II->SetAttribute("division");
+        II->SetName("semicolon");
+        II->reg = new RegTree();
+        II->reg->Reserved(";");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("division");
+        II->SetName("colon");
+        II->reg = new RegTree();
+        II->reg->Reserved(":");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("division");
+        II->SetName("dot");
+        II->reg = new RegTree();
+        II->reg->Reserved(".");
+        regular.append(II);
+    }
+    //braket: braceL, braceR, left, right, squareL, squareR, angleL, angleR;
+    {
+        II = new infor;
+        II->SetAttribute("braket");
+        II->SetName("braceL");
+        II->reg = new RegTree();
+        II->reg->Reserved("{");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("braket");
+        II->SetName("braceR");
+        II->reg = new RegTree();
+        II->reg->Reserved("}");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("braket");
+        II->SetName("left");
+        II->reg = new RegTree();
+        II->reg->Reserved("(");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("braket");
+        II->SetName("right");
+        II->reg = new RegTree();
+        II->reg->Reserved(")");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("braket");
+        II->SetName("squareL");
+        II->reg = new RegTree();
+        II->reg->Reserved("[");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("braket");
+        II->SetName("squareR");
+        II->reg = new RegTree();
+        II->reg->Reserved("]");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("braket");
+        II->SetName("angleL");
+        II->reg = new RegTree();
+        II->reg->Reserved("<");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("braket");
+        II->SetName("angleR");
+        II->reg = new RegTree();
+        II->reg->Reserved(">");
+        regular.append(II);
+    }
+    //anntation: anntationS, anntationM
+    {
+        II = new infor;
+        II->SetAttribute("annotation");
+        II->SetName("anntationS");
+        II->reg = new RegTree();
+        II->reg->build("\'/\'\'/\'([\'\\0\'-\'\\11\']|[\'\\13\'-\'\\177\'])*\'\\n\'");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("annotation");
+        II->SetName("anntationM");
+        II->reg = new RegTree();
+        II->reg->build("\'/\'\'*\'([\'\\0\'-\'\\177\'])*\'*\'+\'/\'");/**///
+        regular.append(II);
+    }
+    //RegSymbol: range, star, plus, question, or;
+    {
+        II = new infor;
+        II->SetAttribute("RegSymbol");
+        II->SetName("range");
+        II->reg = new RegTree();
+        II->reg->Reserved("-");
+        II->priority = 5;
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("RegSymbol");
+        II->SetName("star");
+        II->reg = new RegTree();
+        II->reg->Reserved("*");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("RegSymbol");
+        II->SetName("plus");
+        II->reg = new RegTree();
+        II->reg->Reserved("+");
+        II->priority = 5;
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("RegSymbol");
+        II->SetName("question");
+        II->reg = new RegTree();
+        II->reg->Reserved("?");
+        regular.append(II);
+
+        II = new infor;
+        II->SetAttribute("RegSymbol");
+        II->SetName("or");
+        II->reg = new RegTree();
+        II->reg->Reserved("|");
+        regular.append(II);
+    }
+}
+void lexicalPanel::append(lexicalPanel::infor* II)
+{
+    regular.append(II);
+}
+void lexicalPanel::Cgroup(FILE* fp, const char* name)const
+{
+    fprintf(fp, "int GroupGet");
+    if (name != NULL) fprintf(fp, "_%s", name);
+    CppGroupCore(fp, name);
+    return;
+}
+void lexicalPanel::CppGroup(FILE* fp, const char* name)const
+{
+    if (name != NULL) fprintf(fp, "int %s::GroupGet", name);
+    else fprintf(fp, "int null::GroupGet");
+    CppGroupCore(fp, name);
+    return;
+}
+void lexicalPanel::CppGroupCore(FILE* fp, const char* name)const
+{
+    size_t i, No;
+    fprintf(fp, "(int accept)\n{\n");
+    fprintf(fp, "\tswitch (accept)\n\t{\n");
+    //for (i = 0; i < dfa.StateAmountGet(); i++)
+    for (No = 0; No < regular.count(); No++)
+    {
+        //No = (size_t)dfa.GraphStateGet(i);
+        //if (No == 0) continue;
+        //fprintf(fp, "\tcase %zu:\n", i);
+        //fprintf(fp, "\t\tgroup = %zu;\n", regular[No - 1]->group);
+        //fprintf(fp, "\t\treturn %zu;", No);
+        fprintf(fp, "\tcase %zu:\n", No + 1);
+        //fprintf(fp, "\t\tgroup = %zu;\n", regular[No - 1]->group);
+        fprintf(fp, "\t\treturn %zu;", regular[No]->group);
+        fprintf(fp, "//");
+        fprintf(fp, "%s: ", regular[No]->attribute);
+        fprintf(fp, "%s", regular[No]->name);
+        fprintf(fp, "\n");
+    }
+    fprintf(fp, "\t}\n");
+    fprintf(fp, "\treturn 0;\n}\n");
+}
+void lexicalPanel::Demo(FILE* fp) const
+{
+    size_t i;
+    fprintf(fp, "count: %zu\n", regular.count());
+    for (i = 0; i < regular.count(); i++)
+    {
+        fprintf(fp, "No[%zu]: \n", i);
+        regular[i]->Demo(fp);
+    }
+}
+void lexicalPanel::infor::Demo(FILE* fp)
+{
+    fprintf(fp, "\tpriority: %zu\n", priority);
+    fprintf(fp, "\tname: %s\n", name);
+    fprintf(fp, "\tattribute: %s(%zu)\n\tregular expression: ", attribute, group);
+    reg->Demo(stdout);
+    fprintf(fp, "\n");
+}
+
+void lexicalPanel::SetAll(void)
+{
+    size_t i, j;
+    for (i = 0; i < regular.count(); i++)
+    {
+        for (j = 0; j < attribute.count(); j++)
+            if (compare(regular[i]->attribute, attribute[j])) break;
+        if (j == attribute.count())
+            attribute.append(Copy(regular[i]->attribute));
+        regular[i]->group = j + 1;
+    }
+}
+static bool compare(const char* str1, const char* str2)
+{
+    size_t i;
+    for (i = 0; (str1[i] != '\0') && (str1[i] == str2[i]); i++);
+    return str1[i] == str2[i];
+}
+static size_t strlength(const char* str)
+{
+    size_t i;
+    for (i = 0; str[i] != '\0'; i++);
+    return i;
+}
+static void strfree(const char** strs, size_t length)
+{
+    size_t i;
+    for (i = 0; i < length; i++)
+    {
+        free((void*)strs[i]);
+    }
+    free(strs);
+}
+static void inverse(list<size_t>& out, const list<size_t>& in)
+{
+    size_t i, length;
+    length = in.count();
+    out.refresh(length);
+    for (i = 0; i < length; i++)
+        out[in[i]] = i;
+}
+static int PostfixSwitch_small(char c)
+{
+    switch (c)
+    {
+        /*case 'a':
+            return 7;
+        case 'b':
+            return 8;
+        case 'f':
+            return 12;
+        case 'n':
+            return 10;
+        case 'r':
+            return 13;
+        case 't':
+            return 9;
+        case 'v':
+            return 11;*/
+    case '\\':
+        return 92;
+    case '\'':
+        return 39;
+    case '\"':
+        return 34;
+    case '\?':
+        return 63;
+    case '\0':
+        return 0;
+    default:
+        return -1;
+    }
+}
+/*
+
+void sNFA::build(const RegTree* Reg)
+{
+    buffer<size_t> output;
+    list<size_t> s;
+    list<sNFA*> nfa;
+    build(Reg, output, s, nfa);
+}
+void sNFA::build(const RegTree* Reg, buffer<size_t> &output, list<size_t> &s, list<sNFA*> &nfa)
+{
+    size_t i, length, site, j;
+    RegTree::NodeType T;
+    sNFA* now, *highest, *L, *R;
+    bool input[CharSize + 1];
+    refresh();
+    output.clear();
+    s.refresh();
+    nfa.refresh();
+    Reg->tree.postorderTraversal(output, s);
+    length = output.count();
+    R = NULL;
+    L = NULL;
+    highest = NULL;
+    now = NULL;
+    //for (i = 0; i < length; i++)
+    //	std::cout << "output[" << i << "] = site = " << output[i] << std::endl;
+    for (i = 0; i < length; i++)
+    {
+        site = output[i];
+        //std::cout <<"output[" << i << "] = site = " << site << std::endl;
+        //std::cout << "nfa.count = " << nfa.count() << ", type: ";
+        //Demo(stdout);
+        T = Reg->tree[site].content.type;
+        //RegTree::Demo(stdout, T);
+        if (i + 1 == length) now = this;
+        else now = new sNFA();
+        switch (T)
+        {
+        case hyperlex::RegTree::Concatenation:
+        case hyperlex::RegTree::Alternation:
+            nfa.pop(R);
+            nfa.pop(L);
+            break;
+        case hyperlex::RegTree::ZeroOrMore:
+        case hyperlex::RegTree::OneOrMore:
+        case hyperlex::RegTree::ZeroOrOne:
+            nfa.pop(highest);
+            //std::cout << "highest = " << std::endl;
+            //highest->Demo(stdout);
+            break;
+        case hyperlex::RegTree::Range:
+            break;
+        }
+        switch (T)
+        {
+        case hyperlex::RegTree::Concatenation:
+            now->serial(L, R);
+            break;
+        case hyperlex::RegTree::Alternation:
+            now->parallel(L, R);
+            break;
+        case hyperlex::RegTree::ZeroOrMore:
+            now->any(highest);
+            break;
+        case hyperlex::RegTree::OneOrMore:
+            now->plus(highest);
+            break;
+        case hyperlex::RegTree::ZeroOrOne:
+            now->ZeroOrOne(highest);
+            break;
+        case hyperlex::RegTree::Range:
+            for (j = 0; j < CharSize; j++)
+                input[j] = (j <= (size_t)Reg->tree[site].content.upper && j >= (size_t)Reg->tree[site].content.lower);
+            now->build(input);
+            break;
+        default:
+            break;
+        }
+        switch (T)
+        {
+        case hyperlex::RegTree::Concatenation:
+        case hyperlex::RegTree::Alternation:
+            delete L;
+            delete R;
+            break;
+        case hyperlex::RegTree::ZeroOrMore:
+        case hyperlex::RegTree::OneOrMore:
+        case hyperlex::RegTree::ZeroOrOne:
+            delete highest;
+            break;
+        case hyperlex::RegTree::Range:
+        default:
+            break;
+        }
+        //std::cout << "now = " << std::endl;
+        //now->Demo(stdout);
+        nfa.append(now);
+        //std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++"  << std::endl;
+    }
+    //Reg->tree.postorderTraversal(output, s);
+}
+
+
+NFA::NFA(const lexicalPanel& lP)
+{
+    vec<sNFA*> all;
+    size_t count, i;
+
+    buffer<size_t> output;
+    list<size_t> s;
+    list<sNFA*> nfa;
+
+    count = lP.regular.count();
+    all.Malloc(count);
+    for (i = 0; i < count; i++)
+    {
+        all[i] = new sNFA();
+        all[i]->build(lP.regular[i]->reg, output, s, nfa);
+    }
+    build(all.vector(), count);
+    for (i = 0; i < count; i++)
+        delete all[i];
+    for (i = 0; i < count; i++) priority[i + 1] = lP.regular[i]->priority + 1;
+    priority[0] = 0;
+    //stack.reshape(StateAmount);
+    //stack.refresh();
+}
+*/
+
+//struct Retree
+//{
+//	int* GOTO;
+//	int* ACTION;
+//	int* RulesToSymbol;
+//	int* RulesLength;
+//	const size_t StateCount = 22;
+//	const size_t NonTerminalCount = 5;
+//	const size_t TerminalCount = 5;
+//	const size_t RulesCount = 9;
+
+//};
+
+/*
+struct postorder
+{
+    int state;
+    size_t here;
+    info* back;
+    info* leftback;
+    info* rightback;
+};
+void postorderall(void)
+{
+    list<postorder> s;
+    size_t top;
+    s.append();
+    s[0].state = 0;
+    while (s.count()!=0)
+    {
+
+        switch (s.top().state)
+        {
+        case 0:
+            leftback = new info();
+
+            break;
+        case 1:
+
+            break;
+        }
+    }
+}
+*/
+/*void sheetDFA::acceptSet(const matlist<bool>& Dstates, const NFA& nfa)
+{
+    matlist<bool> __AcceptSheet(nfa.accepted + 1);
+    list<size_t> __accpetedCount;
+    size_t i, j, to;
+    bool* __AcceptList;
+    int* SheetTemp;
+    char ele;
+    //std::cout << "Dstates.row(): " << Dstates.row() << std::endl;
+    AcceptCount = nfa.accepted;
+    accept.refresh(accept.column(), Dstates.row());
+    __AcceptSheet.refresh(__AcceptSheet.column(), Dstates.row());
+    //std::cout << "Dstates.row(): " << Dstates.row() << std::endl;
+    for (i = 0; i < Dstates.row(); i++)
+    {
+        __AcceptList = __AcceptSheet.append();
+        for (j = 0; j < CharSize; j++) accept[i][j] = 0;
+        __accpetedCount.append(nfa.GetAccepted(Dstates[i], __AcceptList));
+        std::cout << "__accpetedCount][]: " << __accpetedCount[i] << std::endl;
+        Demo(stdout, Dstates[i], Dstates.column());
+    }
+    //std::cout << "Dstates.row(): " << Dstates.row() << std::endl;
+    for (i = 0; i < Dstates.row(); i++)
+    {
+        if (__accpetedCount[i] == 0) continue;
+        SheetTemp = sheet[i];
+        for (ele = 0; (size_t)ele < CharSize; ele++)
+        {
+            to = SheetTemp[(size_t)ele];
+            if (__accpetedCount[to] == 0) accept[i][(size_t)ele] = nfa.FirstAccepted(__AcceptSheet[i]);
+        }
+    }
+    //for (i = 0; i < count; i++)
+    //{
+    //	for (j = 0; j < CharSize; j++)
+    //		printf("%2d", action(i, j));
+    //	printf("\n");
+    //}
+}*/
+/*
+bool grammerS::FirstOr(long long int symbol, size_t to)
+{
+    size_t i;
+    bool change;
+    change = false;
+    if (symbol < 0)//symbol is terminal
+    {
+        if (symbol != epsilon)
+        {
+            change = !first[to][-symbol - 1];
+            first[to][-symbol - 1] = true;
+        }
+    }
+    else//symbol is non-terminal
+    {
+        for (i = 0; i < TerminalCount; i++)
+        {
+            change = change || (first[symbol][i] && !first[to][i]);
+            first[to][i] = first[to][i] || first[symbol][i];
+        }
+        i = TerminalCount + 1;
+        change = change || (first[symbol][i] && !first[to][i]);
+        first[to][i] = first[to][i] || first[symbol][i];
+    }
+    return change;
+}
+*/
+
+
+/*
+void RegTree::grow_t(const RegTree* regL, const RegTree* regR, NodeType T, bool key)
+{
+    size_t site;
+    tree.clear();
+    site = tree.NewNodeOffset();
+    tree.SetHead(site);
+    tree.append_t(regL->tree, regR->tree, site, key);
+    tree[site].content.type = T;
+}
+*/
+
+
 
 
 
