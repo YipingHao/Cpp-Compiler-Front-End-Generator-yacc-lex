@@ -36,7 +36,7 @@ int printG(FILE* output, FILE* infor, const char* nameG)const;
 ```
 
 ####        1.  编码规则与build
-build方法接受一个可以读的输入文件或者一个字符串文件名作为输入，文件中字符编码格式应为ASCII.
+build方法接受一个可以读的输入文件或者一个字符串(不是文件名而是完整的文件内容)作为输入，文件中字符编码格式应为ASCII.
 ####        2.  输入信息展示
 demo方法展示读入文件的信息，如果发现输入文件有一些错误，那么它可以自动调用`ErrorDemo`方法展示错误。用户也可以主动使用`ErrorDemo`方法输出错误信息。
 ####        3. 输出打印
@@ -47,6 +47,46 @@ demo方法展示读入文件的信息，如果发现输入文件有一些错误�
 用户输入的文法如果是lr0的`printG`返回LR0分析表（状态转移表等等），此时`printG`返回 0。用户输入的文法如果是lr1的`printG`返回LR1分析表（状态转移表等等），此时`printG`返回 1。
 如果用户输入的文法超过了这两种文法分析器生成器的能力，`printG`返回2。此时`FILE*output`不会有任何输出。如果`InputPanel`没有正确的完成对输入文件的解析，调用`printG`返回-1。
 
+####  5.使用范例
+```
+int sample(void) {
+    InputPanel panel;
+    FILE* input = fopen("sample.txt", "r");
+    if (!input) return -5;
+
+    // 解析输入文件
+    int buildResult = panel.build(input);
+    if (buildResult != 0) {
+        panel.ErrorDemo(stderr); // 输出错误信息
+        fclose(input);
+        return buildResult;
+    }
+    panel.Demo(stdout);// 输出输入信息
+
+    // 生成DFA代码
+    FILE* dfaOut = fopen("DFA.cpp", "w");
+    if (!dfaOut) return -6;
+    int printLResult = panel.printL(dfaOut, "LexerDFA");
+    if (printLResult != 0) {
+        fclose(dfaOut);
+        return printLResult;
+    }
+
+    // 生成LR分析表
+    FILE* parserOut = fopen("ParserTable.cpp", "w");
+    FILE* infoOut = fopen("ParserInfo.txt", "w");
+    if (!parserOut) return -7;
+    if (!infoOut) return -8;
+
+    int printGResult = panel.printG(parserOut, infoOut, "ParserTable");
+    
+    fclose(input);
+    fclose(dfaOut);
+    fclose(parserOut);
+    fclose(infoOut);
+    return printGResult;
+}
+```
 
 ## 输入文件格式
 
@@ -448,6 +488,140 @@ int sample(input)
 `char* Copy(size_t site) const;`返回第`target`个词法单元对应的字符串。`target`合法范围是从`0`到`count-1`。不做范围检测。使用结束后应该对返回的指针释放内存。此成员函数返回的字符串指针的内存由`malloc`分配。
 `size_t GetCount(void) const;` 返回成员变量`size_t count;`的值。
 ### 4. `class GrammarTree` 使用简介
+#### 1. 定义概览
+在automata.h定义如下:
+```
+class GrammarTree
+{
+public:
+	GrammarTree();
+	~GrammarTree();
+	struct TreeInfor
+	{
+		bool rules;// rules: false —— 此为叶子节点，对应词法终结符（lexical terminal symbol），
+		size_t site;// site 表示该词法单元在词法表中的位置（即 Morpheme::storage 中的索引） 
+		size_t label;// rules: true  —— 此节点可能为非叶子节点（对应产生式规则），
+		void* infor; // site 表示对应的产生式规则编号（即 T::RulesToSymbol 中的索引）  
+	};
+	void Demo(FILE* fp, const Morpheme& input, const char* const* RulesName) const;
+	void clear(void);
+	template<typename T> int build(const Morpheme& input);
+
+	tree<TreeInfor>* GT;
+protected:
+};
+
+template <class T> class tree
+{
+public:
+	tree();
+	~tree();
+	void clear(void);
+	void build(vector<tree<T>*>& input);
+	void build(vector<tree<T>*>& input, size_t offset);
+	void PostOrderTraversal(vector<tree<T>*>& output);
+	T& root(void);
+	const T& root(void) const;
+	size_t ChildCount(void) const;
+	tree<T>* child(size_t No) const;
+	struct Iterator
+	{
+		tree<T>* target;
+		int state;
+	};
+	class PostIterator
+	{
+	public:
+		PostIterator() {}
+		~PostIterator() {}
+		void initial(tree<T>* root);
+		int& state(void);
+		tree<T>*& target(void);
+		void next(void);
+		bool still(void);
+	protected:
+		vector<Iterator> stack;
+		
+	};
+private:
+	array<tree<T>*> childs;
+	T content;
+	tree<T>* parent;
+	size_t No;
+};
+```
+#### 2. 对输入进行文法分析
+```
+template<typename T> int build(const Morpheme& input);
+```
+它拥有一个成员函数别接受待词法分析结果`const Morpheme& input`作为输入的串。`typename T`即是`printG`打印的类`struct <nameG>`。它通过`void Demo(FILE* fp, const Morpheme& input, const char* const* RulesName) const;` 可以在屏幕打印输出，输出需要一个字符串数组`const char* const* RulesName`作为参数。
+调用例子如下:
+```
+struct Reg
+{
+	enum regular{/*definations*/};
+	enum group{/*definations*/};
+	static int next(int state, const char c);
+	static int action(int state);
+	static int GroupGet(int state);
+};
+struct Panel
+{
+	enum type{/*definations*/};
+    enum nonterminal{/*definations*/};
+    enum rules{/*definations*/};
+	static const size_t StateCount;
+	static const size_t NonTerminalCount;
+	static const size_t TerminalCount;
+	static const size_t RulesCount;
+	static const int GOTO[StateCount][NonTerminalCount];
+	static const int ACTION[StateCount][TerminalCount];
+	static const int RulesToSymbol[RulesCount];
+	static const int RulesLength[RulesCount];
+	static const char* const RulesName[RulesCount];
+};
+int sample(input)
+{
+    Morpheme eme;
+    GrammarTree Tree;
+    int error;
+    error = eme.Build<Reg>(input);
+    if (error != 0) return error;
+    eme.Demo(stdout);
+    
+    error = Tree.build<Panel>(eme);
+    if (error != 0) return error;
+    Tree.Demo(stdout, eme, Panel::RulesName);
+
+    return error;
+}
+```
+#### 3. 遍历语法树做您想做的
+
+可以使用类型`iterator`帮助遍历语法树，示例代码如下。
+```
+void sample(GrammarTree & input)
+{
+    tree<TreeInfor>* now;
+    hyperlex::tree<GrammarTree::TreeInfor>* Tree;
+    hyperlex::tree<GrammarTree::TreeInfor>::PostIterator iterator;
+    iterator.initial(input.GT);
+    while (iterator.still())
+    {
+	    now = iterator.target();
+	    if (iterator.state() == 0)
+	    {
+            //  先序经过now节点
+	    }
+        else
+        {
+            //  后序经过now节点
+        }
+	    iterator.next();
+    }
+}
+
+```
 
 ## 软件架构简介与版本
 

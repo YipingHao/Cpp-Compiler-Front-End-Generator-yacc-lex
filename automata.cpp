@@ -1678,7 +1678,11 @@ int InputPanel::build(FILE* fp)
 	clear();
 	initial();
 	error = eme.Build<Reg>(fp);
-	if (error != 0) return error;
+	if (error != 0)
+	{
+		errorCode = ErrorinputLEXICAL;
+		return error;
+	}
 	NeglectNullToken(eme);
 	//eme.Demo(stdout);
 	error = buildGanalysis(eme);
