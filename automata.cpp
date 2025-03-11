@@ -84,46 +84,80 @@ void BufferChar::operator+=(const BufferChar& in)
 }
 void BufferChar::operator+=(double source)
 {
-	double x = 123.456;
-	double mantissa;
-	int exponent, top, r;
-	char stack[32];
-	mantissa = std::frexp(source, &exponent);
-	if (mantissa < 0)
-	{
-		mantissa = -mantissa;
-		append('-');
-	}
-	append((char)((int)mantissa) + '0');
-	mantissa = (mantissa - (double)((int)mantissa)) * 10.0;
-	append('.');
-	for (top = 0; top < 16; top++)
-	{
-		append((char)((int)mantissa) + '0');
-		mantissa = (mantissa - (double)((int)mantissa)) * 10.0;
-	}
-	*this += " * 2^{";
-	if (exponent < 0)
-	{
-		exponent = -exponent;
-		append('-');
-	}
-	if (exponent == 0) append('0');
-	top = 0;
-	while (exponent != 0)
-	{
-		r = exponent % 10;
-		exponent = exponent / 10;
-		stack[top] = ((char)r) + '0';
-		top += 1;
-	}
-	while (top != 0)
-	{
-		top -= 1;
-		append(stack[top]);
+	// Step 1: 分解double的二进制表示
+	union { double d; uint64_t i; } u = { source };
+	uint64_t bits = u.i;
 
+	// 提取符号位
+	int sign = (bits >> 63) ? 1 : 0;
+	bits &= 0x7FFFFFFFFFFFFFFF;
+
+	// 提取指数和尾数
+	int exponent = (bits >> 52) & 0x7FF;
+	uint64_t mantissa = bits & 0x000FFFFFFFFFFFFF;
+
+	// 处理特殊值（简化处理非规格化数）
+	if (exponent == 0) { // 非规格化数
+		exponent = -1022;
 	}
-	append('}');
+	else { // 规格化数
+		mantissa |= 0x0010000000000000; // 添加隐含的1
+		exponent -= 1023;
+	}
+
+	// Step 2: 转换为十进制科学计数法
+	// 计算 log10(2^exponent) = exponent * log10(2)
+	double log2_10 = 3.32192809488736234787; // log2(10)
+	int decExponent = static_cast<int>(exponent / log2_10);
+
+	// 手动调整有效数字
+	double factor = 1.0;
+	for (int i = 0; i < decExponent; ++i) factor *= 10;
+	double normalized = source / factor;
+
+	// Step 3: 生成字符串（简化实现）
+	//char* p = result;
+
+	// 符号位
+	//if (sign) *p++ = '-';
+	if (sign) append('-');
+	// 整数部分
+	int integer = static_cast<int>(normalized);
+	
+	append('0' + integer); //*p++ = '0' + integer;
+	append('.'); // *p++ = '.';
+
+	// 小数部分（17位）
+	double fraction = normalized - integer;
+	for (int i = 0; i < 17; ++i) {
+		fraction *= 10;
+		int digit = static_cast<int>(fraction);
+		append('0' + digit);// *p++ = '0' + digit;
+		fraction -= digit;
+	}
+
+	// 指数部分
+	append('E'); //*p++ = 'e';
+	if (decExponent >= 0) {
+		append('+'); //*p++ = '+';
+	}
+	else {
+		append('-'); //*p++ = '-';
+		decExponent = -decExponent;
+	}
+
+	// 指数数值
+	char expStr[5];
+	char* ep;
+	for (ep = expStr; decExponent > 0; ep++)
+	{
+		*ep = '0' + (decExponent % 10);
+		decExponent /= 10;
+	}
+	for (ep--; ep >= expStr; ep--) append(*ep);
+
+
+	//*p = '\0';
 }
 
 void BufferChar::operator<<(char c)
