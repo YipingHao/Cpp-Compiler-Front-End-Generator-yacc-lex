@@ -7,7 +7,7 @@ int test_entrance(const char* output_path);
 int main(int argc, char* argv[])
 {
 	int info;
-	//ParaFile pf;
+	//hyperlex_old::ParaFile pf;
 	int amount_of_cores;
 	const char* output_path;
 	output_path = argv[1];
@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 	return info;
 }
 
-namespace hyperlex
+namespace hyperlex_old
 {
 	typedef long long int IntegerDefault;
 	class DFA00;
@@ -417,38 +417,163 @@ namespace hyperlex
 
 
 }
+hyperlex_old::IntegerDefault hyperlex_old::IntGet(const char* list, size_t end, size_t& head)
+{
+    char c, state;
+    IntegerDefault number;
+    IntegerDefault Sign = 1;
+    number = 0;
+    state = 0;
+    do
+    {
+        c = hyperlex::dequeue(list, end, head);
+        switch (state)
+        {
+        case 0:
+            if (c >= '0' && c <= '9') number = c - '0';
+            else if (c == '-') Sign = -1;
+            state = 1;
+            break;
+        case 1:
+            if (c >= '0' && c <= '9') number = number * 10 + c - '0';
+            else state = 2;
+            break;
+        }
+    } while (state != 2);
+    return number * Sign;
+}
+double hyperlex_old::RealGet(int& state, const char* list, size_t end, size_t& head)
+{
+    char c;
+    double number, digit;
+    int num_sign = 1;
+    int index;
+    int index_sign;
+    number = 0.0;
+    digit = 1.0;
+    num_sign = 1.0;
+    index_sign = 1;
+    index = 0;
+    state = 0;
+    do
+    {
+        c = hyperlex::dequeue(list, end, head);
+        switch (state)
+        {
+        case 0:
+            if (c == '-') { num_sign = 0; state = 1; }
+            else if (c == '+') { num_sign = 1; state = 1; }
+            else if (c == '.') state = 2;
+            else if (c >= '0' && c <= '9') { number = (double)(c - '0'); state = 3; }
+            else state = -1;
+            break;
+        case 1:
+            if (c >= '0' && c <= '9') { number = (double)(c - '0'); state = 3; }
+            else if (c == '.') state = 2;
+            else state = -1;
+            break;
+        case 2:
+            if (c >= '0' && c <= '9')
+            {
+                digit *= 0.1;
+                number = number + digit * (double)(c - '0');
+                state = 4;
+            }
+            else if (c == 'e' || c == 'E') state = 5;
+            else state = -1;
+            break;
+        case 3:
+            if (c >= '0' && c <= '9') { number = number * 10.0 + (double)(c - '0'); state = 3; }
+            else if (c == '.') state = 2;
+            else state = -1;
+            break;
+        case 4:
+            if (c >= '0' && c <= '9')
+            {
+                digit *= 0.1;
+                number = number + digit * (double)(c - '0');
+                state = 4;
+            }
+            else if (c == 'e' || c == 'E') state = 5;
+            else state = -1;
+            break;
+        case 5:
+            if (c == '-') { index_sign = -1; state = 6; }
+            else if (c == '+') { index_sign = 1; state = 6; }
+            else if (c >= '0' && c <= '9') { index = (int)(c - '0'); state = 7; }
+            else state = -1;
+            break;
+        case 6:
+            if (c >= '0' && c <= '9') { index = (int)(c - '0'); state = 7; }
+            else state = -1;
+            break;
+        case 7:
+            if (c >= '0' && c <= '9') { index = index * 10 + (int)(c - '0'); state = 7; }
+            else state = -1;
+            break;
+        }
+    } while (state != -1);
+    number = num_sign ? number : -number;
+    digit = (index_sign == 1 ? 10.0 : 0.1);
+    while (index != 0)
+    {
+        index--;
+        number *= digit;
+    }
+    return number;
+}
+char hyperlex_old::CharGet(const char* list, size_t end, size_t& head)
+{
+    char c, result;
+    int error;
+    result = EOF;
+    c = hyperlex::dequeue(list, end, head);
+    error = 10;
+    if (c == '\'') result = hyperlex::CharGet(error, list, end, head);
+    else return EOF;
+    c = hyperlex::dequeue(list, end, head);
+    if (c == '\'') return result;
+    else return EOF;
+}
 
+
+
+
+hyperlex_old::IntegerDefault hyperlex_old::CharBuffer::DequeueInt(void)
+{
+    return IntGet(content, site, head);
+}
 using namespace hyperlex;
 
-static int test_01(const char* output_path, ParaFile& pf);
-static int test_02(const char* output_path, ParaFile& pf);
-static int test_03(const char* output_path, ParaFile& pf);
-static int test_04(const char* output_path, ParaFile& pf);
-static int test_05(const char* output_path, ParaFile& pf);
-static int test_06(const char* output_path, ParaFile& pf);
-static int test_07(const char* output_path, ParaFile& pf);
-static int test_08(const char* output_path, ParaFile& pf);
-static int test_09(const char* output_path, ParaFile& pf);
-static int test_10(const char* output_path, ParaFile& pf);
-static int test_11(const char* output_path, ParaFile& pf);
-static int test_12(const char* output_path, ParaFile& pf);
-static int test_13(const char* output_path, ParaFile& pf);
-static int test_14(const char* output_path, ParaFile& pf);
-static int test_15(const char* output_path, ParaFile& pf);
-static int test_16(const char* output_path, ParaFile& pf);
-static int test_17(const char* output_path, ParaFile& pf);
-static int test_18(const char* output_path, ParaFile& pf);
-static int test_19(const char* output_path, ParaFile& pf);
-static int test_20(const char* output_path, ParaFile& pf);
+static int test_01(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_02(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_03(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_04(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_05(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_06(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_07(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_08(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_09(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_10(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_11(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_12(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_13(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_14(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_15(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_16(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_17(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_18(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_19(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_20(const char* output_path, hyperlex_old::ParaFile& pf);
 int test_entrance(const char* output_path)
 {
     int item;
     int info;
-    ParaFile pf;
+    hyperlex_old::ParaFile pf;
     size_t sitePF;
     pf.initial("./parameter/test_item.txt");
     pf.demo(stdout);
-    sitePF = pf.SearchKey("item", ParaFile::Int);
+    sitePF = pf.SearchKey("item", hyperlex_old::ParaFile::Int);
     if (sitePF != pf.Amount())
         item = pf.FirstInt(sitePF);
     else
@@ -540,17 +665,17 @@ int test_entrance(const char* output_path)
     }
     return info;
 }
-static int test_01(const char* output_path, ParaFile& pf)
+static int test_01(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     printf("test_01\n");
 }
-static int test_02(const char* output_path, ParaFile& pf)
+static int test_02(const char* output_path, hyperlex_old::ParaFile& pf)
 {
-    hyperlex::ParaFile PF;
+    hyperlex_old::ParaFile PF;
     FILE* fp;
-    hyperlex::CFile F;
+    hyperlex_old::CFile F;
     std::string file;
-    hyperlex::CharBuffer Buffer;
+    hyperlex_old::CharBuffer Buffer;
     file = "./data/struct.txt";
     fp = F.Open(file.c_str(), "r");
     Buffer << fp;
@@ -564,7 +689,7 @@ static int test_02(const char* output_path, ParaFile& pf)
     size_t length;
     long long int* list = NULL;
     size_t i, j;
-    i = PF.SearchKey("MoleculeOfAtom", hyperlex::ParaFile::Int);
+    i = PF.SearchKey("MoleculeOfAtom", hyperlex_old::ParaFile::Int);
     //printf("i: %llu\n", i);
     PF.demo(stdout);
     PF.IntList(list, length, i);
@@ -578,10 +703,10 @@ static int test_02(const char* output_path, ParaFile& pf)
     printf("MoleculeLabel: %llu, length: %llu\n", i, length);
     for (j = 0; j < length; j++)
         printf("%s, ", L[j]);
-    hyperlex::Ruin(L, length);
+    hyperlex_old::Ruin(L, length);
     return 0;
 }
-static int test_03(const char* output_path, ParaFile& pf)
+static int test_03(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     class inner
     {
@@ -619,7 +744,7 @@ static int test_03(const char* output_path, ParaFile& pf)
     //#define CharSize 
 }
 using namespace hyperlex;
-static int test_04(const char* output_path, ParaFile& pf)
+static int test_04(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     /*Bitree<int> tree;
     Bitree<int>::node* temp;
@@ -675,7 +800,7 @@ static int test_04(const char* output_path, ParaFile& pf)
     tree.SetHead(1);*/
     return 0;
 }
-static int test_05(const char* output_path, ParaFile& pf)
+static int test_05(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     /*RegTree RT, Id, res;
     std::cout << "RegTree RT; " << std::endl;
@@ -745,7 +870,7 @@ static int test_05(const char* output_path, ParaFile& pf)
     std::cout << std::endl;*/
     return 0;
 }
-static int test_06(const char* output_path, ParaFile& pf)
+static int test_06(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     /*RegTree RT, Id, res;
     //sNFA nfa, nfa2;
@@ -794,7 +919,7 @@ static int test_06(const char* output_path, ParaFile& pf)
     delete ddfa;*/
     return 0;
 }
-static int test_07(const char* output_path, ParaFile& pf)
+static int test_07(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     /*RegTree RT, Id, res;
     //sNFA nfa, nfa2;
@@ -854,7 +979,7 @@ static int test_07(const char* output_path, ParaFile& pf)
     delete ddfa;*/
     return 0;
 }
-static int test_08(const char* output_path, ParaFile& pf)
+static int test_08(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     /* lexicalPanel lP;
     NFA* nfa;
@@ -886,12 +1011,12 @@ static int test_08(const char* output_path, ParaFile& pf)
     delete ddfa; */
     return 0;
 }
-static int test_09(const char* output_path, ParaFile& pf)
+static int test_09(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     size_t i;
     for (i = 10; i < 20; i++)
     {
-        std::cout << "static int test_" << i << "(const char* output_path, ParaFile& pf);" << std::endl;
+        std::cout << "static int test_" << i << "(const char* output_path, hyperlex_old::ParaFile& pf);" << std::endl;
     }
     for (i = 10; i < 20; i++)
     {
@@ -902,17 +1027,17 @@ static int test_09(const char* output_path, ParaFile& pf)
     }
     for (i = 10; i < 20; i++)
     {
-        std::cout << "static int test_" << i << "(const char* output_path, ParaFile& pf)" << std::endl;
+        std::cout << "static int test_" << i << "(const char* output_path, hyperlex_old::ParaFile& pf)" << std::endl;
         std::cout << "{" << std::endl;
         std::cout << "\treturn 0;" << std::endl;
         std::cout << "}" << std::endl;
     }
 }
-static int test_10(const char* output_path, ParaFile& pf)
+static int test_10(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     BufferChar input;
     FILE* fp;
-    CFile CF;
+    hyperlex_old::CFile CF;
     grammerS G;
     //fp = CF.OpenRead("./data/grammerT.txt");
     fp = CF.OpenRead("./data/if.txt");
@@ -921,11 +1046,11 @@ static int test_10(const char* output_path, ParaFile& pf)
     G.Demo(stdout);
     return 0;
 }
-static int test_11(const char* output_path, ParaFile& pf)
+static int test_11(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     BufferChar input;
     FILE* fp;
-    CFile CF;
+    hyperlex_old::CFile CF;
     grammerS G;
     fp = CF.OpenRead("./data/grammerT.txt");
     //fp = CF.OpenRead("./data/if.txt");
@@ -934,11 +1059,11 @@ static int test_11(const char* output_path, ParaFile& pf)
     G.Demo(stdout);
     return 0;
 }
-static int test_12(const char* output_path, ParaFile& pf)
+static int test_12(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     BufferChar input;
     FILE* fp;
-    CFile CF;
+    hyperlex_old::CFile CF;
     grammerS G;
     LR0* lr;
     fp = CF.OpenRead("./data/grammerP.txt");
@@ -952,11 +1077,11 @@ static int test_12(const char* output_path, ParaFile& pf)
     return 0;
     return 0;
 }
-static int test_13(const char* output_path, ParaFile& pf)
+static int test_13(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     BufferChar input;
     FILE* fp, *Out;
-    CFile CF;
+    hyperlex_old::CFile CF;
     grammerS G;
     LR0* lr;
     LR1* lr1;
@@ -1044,7 +1169,7 @@ struct testh2
     int a;
     int b;
 };
-static int test_14(const char* output_path, ParaFile& pf)
+static int test_14(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     size_t site;
     list<testh> aa;
@@ -1080,11 +1205,11 @@ static int test_14(const char* output_path, ParaFile& pf)
     //n == m;
     return 0;
 }
-static int test_15(const char* output_path, ParaFile& pf)
+static int test_15(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     BufferChar input;
     FILE* fp;
-    CFile CF;
+    hyperlex_old::CFile CF;
     grammerS G;
     LR0* lr;
     string file;
@@ -1122,11 +1247,11 @@ static int test_15(const char* output_path, ParaFile& pf)
     delete lr;
     return 0;
 }
-static int test_16(const char* output_path, ParaFile& pf)
+static int test_16(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     BufferChar input;
     FILE* fp;
-    CFile CF;
+    hyperlex_old::CFile CF;
     grammerS G;
     LR1* lr1;
     string file;
@@ -1166,7 +1291,7 @@ static int test_16(const char* output_path, ParaFile& pf)
 }
 
 
-static int test_17(const char* output_path, ParaFile& pf)
+static int test_17(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     /*lexicalPanel lP;
     NFA* nfa;
@@ -1218,7 +1343,7 @@ static int test_17(const char* output_path, ParaFile& pf)
     //lP.Demo(stdout);*/
     return 0;
 }
-static int test_18(const char* output_path, ParaFile& pf)
+static int test_18(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     /* RegTree RT;
     RT.EscapeChar();
@@ -1302,7 +1427,7 @@ template<class T> void sheetDemo<T>::demo(void)
         std::cout << std::endl;
     }
 }
-static int test_19(const char* output_path, ParaFile& pf)
+static int test_19(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     struct aa
     {
@@ -1387,7 +1512,7 @@ static int test_19(const char* output_path, ParaFile& pf)
 
 
 
-static int test_20(const char* output_path, ParaFile& pf)
+static int test_20(const char* output_path, hyperlex_old::ParaFile& pf)
 {
     RegularExp ee;
     InputPanel IP;
@@ -1395,7 +1520,7 @@ static int test_20(const char* output_path, ParaFile& pf)
     FILE* fp;
     BufferChar input;
     BufferChar temp;
-    CFile CF;
+    hyperlex_old::CFile CF;
     int error;
     //int 哈哈哈;
     //哈哈哈;
@@ -1446,7 +1571,952 @@ static int test_20(const char* output_path, ParaFile& pf)
 }
 
 
+class dictionary
+{
+public:
+    enum Ktype
+    {
+        null_ = 0,
+        int_ = 1,
+        float_ = 2,
+        string_ = 3,
+        bool_ = 4,
+        dictionary_ = 5,
+    };
+    union element
+    {
+        long long int ii;
+        double ff;
+        char* ss;
+        bool bb;
+        dictionary* dd;
+    };
+    struct KV
+    {
+        char* key;
+        Ktype T;
+        element * Content;
+        size_t Capacity;
+        size_t Count;
+    public:
+        KV();
+        ~KV();
+        void ruin(void);
+        void clear(void);
+        void initial(void);
+        void recapacity(size_t NewSize);
+        void append(const element& e);
+        void setType(Ktype newType);
+        void setName(const char* newKey);
 
+        size_t capacity() const;
+        size_t count() const;
+        element& operator[](size_t i);
+        const element& operator[](size_t i) const;
+    };
+
+
+
+    dictionary();
+    ~dictionary();
+    void print(FILE* fp) const;
+    int build(FILE* fp);
+    int build(const char* input);
+
+    void clear(void);
+private:
+    vector<KV> Content;
+    void print(FILE* fp, size_t indent) const;  // 递归打印核心
+    void PrintTab(FILE* fp, size_t count) const; // 缩进工具函数
+
+    // 类型专用打印函数
+    //void PrintValue(FILE* fp, const element& e, Ktype T, size_t indent) const;
+    void PrintArray(FILE* fp, const KV& kv, size_t indent) const;
+
+    void NeglectNullToken(Morpheme& eme) const;
+};
+
+dictionary::dictionary()
+{
+
+}
+dictionary::~dictionary()
+{
+    clear();
+}
+void dictionary::clear(void)
+{
+    size_t i;
+    for (i = 0; i < Content.count(); i++)
+    {
+        Content[i].ruin();
+    }
+    Content.clear();
+}
+dictionary::KV::KV()
+{
+    initial();
+}
+dictionary::KV::~KV()
+{
+    ruin();
+    free(key);
+}
+void dictionary::KV::ruin(void)
+{
+    clear();
+    free(Content);
+    Content = NULL;
+    free(key);
+}
+void dictionary::KV::clear(void)
+{
+    size_t i;
+    for (i = 0; i < Count; ++i) 
+    {
+        switch (T) 
+        {
+            case string_: free(Content[i].ss); break;
+            case dictionary_: delete Content[i].dd; break;
+            default: break;
+        }
+    }
+    Count = 0;
+}
+void dictionary::KV::initial(void)
+{
+    key = NULL;
+    T = null_;
+    Content = NULL;
+    Capacity = 0;
+    Count = 0;
+}
+void dictionary::KV::recapacity(size_t NewSize) 
+{
+    size_t i;
+    element* newContent = (element*)malloc(sizeof(element) * NewSize);
+    if (NewSize <= Count)
+    {
+        for (i = NewSize; i < Count; ++i)
+        {
+            switch (T) {
+            case string_:
+                free(Content[i].ss);
+                break;
+            case dictionary_:
+                delete Content[i].dd;
+                break;
+            }
+        }
+        Count = NewSize;
+    }
+    else
+    {
+        for (i = 0; i < Count; ++i) {
+            newContent[i] = Content[i];
+        }
+    }
+    free(Content);
+    Content = newContent;
+    Capacity = NewSize;
+}
+void dictionary::KV::append(const element& e) 
+{
+    if (Count >= Capacity) recapacity(Capacity ? (Capacity + Capacity / 4 + 4) : 1);
+    Content[Count] = e;
+    Count++;
+}
+void dictionary::KV::setType(Ktype newType)
+{
+    if (T != newType) {  
+        clear();
+        T = newType;
+    }
+}
+void dictionary::KV::setName(const char* newKey)
+{
+    size_t i;
+    free( key); 
+    key = NULL;
+    if (!newKey) return;
+
+    size_t len = 0;
+    while (newKey[len] != '\0') ++len;
+
+    key = (char*)(malloc((len + 1) * sizeof(char)));
+    for (i = 0; i <= len; ++i) 
+    { 
+        key[i] = newKey[i];
+    }
+}
+
+size_t dictionary::KV::capacity() const { return Capacity; }
+size_t dictionary::KV::count() const { return Count; }
+dictionary::element& dictionary::KV::operator[](size_t i) { return Content[i]; }
+const dictionary::element& dictionary::KV::operator[](size_t i) const { return Content[i]; }
+
+
+void dictionary::print(FILE* fp) const 
+{
+    print(fp, 0);
+    fprintf(fp, "\n");
+}
+void dictionary::PrintTab(FILE* fp, size_t count) const
+{
+    for (size_t i = 0; i < count; ++i) {
+        fprintf(fp, "    ");
+    }
+}
+void dictionary::print(FILE* fp, size_t indent) const 
+{
+    PrintTab(fp, indent);
+    fprintf(fp, "{\n");
+
+    for (size_t i = 0; i < Content.count(); ++i) 
+    {
+        const KV& kv = Content[i];
+        PrintTab(fp, indent + 1);
+        fprintf(fp, "\"%s\": ", kv.key ? kv.key : "(null)");
+
+        // 根据类型打印内容
+        if (kv.T == dictionary_ && kv.Count > 0) {
+            PrintArray(fp, kv, indent + 1); // 处理字典数组的特殊缩进
+        }
+        else {
+            PrintArray(fp, kv, 0);          // 基础类型紧凑打印
+        }
+
+        if (i != Content.count() - 1) fprintf(fp, ",");
+        fprintf(fp, "\n");
+    }
+
+    PrintTab(fp, indent);
+    fprintf(fp, "}");
+}
+void dictionary::PrintArray(FILE* fp, const KV& kv, size_t indent) const 
+{
+    const bool isComplexType = (kv.T == dictionary_ || kv.T == string_);
+
+    if (kv.Count == 0) {
+        fprintf(fp, "[]");
+        return;
+    }
+
+    fprintf(fp, "[%s", isComplexType ? "\n" : "");
+
+    for (size_t j = 0; j < kv.Count; ++j) {
+        if (isComplexType) PrintTab(fp, indent);
+
+        // 打印单个元素
+        switch (kv.T) {
+        case int_:
+            fprintf(fp, "%lld", kv.Content[j].ii);
+            break;
+        case float_:
+            fprintf(fp, "%g", kv.Content[j].ff);
+            break;
+        case string_:
+            fprintf(fp, "\"%s\"", kv.Content[j].ss ? kv.Content[j].ss : "");
+            break;
+        case bool_:
+            fprintf(fp, "%s", kv.Content[j].bb ? "true" : "false");
+            break;
+        case dictionary_:
+            if (kv.Content[j].dd) {
+                kv.Content[j].dd->print(fp, indent);
+            }
+            else {
+                fprintf(fp, "{}");
+            }
+            break;
+        default:
+            fprintf(fp, "null");
+        }
+
+        // 元素分隔符
+        if (j != kv.Count - 1) {
+            fprintf(fp, ",%s", isComplexType ? "\n" : " ");
+        }
+    }
+
+    if (isComplexType) {
+        fprintf(fp, "\n");
+        PrintTab(fp, indent - 1);
+    }
+    fprintf(fp, "]");
+}
+
+struct DictReg
+{
+    enum regular
+    {
+        _id_ = 1,
+        _integer_ = 2,
+        _real_ = 3,
+        _string_ = 4,
+        _false_ = 5,
+        _true_ = 6,
+        _null_ = 7,
+        _NULL_ = 8,
+        _semicolon_ = 9,
+        _colon_ = 10,
+        _dot_ = 11,
+        _comma_ = 12,
+        _value_ = 13,
+        _braceL_ = 14,
+        _braceR_ = 15,
+        _left_ = 16,
+        _right_ = 17,
+        _squareL_ = 18,
+        _squareR_ = 19,
+        _anntationS_ = 20,
+        _anntationM_ = 21,
+        _spaces_ = 22,
+        _enters_ = 23,
+        _tab_ = 24
+    };
+    enum group
+    {
+        _id___ = 1,
+        _number___ = 2,
+        _string___ = 3,
+        _reserved___ = 4,
+        _division___ = 5,
+        _value___ = 6,
+        _braket___ = 7,
+        _anntation___ = 8,
+        _format___ = 9
+    };
+    static int next(int state, const char c);
+    static int action(int state);
+    static int GroupGet(int state);
+};
+struct DictPraser
+{
+    enum type
+    {
+        accept = 0,
+        error = 1,
+        push = 2,
+        reduce = 3
+    };
+    enum nonterminal
+    {
+        _all_ = 0,
+        _DICTIONARY_ = 1,
+        _KVS_ = 2,
+        _KV_ = 3,
+        _VALUE_ = 4,
+        _UNITS_ = 5,
+        _UNIT_ = 6
+    };
+    enum rules
+    {
+        _all_all_ = 0,
+        _DICTIONARY_DICTIONARY_ = 1,
+        _KVS_multi_ = 2,
+        _KVS_single_ = 3,
+        _KV_colon_ = 4,
+        _KV_value_ = 5,
+        _VALUE_multi_ = 6,
+        _VALUE_single_ = 7,
+        _VALUE_nul_ = 8,
+        _UNITS_multi_ = 9,
+        _UNITS_single_ = 10,
+        _UNIT_NULL_ = 11,
+        _UNIT_null_ = 12,
+        _UNIT_true_ = 13,
+        _UNIT_false_ = 14,
+        _UNIT_dictionary_ = 15
+    };
+    static const size_t StateCount;
+    static const size_t NonTerminalCount;
+    static const size_t TerminalCount;
+    static const size_t RulesCount;
+    static const int GOTO[27][7];
+    static const int ACTION[27][25];
+    static const int RulesToSymbol[16];
+    static const int RulesLength[16];
+    static const char* const RulesName[16];
+};
+
+
+
+int dictionary::build(FILE* fp)
+{
+    Morpheme eme;
+    int error;
+    clear();
+    error = eme.Build<DictReg>(fp);
+    if (error != 0)
+    {
+        //errorCode = ErrorinputLEXICAL;
+        return error;
+    }
+    //NeglectNullToken(eme);
+    //eme.Demo(stdout);
+    //error = buildGanalysis(eme);
+    if (error != 0) return error;
+    //errorCode = NoError;
+    return 0;
+}
+int dictionary::build(const char* input)
+{
+    Morpheme eme;
+    int error;
+    clear();
+    //initial();
+    error = eme.Build<DictReg>(input);
+    if (error != 0)
+    {
+        //errorCode = ErrorinputLEXICAL;
+        return error;
+    }
+    //NeglectNullToken(eme);
+    //eme.Demo(stdout);
+    //error = buildGanalysis(eme);
+    if (error != 0) return error;
+    //errorCode = NoError;
+    return 0;
+}
+void dictionary::NeglectNullToken(Morpheme& eme) const
+{
+    size_t i;
+    DictReg::regular T;
+    DictReg::group G;
+    for (i = 0; i < eme.GetCount(); i++)
+    {
+        T = (DictReg::regular)(eme[i].accept);
+        G = (DictReg::group)(eme[i].category);
+        if (G == DictReg::_format___ || G == DictReg::_anntation___)
+        {
+            eme.valid(i) = false;
+        }
+    }
+    return;
+}
+
+
+int DictReg::next(int state, const char c)
+{
+    switch (state)
+    {
+    case 0:
+        if (c == (char)9) return 24;
+        else if (c == (char)10) return 23;
+        else if (c == ' ') return 22;
+        else if (c == '\"') return 25;
+        else if (c == '(') return 16;
+        else if (c == ')') return 17;
+        else if (c == '+') return 39;
+        else if (c == ',') return 12;
+        else if (c == '-') return 39;
+        else if (c == '.') return 11;
+        else if (c == '/') return 45;
+        else if ('0' <= c && c <= '9') return 2;
+        else if (c == ':') return 10;
+        else if (c == ';') return 9;
+        else if (c == '=') return 13;
+        else if ('A' <= c && c <= 'M') return 1;
+        else if (c == 'N') return 28;
+        else if ('O' <= c && c <= 'Z') return 1;
+        else if (c == '[') return 18;
+        else if (c == ']') return 19;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'e') return 1;
+        else if (c == 'f') return 34;
+        else if ('g' <= c && c <= 'm') return 1;
+        else if (c == 'n') return 35;
+        else if ('o' <= c && c <= 's') return 1;
+        else if (c == 't') return 36;
+        else if ('u' <= c && c <= 'z') return 1;
+        else if (c == '{') return 14;
+        else if (c == '}') return 15;
+        else return 0;
+    case 1:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 2:
+        if (c == '.') return 47;
+        else if ('0' <= c && c <= '9') return 2;
+        else return 0;
+    case 3:
+        if ('0' <= c && c <= '9') return 3;
+        else if (c == 'E') return 46;
+        else if (c == 'e') return 46;
+        else return 0;
+    case 4:
+        return 0;
+    case 5:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 6:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 7:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 8:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 9:
+        return 0;
+    case 10:
+        return 0;
+    case 11:
+        return 0;
+    case 12:
+        return 0;
+    case 13:
+        return 0;
+    case 14:
+        return 0;
+    case 15:
+        return 0;
+    case 16:
+        return 0;
+    case 17:
+        return 0;
+    case 18:
+        return 0;
+    case 19:
+        return 0;
+    case 20:
+        return 0;
+    case 21:
+        if ((char)0 <= c && c <= ')') return 38;
+        else if (c == '*') return 44;
+        else if ('+' <= c && c <= (char)127) return 38;
+        else return 0;
+    case 22:
+        if (c == ' ') return 22;
+        else return 0;
+    case 23:
+        if (c == (char)10) return 23;
+        else return 0;
+    case 24:
+        return 0;
+    case 25:
+        if (' ' <= c && c <= '!') return 40;
+        else if ('#' <= c && c <= '~') return 40;
+        else return 0;
+    case 26:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'K') return 1;
+        else if (c == 'L') return 8;
+        else if ('M' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 27:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'K') return 1;
+        else if (c == 'L') return 26;
+        else if ('M' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 28:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'T') return 1;
+        else if (c == 'U') return 27;
+        else if ('V' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 29:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'd') return 1;
+        else if (c == 'e') return 6;
+        else if ('f' <= c && c <= 'z') return 1;
+        else return 0;
+    case 30:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'k') return 1;
+        else if (c == 'l') return 7;
+        else if ('m' <= c && c <= 'z') return 1;
+        else return 0;
+    case 31:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'k') return 1;
+        else if (c == 'l') return 30;
+        else if ('m' <= c && c <= 'z') return 1;
+        else return 0;
+    case 32:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'r') return 1;
+        else if (c == 's') return 41;
+        else if ('t' <= c && c <= 'z') return 1;
+        else return 0;
+    case 33:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'k') return 1;
+        else if (c == 'l') return 32;
+        else if ('m' <= c && c <= 'z') return 1;
+        else return 0;
+    case 34:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if (c == 'a') return 33;
+        else if ('b' <= c && c <= 'z') return 1;
+        else return 0;
+    case 35:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 't') return 1;
+        else if (c == 'u') return 31;
+        else if ('v' <= c && c <= 'z') return 1;
+        else return 0;
+    case 36:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'q') return 1;
+        else if (c == 'r') return 42;
+        else if ('s' <= c && c <= 'z') return 1;
+        else return 0;
+    case 37:
+        if ('0' <= c && c <= '9') return 37;
+        else return 0;
+    case 38:
+        if ((char)0 <= c && c <= ')') return 38;
+        else if (c == '*') return 44;
+        else if ('+' <= c && c <= (char)127) return 38;
+        else return 0;
+    case 39:
+        if ('0' <= c && c <= '9') return 2;
+        else return 0;
+    case 40:
+        if (' ' <= c && c <= '!') return 40;
+        else if (c == '\"') return 4;
+        else if ('#' <= c && c <= '~') return 40;
+        else return 0;
+    case 41:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'd') return 1;
+        else if (c == 'e') return 5;
+        else if ('f' <= c && c <= 'z') return 1;
+        else return 0;
+    case 42:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 't') return 1;
+        else if (c == 'u') return 29;
+        else if ('v' <= c && c <= 'z') return 1;
+        else return 0;
+    case 43:
+        if ((char)0 <= c && c <= (char)9) return 43;
+        else if (c == (char)10) return 20;
+        else if ((char)11 <= c && c <= (char)127) return 43;
+        else return 0;
+    case 44:
+        if ((char)0 <= c && c <= ')') return 38;
+        else if (c == '*') return 44;
+        else if ('+' <= c && c <= '.') return 38;
+        else if (c == '/') return 21;
+        else if ('0' <= c && c <= (char)127) return 38;
+        else return 0;
+    case 45:
+        if (c == '*') return 38;
+        else if (c == '/') return 43;
+        else return 0;
+    case 46:
+        if (c == '+') return 48;
+        else if (c == '-') return 48;
+        else if ('0' <= c && c <= '9') return 37;
+        else return 0;
+    case 47:
+        if ('0' <= c && c <= '9') return 3;
+        else return 0;
+    case 48:
+        if ('0' <= c && c <= '9') return 37;
+        else return 0;
+    }
+    return 0;
+}
+int DictReg::action(int state)
+{
+    switch (state)
+    {
+    case 1:
+        return 1;//id: id
+    case 2:
+        return 2;//number: integer
+    case 3:
+        return 3;//number: real
+    case 4:
+        return 4;//string: string
+    case 5:
+        return 5;//reserved: false
+    case 6:
+        return 6;//reserved: true
+    case 7:
+        return 7;//reserved: null
+    case 8:
+        return 8;//reserved: NULL
+    case 9:
+        return 9;//division: semicolon
+    case 10:
+        return 10;//division: colon
+    case 11:
+        return 11;//division: dot
+    case 12:
+        return 12;//division: comma
+    case 13:
+        return 13;//value: value
+    case 14:
+        return 14;//braket: braceL
+    case 15:
+        return 15;//braket: braceR
+    case 16:
+        return 16;//braket: left
+    case 17:
+        return 17;//braket: right
+    case 18:
+        return 18;//braket: squareL
+    case 19:
+        return 19;//braket: squareR
+    case 20:
+        return 20;//anntation: anntationS
+    case 21:
+        return 21;//anntation: anntationM
+    case 22:
+        return 22;//format: spaces
+    case 23:
+        return 23;//format: enters
+    case 24:
+        return 24;//format: tab
+    case 26:
+        return 1;//id: id
+    case 27:
+        return 1;//id: id
+    case 28:
+        return 1;//id: id
+    case 29:
+        return 1;//id: id
+    case 30:
+        return 1;//id: id
+    case 31:
+        return 1;//id: id
+    case 32:
+        return 1;//id: id
+    case 33:
+        return 1;//id: id
+    case 34:
+        return 1;//id: id
+    case 35:
+        return 1;//id: id
+    case 36:
+        return 1;//id: id
+    case 37:
+        return 3;//number: real
+    case 41:
+        return 1;//id: id
+    case 42:
+        return 1;//id: id
+    }
+    return 0;
+}
+int DictReg::GroupGet(int accept)
+{
+    switch (accept)
+    {
+    case 1:
+        return 1;//id: id
+    case 2:
+        return 2;//number: integer
+    case 3:
+        return 2;//number: real
+    case 4:
+        return 3;//string: string
+    case 5:
+        return 4;//reserved: false
+    case 6:
+        return 4;//reserved: true
+    case 7:
+        return 4;//reserved: null
+    case 8:
+        return 4;//reserved: NULL
+    case 9:
+        return 5;//division: semicolon
+    case 10:
+        return 5;//division: colon
+    case 11:
+        return 5;//division: dot
+    case 12:
+        return 5;//division: comma
+    case 13:
+        return 6;//value: value
+    case 14:
+        return 7;//braket: braceL
+    case 15:
+        return 7;//braket: braceR
+    case 16:
+        return 7;//braket: left
+    case 17:
+        return 7;//braket: right
+    case 18:
+        return 7;//braket: squareL
+    case 19:
+        return 7;//braket: squareR
+    case 20:
+        return 8;//anntation: anntationS
+    case 21:
+        return 8;//anntation: anntationM
+    case 22:
+        return 9;//format: spaces
+    case 23:
+        return 9;//format: enters
+    case 24:
+        return 9;//format: tab
+    }
+    return 0;
+}
+const size_t DictPraser::StateCount = 27;
+const size_t DictPraser::NonTerminalCount = 7;
+const size_t DictPraser::TerminalCount = 24;
+const size_t DictPraser::RulesCount = 16;
+const int DictPraser::GOTO[27][7] = { \
+{1, 6, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 14, 18, 1, 1, 1}, \
+{1, 1, 1, 102, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 34, 1, 1, 94, 1, 42}, \
+{1, 34, 1, 1, 38, 1, 42}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 34, 1, 1, 1, 66, 70}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 34, 1, 1, 1, 1, 86}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1} };
+//==============================
+const int DictPraser::ACTION[27][25] = { \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 106, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 26, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 46, 50, 54, 58, 1, 1, 1, 1, 1, 10, 1, 1, 1, 62, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 46, 50, 54, 58, 1, 1, 1, 1, 1, 10, 1, 1, 1, 62, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 63, 1, 1, 63, 1, 1, 1, 1, 1, 1, 63, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 90, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 59, 1, 1, 59, 1, 1, 1, 1, 1, 1, 59, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 55, 1, 1, 55, 1, 1, 1, 1, 1, 1, 55, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 1, 1, 51, 1, 1, 1, 1, 1, 1, 51, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 47, 1, 1, 47, 1, 1, 1, 1, 1, 1, 47, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 46, 50, 54, 58, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 74, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 78, 1, 1, 1, 1, 1, 1, 82, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 46, 50, 54, 58, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1}, \
+{1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 98, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{7, 1, 1, 1, 1, 1, 1, 1, 1, 7, 1, 1, 7, 1, 1, 1, 1, 1, 1, 7, 1, 1, 1, 1, 1} };
+//==============================
+const int DictPraser::RulesToSymbol[16] = { \
+0,\
+1,\
+2,\
+2,\
+3,\
+3,\
+4,\
+4,\
+4,\
+5,\
+5,\
+6,\
+6,\
+6,\
+6,\
+6 };
+//==============================
+const int DictPraser::RulesLength[16] = { \
+1,\
+3,\
+2,\
+1,\
+4,\
+4,\
+3,\
+1,\
+2,\
+3,\
+1,\
+1,\
+1,\
+1,\
+1,\
+1 };
+//==============================
+const char* const DictPraser::RulesName[16] = { \
+"all->DICTIONARY ",\
+"DICTIONARY->braceL KVS braceR ",\
+"KVS->KVS KV ",\
+"KVS->KV ",\
+"KV->id colon VALUE semicolon ",\
+"KV->id value VALUE semicolon ",\
+"VALUE->squareL UNITS squareR ",\
+"VALUE->UNIT ",\
+"VALUE->squareL squareR ",\
+"UNITS->UNITS comma UNIT ",\
+"UNITS->UNIT ",\
+"UNIT->NULL ",\
+"UNIT->null ",\
+"UNIT->true ",\
+"UNIT->false ",\
+"UNIT->DICTIONARY " };
 
 
 using namespace hyperlex;
@@ -1456,18 +2526,18 @@ static char* CopyMalloc(const char* s);
 static bool isIdBegin(char c);
 static bool isIdNumber(char c);
 
-void unit::initial(void)
+void hyperlex_old::unit::initial(void)
 {
     origin = NULL;
     C.S = NULL;
 }
-void unit::ruin(void)
+void hyperlex_old::unit::ruin(void)
 {
     if (type == 3)
         free(C.S);
     free(origin);
 }
-void unit::print(FILE* fp)
+void hyperlex_old::unit::print(FILE* fp)
 {
     fprintf(fp, "<%3d|%d>: ", lexical, type);
     if (type == 0)
@@ -1479,17 +2549,17 @@ void unit::print(FILE* fp)
     else
         fprintf(fp, "<%s>", C.S);
 }
-void unit::operator=(double e)
+void hyperlex_old::unit::operator=(double e)
 {
     C.real = e;
     type = 1;
 }
-void unit::operator=(long long int e)
+void hyperlex_old::unit::operator=(long long int e)
 {
     C.integer = e;
     type = 0;
 }
-void unit::operator=(std::string e)
+void hyperlex_old::unit::operator=(std::string e)
 {
     size_t i;
     C.S = (char*)malloc((e.length() + 1) * sizeof(char));
@@ -1497,7 +2567,7 @@ void unit::operator=(std::string e)
     C.S[i] = e[i];
     type = 3;
 }
-UnitBuffer::UnitBuffer()
+hyperlex_old::UnitBuffer::UnitBuffer()
 {
     size_t i;
     size = 128;
@@ -1507,7 +2577,7 @@ UnitBuffer::UnitBuffer()
         content[i].initial();
     site = 0;
 }
-UnitBuffer::~UnitBuffer()
+hyperlex_old::UnitBuffer::~UnitBuffer()
 {
     size_t i;
     for (i = 0; i < site; i++)
@@ -1516,11 +2586,11 @@ UnitBuffer::~UnitBuffer()
     size = 0;
     site = 0;
 }
-size_t UnitBuffer::Site(void)
+size_t hyperlex_old::UnitBuffer::Site(void)
 {
     return site;
 }
-size_t UnitBuffer::add(void)
+size_t hyperlex_old::UnitBuffer::add(void)
 {
     size_t should, i, new_size;
     if (site >= size)
@@ -1534,11 +2604,11 @@ size_t UnitBuffer::add(void)
     site += 1;
     return should;
 }
-void UnitBuffer::add(long long int c)
+void hyperlex_old::UnitBuffer::add(long long int c)
 {
     content[add()] = c;
 }
-void UnitBuffer::print(FILE* fp)
+void hyperlex_old::UnitBuffer::print(FILE* fp)
 {
     size_t i;
     for (i = 0; i < site; i++)
@@ -1556,7 +2626,7 @@ void UnitBuffer::print(FILE* fp)
     }
     return;
 }
-void UnitBuffer::print(FILE* fp, size_t count)
+void hyperlex_old::UnitBuffer::print(FILE* fp, size_t count)
 {
     size_t i;
     for (i = 0; i < site && i < count; i++)
@@ -1566,7 +2636,7 @@ void UnitBuffer::print(FILE* fp, size_t count)
     }
     return;
 }
-unit& UnitBuffer::operator[](size_t target)
+hyperlex_old::unit& hyperlex_old::UnitBuffer::operator[](size_t target)
 {
     return content[target];
 }
@@ -1575,30 +2645,30 @@ unit& UnitBuffer::operator[](size_t target)
 
 
 
-CharBuffer::CharBuffer()
+hyperlex_old::CharBuffer::CharBuffer()
 {
     size = 128;
     head = 0;
     content = (char*)malloc(sizeof(char) * size);
     site = 0;
 }
-CharBuffer::~CharBuffer()
+hyperlex_old::CharBuffer::~CharBuffer()
 {
-    //printf("~CharBuffer()\n");
+    //printf("~hyperlex_old::CharBuffer()\n");
     free((void*)content);
     size = 0;
     site = 0;
     head = 0;
 }
-size_t CharBuffer::Site(void)
+size_t hyperlex_old::CharBuffer::Site(void)
 {
     return site;
 }
-size_t CharBuffer::Length(void)
+size_t hyperlex_old::CharBuffer::Length(void)
 {
     return (size_t)(site - head);
 }
-void CharBuffer::Append(char c)
+void hyperlex_old::CharBuffer::Append(char c)
 {
     if (site >= size)
     {
@@ -1608,7 +2678,7 @@ void CharBuffer::Append(char c)
     *(content + site) = c;
     site += 1;
 }
-void CharBuffer::Append(const char* c)
+void hyperlex_old::CharBuffer::Append(const char* c)
 {
     size_t strsize, i;
     for (strsize = 0; c[strsize] != '\0'; strsize++);
@@ -1621,7 +2691,7 @@ void CharBuffer::Append(const char* c)
     site += strsize;
     return;
 }
-void CharBuffer::Append(CharBuffer& in)
+void hyperlex_old::CharBuffer::Append(hyperlex_old::CharBuffer& in)
 {
     size_t L, i;
     L = in.Length();
@@ -1634,7 +2704,7 @@ void CharBuffer::Append(CharBuffer& in)
     site += L;
     return;
 }
-void CharBuffer::Print(FILE* fp)
+void hyperlex_old::CharBuffer::Print(FILE* fp)
 {
     size_t i;
     for (i = head; i < site; i++)
@@ -1644,7 +2714,7 @@ void CharBuffer::Print(FILE* fp)
     fprintf(fp, "\n");
     return;
 }
-void CharBuffer::Print(FILE* fp, int count)
+void hyperlex_old::CharBuffer::Print(FILE* fp, int count)
 {
     size_t i;
     for (i = 0; i < site && i < count; i++)
@@ -1654,7 +2724,7 @@ void CharBuffer::Print(FILE* fp, int count)
     fprintf(fp, "\n");
     return;
 }
-void CharBuffer::Copy(char* to)
+void hyperlex_old::CharBuffer::Copy(char* to)
 {
     size_t i;
     for (i = head; i < site; i++)
@@ -1662,7 +2732,7 @@ void CharBuffer::Copy(char* to)
     to[i - head] = '\0';
     return;
 }
-char* CharBuffer::CopyMalloc(void)
+char* hyperlex_old::CharBuffer::CopyMalloc(void)
 {
     size_t i, L;
     char* to;
@@ -1673,13 +2743,13 @@ char* CharBuffer::CopyMalloc(void)
     to[L] = '\0';
     return to;
 }
-char CharBuffer::Pop(void)
+char hyperlex_old::CharBuffer::Pop(void)
 {
     if (site == head) return EOF;
     site -= 1;
     return content[site];
 }
-bool CharBuffer::Pop(char& out)
+bool hyperlex_old::CharBuffer::Pop(char& out)
 {
     if (site == head) return false;
     site -= 1;
@@ -1687,74 +2757,74 @@ bool CharBuffer::Pop(char& out)
     return true;
 }
 
-void CharBuffer::Clear(void)
+void hyperlex_old::CharBuffer::Clear(void)
 {
     site = 0;
     head = 0;
 }
-void CharBuffer::operator<<(char c)
+void hyperlex_old::CharBuffer::operator<<(char c)
 {
     Append(c);
     return;
 }
-void CharBuffer::operator<<(const char* c)
+void hyperlex_old::CharBuffer::operator<<(const char* c)
 {
     Append(c);
 }
-void CharBuffer::operator<<(double e)
+void hyperlex_old::CharBuffer::operator<<(double e)
 {
     char temp[32];
     sprintf(temp, "%+24.16e", e);
     Append(temp);
     return;
 }
-void CharBuffer::operator<<(int e)
+void hyperlex_old::CharBuffer::operator<<(int e)
 {
     char temp[32];
     sprintf(temp, "%d", e);
     Append(temp);
     return;
 }
-void CharBuffer::operator<<(long long int e)
+void hyperlex_old::CharBuffer::operator<<(long long int e)
 {
     char temp[32];
     sprintf(temp, "%lld", e);
     Append(temp);
     return;
 }
-void CharBuffer::operator<<(CharBuffer& in)
+void hyperlex_old::CharBuffer::operator<<(hyperlex_old::CharBuffer& in)
 {
     size_t L, i;
     Append(in);
     in.Clear();
     return;
 }
-void CharBuffer::operator<<(FILE* fp)
+void hyperlex_old::CharBuffer::operator<<(FILE* fp)
 {
     while (feof(fp) == 0)
         Append((char)getc(fp));
     //if (site == 0) Append(EOF);
     //else if (content[site - 1] != ((char)(EOF))) Append(EOF);
 }
-bool CharBuffer::operator==(size_t length)
+bool hyperlex_old::CharBuffer::operator==(size_t length)
 {
     if ((site - head) <= 0) return length == 0;
     else return (site - head) == length;
 }
-bool CharBuffer::operator!=(size_t length)
+bool hyperlex_old::CharBuffer::operator!=(size_t length)
 {
     if ((site - head) <= 0) return length != 0;
     else return (site - head) != length;
 }
 
 
-char CharBuffer::Dequeue(void)
+char hyperlex_old::CharBuffer::Dequeue(void)
 {
     if (head >= site) return EOF;
     head += 1;
     return content[head - 1];
 }
-char CharBuffer::Dequeue(CharBuffer& backspace)
+char hyperlex_old::CharBuffer::Dequeue(hyperlex_old::CharBuffer& backspace)
 {
     if (backspace.head >= backspace.site)
     {
@@ -1765,151 +2835,26 @@ char CharBuffer::Dequeue(CharBuffer& backspace)
     backspace.head += 1;
     return *(backspace.content + backspace.head - 1);
 }
-char CharBuffer::QueueHead(void)
+char hyperlex_old::CharBuffer::QueueHead(void)
 {
     if (head >= site) return EOF;
     return content[head];
 }
 
 
-IntegerDefault hyperlex::IntGet(const char* list, size_t end, size_t& head)
-{
-    char c, state;
-    IntegerDefault number;
-    IntegerDefault Sign = 1;
-    number = 0;
-    state = 0;
-    do
-    {
-        c = dequeue(list, end, head);
-        switch (state)
-        {
-        case 0:
-            if (c >= '0' && c <= '9') number = c - '0';
-            else if (c == '-') Sign = -1;
-            state = 1;
-            break;
-        case 1:
-            if (c >= '0' && c <= '9') number = number * 10 + c - '0';
-            else state = 2;
-            break;
-        }
-    } while (state != 2);
-    return number * Sign;
-}
-double hyperlex::RealGet(int& state, const char* list, size_t end, size_t& head)
-{
-    char c;
-    double number, digit;
-    int num_sign = 1;
-    int index;
-    int index_sign;
-    number = 0.0;
-    digit = 1.0;
-    num_sign = 1.0;
-    index_sign = 1;
-    index = 0;
-    state = 0;
-    do
-    {
-        c = dequeue(list, end, head);
-        switch (state)
-        {
-        case 0:
-            if (c == '-') { num_sign = 0; state = 1; }
-            else if (c == '+') { num_sign = 1; state = 1; }
-            else if (c == '.') state = 2;
-            else if (c >= '0' && c <= '9') { number = (double)(c - '0'); state = 3; }
-            else state = -1;
-            break;
-        case 1:
-            if (c >= '0' && c <= '9') { number = (double)(c - '0'); state = 3; }
-            else if (c == '.') state = 2;
-            else state = -1;
-            break;
-        case 2:
-            if (c >= '0' && c <= '9')
-            {
-                digit *= 0.1;
-                number = number + digit * (double)(c - '0');
-                state = 4;
-            }
-            else if (c == 'e' || c == 'E') state = 5;
-            else state = -1;
-            break;
-        case 3:
-            if (c >= '0' && c <= '9') { number = number * 10.0 + (double)(c - '0'); state = 3; }
-            else if (c == '.') state = 2;
-            else state = -1;
-            break;
-        case 4:
-            if (c >= '0' && c <= '9')
-            {
-                digit *= 0.1;
-                number = number + digit * (double)(c - '0');
-                state = 4;
-            }
-            else if (c == 'e' || c == 'E') state = 5;
-            else state = -1;
-            break;
-        case 5:
-            if (c == '-') { index_sign = -1; state = 6; }
-            else if (c == '+') { index_sign = 1; state = 6; }
-            else if (c >= '0' && c <= '9') { index = (int)(c - '0'); state = 7; }
-            else state = -1;
-            break;
-        case 6:
-            if (c >= '0' && c <= '9') { index = (int)(c - '0'); state = 7; }
-            else state = -1;
-            break;
-        case 7:
-            if (c >= '0' && c <= '9') { index = index * 10 + (int)(c - '0'); state = 7; }
-            else state = -1;
-            break;
-        }
-    } while (state != -1);
-    number = num_sign ? number : -number;
-    digit = (index_sign == 1 ? 10.0 : 0.1);
-    while (index != 0)
-    {
-        index--;
-        number *= digit;
-    }
-    return number;
-}
-char hyperlex::CharGet(const char* list, size_t end, size_t& head)
-{
-    char c, result;
-    int error;
-    result = EOF;
-    c = dequeue(list, end, head);
-    error = 10;
-    if (c == '\'') result = CharGet(error, list, end, head);
-    else return EOF;
-    c = dequeue(list, end, head);
-    if (c == '\'') return result;
-    else return EOF;
-}
 
-
-
-
-IntegerDefault CharBuffer::DequeueInt(void)
-{
-    return IntGet(content, site, head);
-}
-double CharBuffer::DequeueReal(void)
+double hyperlex_old::CharBuffer::DequeueReal(void)
 {
     int state;
     return RealGet(state, content, site, head);
 }
-char CharBuffer::DequeueChar(void)
+char hyperlex_old::CharBuffer::DequeueChar(void)
 {
     return CharGet(content, site, head);
 }
-char* CharBuffer::DequeueString(void)
+char* hyperlex_old::CharBuffer::DequeueString(void)
 {
-    CharBuffer middle;
+    hyperlex_old::CharBuffer middle;
     char* temp, c, index;
     int state, error;
     state = 0;
@@ -1928,7 +2873,7 @@ char* CharBuffer::DequeueString(void)
             else if (index == (char)EOF) state = -3;
             else
             {
-                c = CharGet(error, content, site, head);
+                c = hyperlex::CharGet(error, content, site, head);
                 if (c != (char)EOF) middle << c;
             }
             break;
@@ -1937,9 +2882,9 @@ char* CharBuffer::DequeueString(void)
     temp = middle.CopyMalloc();
     return temp;
 }
-char* CharBuffer::DequeueId(void)
+char* hyperlex_old::CharBuffer::DequeueId(void)
 {
-    CharBuffer middle;
+    hyperlex_old::CharBuffer middle;
     char* temp, c;
     int state, error;
     state = 0;
@@ -1971,12 +2916,12 @@ char* CharBuffer::DequeueId(void)
     return temp;
 }
 
-void UnitBuffer::build(CharBuffer& in)
+void hyperlex_old::UnitBuffer::build(hyperlex_old::CharBuffer& in)
 {
     DFA00 dfa;
-    CharBuffer backspace;
-    CharBuffer result;
-    CharBuffer intermediate;
+    hyperlex_old::CharBuffer backspace;
+    hyperlex_old::CharBuffer result;
+    hyperlex_old::CharBuffer intermediate;
     char c;
     int state = 0;
     enum DFA00::action Ac;
@@ -2018,7 +2963,7 @@ void UnitBuffer::build(CharBuffer& in)
         }
     }
 }
-void UnitBuffer::Append(CharBuffer& result, int state)
+void hyperlex_old::UnitBuffer::Append(hyperlex_old::CharBuffer& result, int state)
 {
     //int state;
     size_t target;
@@ -2055,7 +3000,7 @@ void UnitBuffer::Append(CharBuffer& result, int state)
         content[target].C.S = result.CopyMalloc();
     }
 }
-void UnitBuffer::clear(void)
+void hyperlex_old::UnitBuffer::clear(void)
 {
     size_t i;
     for (i = 0; i < size; i++)
@@ -2066,13 +3011,13 @@ void UnitBuffer::clear(void)
     site = 0;
 }
 
-DFA00::DFA00()
+hyperlex_old::DFA00::DFA00()
 {
     state = 0;
     former_state = 0;
     last_success = -1;
 }
-DFA00::~DFA00()
+hyperlex_old::DFA00::~DFA00()
 {
     state = 0;
     former_state = 0;
@@ -2122,7 +3067,7 @@ DFA00::~DFA00()
     //type = 92: register     , type = 93: extern
     //type = 94: static       , type = 95: sizeof
 
-void DFA00::DFA_swicth(char c)
+void hyperlex_old::DFA00::DFA_swicth(char c)
 {
     int temp;
     former_state = state;
@@ -3521,7 +4466,7 @@ void DFA00::DFA_swicth(char c)
     temp = this->success_get(state);
     if (temp != -1) last_success = temp;
 }
-int DFA00::success_get(int State)
+int hyperlex_old::DFA00::success_get(int State)
 {
     int succeed;
     switch (State)
@@ -4180,15 +5125,15 @@ int DFA00::success_get(int State)
     }
     return succeed;
 }
-int DFA00::DFA_state(void)
+int hyperlex_old::DFA00::DFA_state(void)
 {
     return state;
 }
-int DFA00::DFA_former_state(void)
+int hyperlex_old::DFA00::DFA_former_state(void)
 {
     return former_state;
 }
-enum DFA00::action DFA00::should(void)
+enum hyperlex_old::DFA00::action hyperlex_old::DFA00::should(void)
 {
     if (state < 0) return halt;
     if (this->success_get(state) != -1) return add;
@@ -4208,15 +5153,15 @@ enum DFA00::action DFA00::should(void)
         else return record;
     }
 }
-int DFA00::result(void)
+int hyperlex_old::DFA00::result(void)
 {
     return last_success;
 }
-int  DFA00::if_error(int type)
+int  hyperlex_old::DFA00::if_error(int type)
 {
     return (type == 12) || (type == 56) || (type == 58);
 }
-void DFA00::lexical_analyse(CharBuffer& in)
+void hyperlex_old::DFA00::lexical_analyse(hyperlex_old::CharBuffer& in)
 {
     CharBuffer backspace;
     CharBuffer result;
@@ -4269,11 +5214,11 @@ void DFA00::lexical_analyse(CharBuffer& in)
 }
 
 
-Bitwise::Bitwise()
+hyperlex_old::Bitwise::Bitwise()
 {
     fp = NULL;
 }
-Bitwise::~Bitwise()
+hyperlex_old::Bitwise::~Bitwise()
 {
     if (fp != NULL)
     {
@@ -4282,13 +5227,13 @@ Bitwise::~Bitwise()
     }
 }
 
-CFile::CFile()
+hyperlex_old::CFile::CFile()
 {
 }
-CFile::~CFile()
+hyperlex_old::CFile::~CFile()
 {
 }
-void hyperlex::ExitWarning(int error, FILE* fp)
+void hyperlex_old::ExitWarning(int error, FILE* fp)
 {
     if (error == 0) return;
     fprintf(fp, "\n\n\n");
@@ -4303,18 +5248,18 @@ void hyperlex::ExitWarning(int error, FILE* fp)
     exit(error);
     return;
 }
-void hyperlex::Ruin(char** list, size_t length)
+void hyperlex_old::Ruin(char** list, size_t length)
 {
     size_t i;
     for (i = 0; i < length; i++)
         free(list[i]);
     free(list);
 }
-bool hyperlex::IfLetter(char c)
+bool hyperlex_old::IfLetter(char c)
 {
     return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
-bool hyperlex::StringToBool(const char* c_t_f)
+bool hyperlex_old::StringToBool(const char* c_t_f)
 {
     size_t i;
     for (i = 0; c_t_f[i] != '\0'; i++)
@@ -4324,7 +5269,7 @@ bool hyperlex::StringToBool(const char* c_t_f)
 }
 
 
-void Bitwise::Open(const char* name)
+void hyperlex_old::Bitwise::Open(const char* name)
 {
     if (fp != NULL)
     {
@@ -4333,7 +5278,7 @@ void Bitwise::Open(const char* name)
     }
     fp = FP.Open(name, "ab+");
 }
-void Bitwise::StoreOpen(const char* name)
+void hyperlex_old::Bitwise::StoreOpen(const char* name)
 {
     if (fp != NULL)
     {
@@ -4342,7 +5287,7 @@ void Bitwise::StoreOpen(const char* name)
     }
     fp = FP.Open(name, "wb");
 }
-void Bitwise::LoadOpen(const char* name)
+void hyperlex_old::Bitwise::LoadOpen(const char* name)
 {
     if (fp != NULL)
     {
@@ -4351,14 +5296,14 @@ void Bitwise::LoadOpen(const char* name)
     }
     fp = FP.Open(name, "rb");
 }
-void Bitwise::SetDMatrix(const double* mat, size_t row, size_t column)
+void hyperlex_old::Bitwise::SetDMatrix(const double* mat, size_t row, size_t column)
 {
     if (fp == NULL) return;
     fwrite(&row, sizeof(size_t), 1, fp);
     fwrite(&column, sizeof(size_t), 1, fp);
     fwrite(mat, sizeof(double), row * column, fp);
 }
-double* Bitwise::GetDMatrix(size_t* row, size_t* column)
+double* hyperlex_old::Bitwise::GetDMatrix(size_t* row, size_t* column)
 {
     double* mat;
     size_t size;
@@ -4371,28 +5316,28 @@ double* Bitwise::GetDMatrix(size_t* row, size_t* column)
     return mat;
 }
 
-void Bitwise::store(size_t value)
+void hyperlex_old::Bitwise::store(size_t value)
 {
     fwrite(&value, sizeof(size_t), 1, fp);
 }
-void Bitwise::store(const size_t* vector, size_t length)
+void hyperlex_old::Bitwise::store(const size_t* vector, size_t length)
 {
     fwrite(vector, sizeof(size_t), length, fp);
 }
-void Bitwise::store(const bool* vector, size_t length)
+void hyperlex_old::Bitwise::store(const bool* vector, size_t length)
 {
     fwrite(vector, sizeof(bool), length, fp);
 }
-void Bitwise::store(const int* vector, size_t length)
+void hyperlex_old::Bitwise::store(const int* vector, size_t length)
 {
     fwrite(vector, sizeof(int), length, fp);
 }
-void Bitwise::store(const void* vector, size_t byte)
+void hyperlex_old::Bitwise::store(const void* vector, size_t byte)
 {
     fwrite(vector, 1, byte, fp);
 }
 
-void Bitwise::store(const char* list)
+void hyperlex_old::Bitwise::store(const char* list)
 {
     size_t length;
     length = 0;
@@ -4406,7 +5351,7 @@ void Bitwise::store(const char* list)
     fwrite(&length, sizeof(size_t), 1, fp);
     fwrite(list, sizeof(char), length, fp);
 }
-void Bitwise::store(const char** list, size_t length)
+void hyperlex_old::Bitwise::store(const char** list, size_t length)
 {
     size_t i;
     fwrite(&length, sizeof(size_t), 1, fp);
@@ -4415,13 +5360,13 @@ void Bitwise::store(const char** list, size_t length)
 }
 
 
-size_t Bitwise::loadllu(void)
+size_t hyperlex_old::Bitwise::loadllu(void)
 {
     size_t value;
     fread(&value, sizeof(size_t), 1, fp);
     return value;
 }
-char* Bitwise::loadstring(void)
+char* hyperlex_old::Bitwise::loadstring(void)
 {
     char* list;
     size_t length;
@@ -4431,7 +5376,7 @@ char* Bitwise::loadstring(void)
     fread(list, sizeof(char), length, fp);
     return list;
 }
-char** Bitwise::loadlist(void)
+char** hyperlex_old::Bitwise::loadlist(void)
 {
     char** list;
     size_t length, i;
@@ -4441,14 +5386,14 @@ char** Bitwise::loadlist(void)
         list[i] = loadstring();
     return list;
 }
-void* Bitwise::load(size_t byte)
+void* hyperlex_old::Bitwise::load(size_t byte)
 {
     void* vector;
     vector = malloc(byte);
     fread(vector, 1, byte, fp);
     return vector;
 }
-void* Bitwise::load(size_t EleAmount, size_t ContainerAmount, size_t EleSize)
+void* hyperlex_old::Bitwise::load(size_t EleAmount, size_t ContainerAmount, size_t EleSize)
 {
     void* vector;
     vector = malloc(ContainerAmount * EleSize);
@@ -4457,7 +5402,7 @@ void* Bitwise::load(size_t EleAmount, size_t ContainerAmount, size_t EleSize)
 }
 
 
-ParaFile::ParaFile()
+hyperlex_old::ParaFile::ParaFile()
 {
     //printf("giuirefgds\n");
     KeyAmount = 0;
@@ -4468,7 +5413,7 @@ ParaFile::ParaFile()
     Next = NULL;
     Type = NULL;
 }
-ParaFile::~ParaFile()
+hyperlex_old::ParaFile::~ParaFile()
 {
     free(key);
     free(FirstElem);
@@ -4476,13 +5421,13 @@ ParaFile::~ParaFile()
     free(Next);
     free(Type);
 }
-int ParaFile::initial(FILE* fp)
+int hyperlex_old::ParaFile::initial(FILE* fp)
 {
     CharBuffer Buffer;
     Buffer << fp;
     return initial(Buffer);
 }
-int ParaFile::initial(const char* file)
+int hyperlex_old::ParaFile::initial(const char* file)
 {
     FILE* fp;
     CFile F;
@@ -4494,7 +5439,7 @@ int ParaFile::initial(const char* file)
     //printf("adfereqw112222211r\n");
     return initial(Buffer);
 }
-int ParaFile::initial(CharBuffer& in)
+int hyperlex_old::ParaFile::initial(CharBuffer& in)
 {
     size_t i;
     build(in);
@@ -4504,7 +5449,7 @@ int ParaFile::initial(CharBuffer& in)
     for (i = 0; i < site; i++) Next[i] = site;
     return construct(in);
 }
-int ParaFile::construct(CharBuffer& in)
+int hyperlex_old::ParaFile::construct(CharBuffer& in)
 {
     int state, T;
     size_t i, rear, stack;
@@ -4593,7 +5538,7 @@ int ParaFile::construct(CharBuffer& in)
         }
     return ERROR;
 }
-void ParaFile::append(size_t No)
+void hyperlex_old::ParaFile::append(size_t No)
 {
     size_t NewSize;
     Target = KeyAmount;
@@ -4611,11 +5556,11 @@ void ParaFile::append(size_t No)
     ElemAmount[Target] = 0;
     FirstElem[Target] = site;
 }
-bool ParaFile::IfContent(int T)
+bool hyperlex_old::ParaFile::IfContent(int T)
 {
     return T == 5 || T == 3 || T == 4 || T == 11 || T == 0 || T == 57;
 }
-ParaFile::ParaType ParaFile::SwitchType(int T)
+hyperlex_old::ParaFile::ParaType hyperlex_old::ParaFile::SwitchType(int T)
 {
     if (T == 5) return Id;
     else if (T == 3 || T == 4) return Real;
@@ -4625,7 +5570,7 @@ ParaFile::ParaType ParaFile::SwitchType(int T)
     else return Mix;
 }
 
-void ParaFile::demo(FILE* fp)
+void hyperlex_old::ParaFile::demo(FILE* fp)
 {
     size_t i;
     for (i = 0; i < KeyAmount; i++)
@@ -4635,16 +5580,16 @@ void ParaFile::demo(FILE* fp)
     for (i = 0; i < site; i++)
         fprintf(fp, "Next[%llu] = %llu\n", i, Next[i]);
 }
-size_t ParaFile::Amount(void)const
+size_t hyperlex_old::ParaFile::Amount(void)const
 {
     return KeyAmount;
 }
-size_t ParaFile::Amount(size_t i)const
+size_t hyperlex_old::ParaFile::Amount(size_t i)const
 {
     return i < KeyAmount ? ElemAmount[i] : 0;
 }
 #include <string.h>
-size_t ParaFile::SearchKey(const char* Key) const
+size_t hyperlex_old::ParaFile::SearchKey(const char* Key) const
 {
     const char* targat;
     size_t i;
@@ -4656,7 +5601,7 @@ size_t ParaFile::SearchKey(const char* Key) const
     }
     return KeyAmount;
 }
-size_t ParaFile::SearchKey(const char* Key, ParaFile::ParaType T)const
+size_t hyperlex_old::ParaFile::SearchKey(const char* Key, hyperlex_old::ParaFile::ParaType T)const
 {
     const char* targat;
     size_t i;
@@ -4669,30 +5614,30 @@ size_t ParaFile::SearchKey(const char* Key, ParaFile::ParaType T)const
     }
     return KeyAmount;
 }
-ParaFile::ParaType ParaFile::GetType(size_t i)
+hyperlex_old::ParaFile::ParaType hyperlex_old::ParaFile::GetType(size_t i)
 {
     return Type[i];
 }
-IntegerDefault ParaFile::FirstInt(size_t i)
+hyperlex_old::IntegerDefault hyperlex_old::ParaFile::FirstInt(size_t i)
 {
     if (i < KeyAmount)
         if (Int == Type[i]) return content[FirstElem[i]].C.integer;
     return 0;
 }
-double ParaFile::FirstReal(size_t i)
+double hyperlex_old::ParaFile::FirstReal(size_t i)
 {
     if (i < KeyAmount)
         if (Real == Type[i]) return content[FirstElem[i]].C.real;
     return 0;
 }
-std::string ParaFile::FirstString(size_t i)
+std::string hyperlex_old::ParaFile::FirstString(size_t i)
 {
     std::string SSS;
     if (i < KeyAmount)
         if (String == Type[i]) SSS = content[FirstElem[i]].C.S;
     return SSS;
 }
-std::string ParaFile::GetString(const char* Key, const char* Default)
+std::string hyperlex_old::ParaFile::GetString(const char* Key, const char* Default)
 {
     std::string temp;
     size_t site;
@@ -4712,7 +5657,7 @@ std::string ParaFile::GetString(const char* Key, const char* Default)
     }
     return temp;
 }
-bool ParaFile::GetBool(const char* Key) const
+bool hyperlex_old::ParaFile::GetBool(const char* Key) const
 {
     std::string temp;
     size_t site;
@@ -4730,7 +5675,7 @@ bool ParaFile::GetBool(const char* Key) const
     return true_false_judge(temp.c_str());
 }
 
-void ParaFile::IntList(IntegerDefault*& list, size_t& length, size_t i)
+void hyperlex_old::ParaFile::IntList(IntegerDefault*& list, size_t& length, size_t i)
 {
     size_t head, j;
     if (i >= KeyAmount) return;
@@ -4746,7 +5691,7 @@ void ParaFile::IntList(IntegerDefault*& list, size_t& length, size_t i)
         head = Next[head];
     }
 }
-void ParaFile::CharList(char**& list, size_t& length, size_t i)
+void hyperlex_old::ParaFile::CharList(char**& list, size_t& length, size_t i)
 {
     size_t head, j;
     if (i >= KeyAmount) return;
@@ -4773,7 +5718,7 @@ static char* CopyMalloc(const char* s)
 }
 #include<errno.h>
 #include <string.h>
-FILE* CFile::Open(const char* name, const char* mode)
+FILE* hyperlex_old::CFile::Open(const char* name, const char* mode)
 {
     FILE* fp;
     int error;
@@ -4793,19 +5738,19 @@ FILE* CFile::Open(const char* name, const char* mode)
     ExitWarning((fp == NULL), stderr);
     return fp;
 }
-FILE* CFile::OpenRead(const char* name)
+FILE* hyperlex_old::CFile::OpenRead(const char* name)
 {
     return Open(name, "r");
 }
-FILE* CFile::OpenWriteAtRear(const char* name)
+FILE* hyperlex_old::CFile::OpenWriteAtRear(const char* name)
 {
     return Open(name, "a+");
 }
-FILE* CFile::OpenWritePlus(const char* name)
+FILE* hyperlex_old::CFile::OpenWritePlus(const char* name)
 {
     return Open(name, "w+");
 }
-std::string CFile::FusePathAndName(const std::string& path, const std::string& name)
+std::string hyperlex_old::CFile::FusePathAndName(const std::string& path, const std::string& name)
 {
     std::string fusion;
     if (path[path.length() - 1] == '/')
@@ -4814,13 +5759,13 @@ std::string CFile::FusePathAndName(const std::string& path, const std::string& n
         fusion = path + '/' + name;
     return fusion;
 }
-std::string CFile::FusePathAndName(const char* path, const std::string& name)
+std::string hyperlex_old::CFile::FusePathAndName(const char* path, const std::string& name)
 {
     std::string PPP;
     PPP = path;
     return FusePathAndName(PPP, name);
 }
-std::string CFile::ChangeSuffix(const std::string& file, const char* new_one)
+std::string hyperlex_old::CFile::ChangeSuffix(const std::string& file, const char* new_one)
 {
     size_t i, j;
     std::string name;
@@ -4852,15 +5797,15 @@ static bool isIdNumber(char c)
 }
 
 
-MatFile::MatFile()
+hyperlex_old::MatFile::MatFile()
 {
 }
-MatFile::~MatFile()
+hyperlex_old::MatFile::~MatFile()
 {
 }
 
 
-int MatFile::MatrixGet(double** list, size_t* row, size_t* column, CharBuffer& in)
+int hyperlex_old::MatFile::MatrixGet(double** list, size_t* row, size_t* column, hyperlex_old::CharBuffer& in)
 {
     double* List;
     size_t L, site;
@@ -4951,7 +5896,7 @@ int MatFile::MatrixGet(double** list, size_t* row, size_t* column, CharBuffer& i
     }
     return judge;
 }
-int MatFile::MatrixGet(double** list, size_t* row, size_t* column, const char* file)
+int hyperlex_old::MatFile::MatrixGet(double** list, size_t* row, size_t* column, const char* file)
 {
     int error;
     FILE* fp;
@@ -4963,13 +5908,13 @@ int MatFile::MatrixGet(double** list, size_t* row, size_t* column, const char* f
 
     return error;
 }
-int MatFile::MatrixGet(double** list, size_t* row, size_t* column, FILE* fp)
+int hyperlex_old::MatFile::MatrixGet(double** list, size_t* row, size_t* column, FILE* fp)
 {
     CharBuffer in;
     in << fp;
     return MatrixGet(list, row, column, in);
 }
-void MatFile::MatrixSet(const double* mat, size_t ld, size_t row, size_t column, const char* file)
+void hyperlex_old::MatFile::MatrixSet(const double* mat, size_t ld, size_t row, size_t column, const char* file)
 {
     FILE* fp;
     CFile CF;
@@ -4978,7 +5923,7 @@ void MatFile::MatrixSet(const double* mat, size_t ld, size_t row, size_t column,
     fclose(fp);
     return;
 }
-void MatFile::MatrixSet(const double* mat, size_t ld, size_t row, size_t column, FILE* fp)
+void hyperlex_old::MatFile::MatrixSet(const double* mat, size_t ld, size_t row, size_t column, FILE* fp)
 {
     size_t i, j;
     const double* Line;

@@ -192,7 +192,7 @@ namespace hyperlex
 	public:
 		BufferChar();
 		~BufferChar();
-		void operator<<(FILE* fp);
+		//void operator<<(FILE* fp);
 		char* ptr(void);
 		char* CopyVector(void) const;
 		size_t CopyVector(vector<char>& storage, size_t& length) const;
@@ -373,6 +373,7 @@ namespace hyperlex
 			int category;
 			size_t length;
 			size_t begin;
+			bool valid;
 		};
 		Morpheme();
 		~Morpheme();
@@ -387,15 +388,26 @@ namespace hyperlex
 		const result& operator[](const size_t target) const;
 
 		char GetChar(size_t site) const;
+		bool& valid(size_t site);
 
 		template<typename T> int Build(const char* reg);
 		template<typename T> int Build(FILE* fp);
+
+		//size_t index;
+		
+		size_t initial(void)const;
+		size_t next(size_t index)const;
+		bool still(size_t index) const;
+		int accept(size_t index)const;
 	protected:
 		size_t count;
 		//list<size_t> begin;
 		//list<size_t> length;
 		vector<result> lex;
 		vector<char> storage;
+
+		
+
 		template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
 	};
 	class GrammarTree
@@ -893,23 +905,23 @@ namespace hyperlex
 		vector<tree<TreeInfor>*> TempTree;
 		tree<TreeInfor>* TreeNow;
 		bool DoNext;
-		size_t length, head, i, begin_, inputCount_;
+		size_t length, head, i, begin_;// , inputCount_;
 		int symbol, top, temp, information;
 		int GoFull, GoD, GoI, error;
 		typename T::type type;
 		stack.append(0);
-		head = 0;
-		inputCount_ = input.GetCount();
+		head = input.initial();
+		//inputCount_ = input.GetCount();
 		DoNext = true;
 		do
 		{
-			if (head >= inputCount_)
+			if (!input.still(head))
 			{
 				error = -1;
 				break;
 			}
 			top = stack.top();
-			temp = T::ACTION[top][input[head].accept];
+			temp = T::ACTION[top][input.accept(head)];
 			information = temp / 4;
 			type = (typename T::type)(temp % 4);
 			//printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
@@ -935,7 +947,7 @@ namespace hyperlex
 				TreeNow->root().site = head;
 				TreeNow->root().infor = NULL;
 				TempTree.append(TreeNow);		
-				head += 1;
+				head = input.next(head);
 				
 				break;
 			case T::reduce:

@@ -85,8 +85,8 @@ void BufferChar::operator+=(const BufferChar& in)
 void BufferChar::operator+=(double source)
 {
 	// Step 1: 分解double的二进制表示
-	union { double d; uint64_t i; } u = { source };
-	uint64_t bits = u.i;
+	union { double d; unsigned long long i; } u = { source };
+	unsigned long long bits = u.i;
 
 	// 提取符号位
 	int sign = (bits >> 63) ? 1 : 0;
@@ -94,7 +94,7 @@ void BufferChar::operator+=(double source)
 
 	// 提取指数和尾数
 	int exponent = (bits >> 52) & 0x7FF;
-	uint64_t mantissa = bits & 0x000FFFFFFFFFFFFF;
+	unsigned long long mantissa = bits & 0x000FFFFFFFFFFFFF;
 
 	// 处理特殊值（简化处理非规格化数）
 	if (exponent == 0) { // 非规格化数
@@ -356,6 +356,8 @@ char BufferChar::QueueHead(void)
 Morpheme::Morpheme()
 {
 	count = 0;
+
+	//index = 0;
 }
 Morpheme::~Morpheme()
 {
@@ -395,6 +397,7 @@ void Morpheme::append(const BufferChar& input, int accept, int category)
 	temp.category = category;
 	temp.length = length__;
 	temp.begin = offset__;
+	temp.valid = true;
 	lex.append(temp);
 	return;
 }
@@ -406,6 +409,7 @@ void Morpheme::AppendEnd(int TerminalCount)
 	storage.append('\0');
 	//begin.append(offset__);
 	//length.append(length__);
+	temp.valid = true;
 	temp.accept = TerminalCount;
 	temp.category = TerminalCount;
 	temp.length = 1;
@@ -418,7 +422,9 @@ void Morpheme::Demo(FILE* fp)const
 	fprintf(fp, "count = %zu\n", count);
 	for (i = 0; i < count; i++)
 	{
-		fprintf(fp, "<%4d : %4d , %s>\n", lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
+		if(lex[i].valid)
+			fprintf(fp, "<%4d (valid) : %4d , %s>\n", lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
+		else fprintf(fp, "<%4d(invalid): %4d , %s>\n", lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
 	}
 }
 const Morpheme::result& Morpheme::operator[](const size_t target)const
@@ -444,6 +450,31 @@ void Morpheme::CountReset(size_t NewCount)
 	count = NewCount;
 }
 
+bool& Morpheme::valid(size_t site)
+{
+	return lex[site].valid;
+}
+size_t Morpheme::initial(void) const
+{
+	size_t index;
+	for (index = 0; index < count; index++)
+		if(lex[index].valid) return index;
+	return index;
+}
+size_t Morpheme::next(size_t index) const
+{
+	for (index = index + 1; index < count; index++)
+		if (lex[index].valid) return index;
+	return index;
+}
+bool Morpheme::still(size_t index) const
+{
+	return index < count;
+}
+int Morpheme::accept(size_t index)const
+{
+	return lex[index].accept;
+}
 
 GrammarTree::GrammarTree()
 {
@@ -1989,21 +2020,23 @@ int InputPanel::buildGanalysis(const Morpheme& eme)
 }
 void InputPanel::NeglectNullToken(Morpheme& eme) const
 {
-	size_t i, site;
+	size_t i;// , site;
 	Reg::regular T;
 	Reg::group G;
-	site = 0;
+	//site = 0;
 	for (i = 0; i < eme.GetCount(); i++)
 	{
 		T = (Reg::regular)(eme[i].accept);
 		G = (Reg::group)(eme[i].category);
-		if (G != Reg::_format___ && G != Reg::_annotation___)
-		{
-			if (i != site) eme.UnitMove(i, site);
-			site += 1;
-		}
+		if (G == Reg::_format___ || G == Reg::_annotation___)
+			eme.valid(i) = false;
+		//if (G != Reg::_format___ && G != Reg::_annotation___)
+		//{
+		//	if (i != site) eme.UnitMove(i, site);
+		//	site += 1;
+		//}
 	}
-	eme.CountReset(site);
+	//eme.CountReset(site);
 	return;
 }
 int InputPanel::buildAll(const Morpheme& eme, GrammarTree& Tree)

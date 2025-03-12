@@ -57,7 +57,7 @@ lexical:{
 };
 grammar: DICTIONARY:
 {
-    DICTIONARY: braceL KVS END; 
+    DICTIONARY: braceL KVS braceR; 
     KVS:{
         single: KV;
         multi: KVS KV; 
@@ -85,8 +85,8 @@ grammar: DICTIONARY:
 		null: null;
 		NULL: NULL;
     }
-    END:{
-		full: braceR semicolon;
-		half: braceR;
-	}
+    //END:{
+	//	full: braceR semicolon;
+	//	half: braceR;
+	//}
 }
