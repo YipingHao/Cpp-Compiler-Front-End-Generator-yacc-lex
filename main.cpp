@@ -1622,7 +1622,7 @@ public:
     void print(FILE* fp) const;
     int build(FILE* fp);
     int build(const char* input);
-
+    void move(dictionary* source);
     void clear(void);
 private:
     vector<KV> Content;
@@ -1953,7 +1953,7 @@ int dictionary::build(FILE* fp)
         //errorCode = ErrorinputLEXICAL;
         return error;
     }
-    //NeglectNullToken(eme);
+    NeglectNullToken(eme);
     //eme.Demo(stdout);
     //error = buildGanalysis(eme);
     if (error != 0) return error;
@@ -1972,13 +1972,26 @@ int dictionary::build(const char* input)
         //errorCode = ErrorinputLEXICAL;
         return error;
     }
-    //NeglectNullToken(eme);
+    NeglectNullToken(eme);
     //eme.Demo(stdout);
     //error = buildGanalysis(eme);
     if (error != 0) return error;
     //errorCode = NoError;
     return 0;
 }
+void dictionary::move(dictionary* source)
+{
+    size_t i;
+    clear();
+    Content.recount(source->Content.count());
+    for (i = 0; i < source->Content.count(); i++)
+    {
+        Content.append(source->Content[i]);
+    }
+    source->clear();
+}
+
+
 void dictionary::NeglectNullToken(Morpheme& eme) const
 {
     size_t i;
