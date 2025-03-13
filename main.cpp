@@ -1625,6 +1625,8 @@ public:
     void move(dictionary* source);
     void clear(void);
 private:
+    typedef hyperlex::tree<GrammarTree::TreeInfor> GLTree;
+    typedef hyperlex::tree<GrammarTree::TreeInfor>::PostIterator GTIter;
     vector<KV> Content;
     void print(FILE* fp, size_t indent) const;  // 递归打印核心
     void PrintTab(FILE* fp, size_t count) const; // 缩进工具函数
@@ -1632,8 +1634,9 @@ private:
     // 类型专用打印函数
     //void PrintValue(FILE* fp, const element& e, Ktype T, size_t indent) const;
     void PrintArray(FILE* fp, const KV& kv, size_t indent) const;
-
     void NeglectNullToken(Morpheme& eme) const;
+    int buildGanalysis(const Morpheme& eme);
+    int buildAll(const Morpheme& eme, GrammarTree& Tree);
 };
 
 dictionary::dictionary()
@@ -2007,6 +2010,125 @@ void dictionary::NeglectNullToken(Morpheme& eme) const
         }
     }
     return;
+}
+int dictionary::buildGanalysis(const Morpheme& eme)
+{
+    int error;
+    GrammarTree Tree;
+    error = Tree.build<DictPraser>(eme);
+    if (error != 0)
+    {
+        //errorCode = ErrorinputGrammar;
+        return error;
+    }
+    //printf("Here?!\n");
+    //Tree.Demo(stdout, eme, Panel::RulesName);
+    //printf("Here?!\n");
+    error = buildAll(eme, Tree);
+    //printf("Here?!:%d\n", error);
+    if (error != 0) return error;
+    //printf("Here?!:%d\n", error);
+    return error;
+}
+int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
+{
+    int error;
+    GLTree *GT;
+    GTIter iterator;
+    DictPraser::rules RR;
+    error = 0;
+    iterator.initial(Tree.GT);
+    while (iterator.still())
+    {
+        GT = iterator.target();
+        if (iterator.state() == 0)
+        {
+            site_ = GT->root().site;
+            if (GT->root().rules) RR = (DictPraser::rules)GT->root().site;
+            switch (RR)
+            {
+            case DictPraser::_all_all_:
+                break;
+            case DictPraser::_DICTIONARY_DICTIONARY_:
+                break;
+            case DictPraser::_KVS_multi_:
+                break;
+            case DictPraser::_KVS_single_:
+                break;
+            case DictPraser::_KV_colon_:
+                break;
+            case DictPraser::_KV_value_:
+                break;
+            case DictPraser::_VALUE_multi_:
+                break;
+            case DictPraser::_VALUE_single_:
+                break;
+            case DictPraser::_VALUE_nul_:
+                break;
+            case DictPraser::_UNITS_multi_:
+                break;
+            case DictPraser::_UNITS_single_:
+                break;
+            case DictPraser::_UNIT_NULL_:
+                break;
+            case DictPraser::_UNIT_null_:
+                break;
+            case DictPraser::_UNIT_true_:
+                break;
+            case DictPraser::_UNIT_false_:
+                break;
+            case DictPraser::_UNIT_dictionary_:
+                break;
+            default:
+                break;
+            }
+        }
+        else
+        {
+            site_ = GT->root().site;
+            if (GT->root().rules) RR = (DictPraser::rules)GT->root().site;
+            switch (RR)
+            {
+            case DictPraser::_all_all_:
+
+                break;
+            case DictPraser::_DICTIONARY_DICTIONARY_:
+                break;
+            case DictPraser::_KVS_multi_:
+                break;
+            case DictPraser::_KVS_single_:
+                break;
+            case DictPraser::_KV_colon_:
+                break;
+            case DictPraser::_KV_value_:
+                break;
+            case DictPraser::_VALUE_multi_:
+                break;
+            case DictPraser::_VALUE_single_:
+                break;
+            case DictPraser::_VALUE_nul_:
+                break;
+            case DictPraser::_UNITS_multi_:
+                break;
+            case DictPraser::_UNITS_single_:
+                break;
+            case DictPraser::_UNIT_NULL_:
+                break;
+            case DictPraser::_UNIT_null_:
+                break;
+            case DictPraser::_UNIT_true_:
+                break;
+            case DictPraser::_UNIT_false_:
+                break;
+            case DictPraser::_UNIT_dictionary_:
+                break;
+            default:
+                break;
+            }
+        }
+        iterator.next();
+    }
+    return error;
 }
 
 
