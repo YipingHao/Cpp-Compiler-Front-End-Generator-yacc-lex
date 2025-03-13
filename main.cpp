@@ -2036,6 +2036,7 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
     GLTree *GT;
     GTIter iterator;
     DictPraser::rules RR;
+    size_t site_;
     error = 0;
     iterator.initial(Tree.GT);
     while (iterator.still())
