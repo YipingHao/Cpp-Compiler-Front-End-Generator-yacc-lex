@@ -28,8 +28,14 @@ BufferChar::~BufferChar()
 }
 void BufferChar::operator<<(FILE* fp)
 {
+	char c;
 	while (feof(fp) == 0)
-		append((const char)getc(fp));	
+	{
+		c = (const char)getc(fp);
+		if((int)c != (int)EOF)
+			append(c);
+	}
+			
 }
 void BufferChar::operator=(const char* input)
 {

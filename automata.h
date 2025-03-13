@@ -932,7 +932,15 @@ namespace hyperlex
 				error = 0;
 				DoNext = false;
 				clear();
-				TempTree.pop(GT);
+				begin_ = TempTree.count() - 1;
+				TreeNow = new tree<TreeInfor>;
+				TreeNow->root().rules = true;
+				TreeNow->root().site = 0;
+				TreeNow->root().infor = NULL;
+				TreeNow->build(TempTree, begin_);
+				TempTree.pop();
+				GT = TreeNow;
+				//TempTree.pop(GT);
 				break;
 			case T::error:
 				error = temp;

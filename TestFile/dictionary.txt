@@ -84,9 +84,8 @@ grammar: DICTIONARY:
 		true: true;
 		null: null;
 		NULL: NULL;
+        real: real;
+        integer: integer;
+        string: string;
     }
-    //END:{
-	//	full: braceR semicolon;
-	//	half: braceR;
-	//}
 }

@@ -565,6 +565,7 @@ static int test_17(const char* output_path, hyperlex_old::ParaFile& pf);
 static int test_18(const char* output_path, hyperlex_old::ParaFile& pf);
 static int test_19(const char* output_path, hyperlex_old::ParaFile& pf);
 static int test_20(const char* output_path, hyperlex_old::ParaFile& pf);
+static int test_21(const char* output_path, hyperlex_old::ParaFile& pf);
 int test_entrance(const char* output_path)
 {
     int item;
@@ -656,8 +657,12 @@ int test_entrance(const char* output_path)
         info = test_19(output_path, pf);
         break;
     case 20:
-        std::cout << "Test Tree; " << std::endl;
+        std::cout << "InputPanel: " << std::endl;
         info = test_20(output_path, pf);
+        break;
+    case 21:
+        std::cout << "Test Tree; " << std::endl;
+        info = test_21(output_path, pf);
         break;
     default:
         info = test_01(output_path, pf);
@@ -1569,8 +1574,6 @@ static int test_20(const char* output_path, hyperlex_old::ParaFile& pf)
     error = IP.printG(stdout, stdout, "panel");
     std::cout << "error: " << error << std::endl;
 }
-
-
 class dictionary
 {
 public:
@@ -1585,7 +1588,7 @@ public:
     };
     union element
     {
-        long long int ii;
+        long int ii;
         double ff;
         char* ss;
         bool bb;
@@ -1623,6 +1626,7 @@ public:
     int build(FILE* fp);
     int build(const char* input);
     void move(dictionary* source);
+    void move(KV* & source);
     void clear(void);
 private:
     typedef hyperlex::tree<GrammarTree::TreeInfor> GLTree;
@@ -1637,7 +1641,36 @@ private:
     void NeglectNullToken(Morpheme& eme) const;
     int buildGanalysis(const Morpheme& eme);
     int buildAll(const Morpheme& eme, GrammarTree& Tree);
+    element buildUnit(Ktype& T, const Morpheme& eme, GLTree* GT);
 };
+static int test_21(const char* output_path, hyperlex_old::ParaFile& pf)
+{
+    dictionary dick, dickdick;
+    FILE* fp;
+    BufferChar input;
+    BufferChar temp;
+    std::string file;
+    hyperlex_old::CFile CF;
+    int error;
+
+    file = pf.GetString("InputFileName", "./data/grammerT.txt");
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fp = CF.OpenRead(file.c_str());
+    std::cout << "InputFileName: " << file << std::endl;
+    input << fp;
+    temp.append(input);
+    std::cout << "/*" << std::endl;
+    std::cout << temp.ptr() << std::endl;
+    std::cout << "*/" << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fclose(fp);
+    error = dick.build(input.ptr());
+    std::cout << "error: " << error << std::endl;
+    dick.print(stdout);
+    return 0;
+}
+
+
 
 dictionary::dictionary()
 {
@@ -1671,6 +1704,7 @@ void dictionary::KV::ruin(void)
     free(Content);
     Content = NULL;
     free(key);
+    key = NULL;
 }
 void dictionary::KV::clear(void)
 {
@@ -1766,31 +1800,55 @@ void dictionary::print(FILE* fp) const
 }
 void dictionary::PrintTab(FILE* fp, size_t count) const
 {
-    for (size_t i = 0; i < count; ++i) {
-        fprintf(fp, "    ");
+    size_t i;
+    for (i = 0; i < count; ++i) 
+    {
+        fprintf(fp, "\t");
     }
 }
 void dictionary::print(FILE* fp, size_t indent) const 
 {
-    PrintTab(fp, indent);
     fprintf(fp, "{\n");
 
     for (size_t i = 0; i < Content.count(); ++i) 
     {
         const KV& kv = Content[i];
         PrintTab(fp, indent + 1);
-        fprintf(fp, "\"%s\": ", kv.key ? kv.key : "(null)");
-
+        fprintf(fp, "%s: ", kv.key ? kv.key : "(null)");
+        //continue;
         // 根据类型打印内容
-        if (kv.T == dictionary_ && kv.Count > 0) {
-            PrintArray(fp, kv, indent + 1); // 处理字典数组的特殊缩进
+        if (kv.Count != 1)
+        {
+            PrintArray(fp, kv, indent + 1);          // 基础类型紧凑打印
         }
-        else {
-            PrintArray(fp, kv, 0);          // 基础类型紧凑打印
+        else
+        {
+            switch (kv.T) {
+            case int_:
+                fprintf(fp, "%ld", kv.Content[0].ii);
+                break;
+            case float_:
+                fprintf(fp, "%g", kv.Content[0].ff);
+                break;
+            case string_:
+                fprintf(fp, "\"%s\"", kv.Content[0].ss ? kv.Content[0].ss : "");
+                break;
+            case bool_:
+                fprintf(fp, "%s", kv.Content[0].bb ? "true" : "false");
+                break;
+            case dictionary_:
+                if (kv.Content[0].dd) {
+                    kv.Content[0].dd->print(fp, indent + 1);
+                }
+                else {
+                    fprintf(fp, "{}");
+                }
+                break;
+            default:
+                fprintf(fp, "null");
+            }
         }
-
-        if (i != Content.count() - 1) fprintf(fp, ",");
-        fprintf(fp, "\n");
+        fprintf(fp, ";\n");
     }
 
     PrintTab(fp, indent);
@@ -1799,21 +1857,19 @@ void dictionary::print(FILE* fp, size_t indent) const
 void dictionary::PrintArray(FILE* fp, const KV& kv, size_t indent) const 
 {
     const bool isComplexType = (kv.T == dictionary_ || kv.T == string_);
-
-    if (kv.Count == 0) {
-        fprintf(fp, "[]");
-        return;
-    }
-
-    fprintf(fp, "[%s", isComplexType ? "\n" : "");
-
-    for (size_t j = 0; j < kv.Count; ++j) {
-        if (isComplexType) PrintTab(fp, indent);
-
+    //fprintf(fp, "%zu, indent: %zu", kv.Count, indent);
+    fprintf(fp, "[");
+    //return;
+    for (size_t j = 0; j < kv.Count; ++j) 
+    {
+        //fprintf(fp, "%zu, indent: %zu\n", j, kv.Count);
+        
+        //fprintf(fp, "===%zu, indent: %zu\n", j, kv.Count);
+        //continue;
         // 打印单个元素
         switch (kv.T) {
         case int_:
-            fprintf(fp, "%lld", kv.Content[j].ii);
+            fprintf(fp, "%ld", kv.Content[j].ii);
             break;
         case float_:
             fprintf(fp, "%g", kv.Content[j].ff);
@@ -1838,13 +1894,14 @@ void dictionary::PrintArray(FILE* fp, const KV& kv, size_t indent) const
 
         // 元素分隔符
         if (j != kv.Count - 1) {
-            fprintf(fp, ",%s", isComplexType ? "\n" : " ");
+            if (isComplexType)
+            {
+                fprintf(fp, ",\n");
+                PrintTab(fp, indent + 1);
+            }
+            else
+                fprintf(fp, ", ");
         }
-    }
-
-    if (isComplexType) {
-        fprintf(fp, "\n");
-        PrintTab(fp, indent - 1);
     }
     fprintf(fp, "]");
 }
@@ -1926,22 +1983,27 @@ struct DictPraser
         _VALUE_nul_ = 8,
         _UNITS_multi_ = 9,
         _UNITS_single_ = 10,
-        _UNIT_NULL_ = 11,
-        _UNIT_null_ = 12,
-        _UNIT_true_ = 13,
-        _UNIT_false_ = 14,
-        _UNIT_dictionary_ = 15
+        _UNIT_string_ = 11,
+        _UNIT_integer_ = 12,
+        _UNIT_real_ = 13,
+        _UNIT_NULL_ = 14,
+        _UNIT_null_ = 15,
+        _UNIT_true_ = 16,
+        _UNIT_false_ = 17,
+        _UNIT_dictionary_ = 18
     };
     static const size_t StateCount;
     static const size_t NonTerminalCount;
     static const size_t TerminalCount;
     static const size_t RulesCount;
-    static const int GOTO[27][7];
-    static const int ACTION[27][25];
-    static const int RulesToSymbol[16];
-    static const int RulesLength[16];
-    static const char* const RulesName[16];
+    static const int GOTO[30][7];
+    static const int ACTION[30][25];
+    static const int RulesToSymbol[19];
+    static const int RulesLength[19];
+    static const char* const RulesName[19];
 };
+
+
 
 
 
@@ -1958,7 +2020,7 @@ int dictionary::build(FILE* fp)
     }
     NeglectNullToken(eme);
     //eme.Demo(stdout);
-    //error = buildGanalysis(eme);
+    error = buildGanalysis(eme);
     if (error != 0) return error;
     //errorCode = NoError;
     return 0;
@@ -1977,7 +2039,7 @@ int dictionary::build(const char* input)
     }
     NeglectNullToken(eme);
     //eme.Demo(stdout);
-    //error = buildGanalysis(eme);
+    error = buildGanalysis(eme);
     if (error != 0) return error;
     //errorCode = NoError;
     return 0;
@@ -1989,11 +2051,19 @@ void dictionary::move(dictionary* source)
     Content.recount(source->Content.count());
     for (i = 0; i < source->Content.count(); i++)
     {
-        Content.append(source->Content[i]);
+        Content[i] = source->Content[i];
     }
-    source->clear();
+    source->Content.clear();
 }
-
+void dictionary::move(KV*& source)
+{
+    Content.append(*source);
+    source->Count = 0;
+    source->Content = NULL;
+    source->key = NULL;
+    delete source;
+    source = NULL;
+}
 
 void dictionary::NeglectNullToken(Morpheme& eme) const
 {
@@ -2022,10 +2092,12 @@ int dictionary::buildGanalysis(const Morpheme& eme)
         return error;
     }
     //printf("Here?!\n");
-    //Tree.Demo(stdout, eme, Panel::RulesName);
+    //Tree.Demo(stdout, eme, DictPraser::RulesName);
     //printf("Here?!\n");
     error = buildAll(eme, Tree);
     //printf("Here?!:%d\n", error);
+    //Tree.Demo(stdout, eme, DictPraser::RulesName);
+    //printf("Here?!\n");
     if (error != 0) return error;
     //printf("Here?!:%d\n", error);
     return error;
@@ -2033,97 +2105,132 @@ int dictionary::buildGanalysis(const Morpheme& eme)
 int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
 {
     int error;
+    struct tempInfor
+    {
+        Ktype T;
+        element E;
+    }* tempI;
+    Ktype T;
     GLTree *GT;
+    KV* KVtemp;
     GTIter iterator;
     DictPraser::rules RR;
     size_t site_;
+    const char* Ctemp;
+    dictionary* Dtemp;
     error = 0;
     iterator.initial(Tree.GT);
     while (iterator.still())
     {
         GT = iterator.target();
-        if (iterator.state() == 0)
+        site_ = GT->root().site;
+        if (iterator.state() != 0 && GT->root().rules)
         {
-            site_ = GT->root().site;
-            if (GT->root().rules) RR = (DictPraser::rules)GT->root().site;
+            //printf("label:%zu, %zu\n", GT->root().label, (size_t)GT);
+            RR = (DictPraser::rules)GT->root().site;
             switch (RR)
             {
             case DictPraser::_all_all_:
+                Dtemp = (dictionary*)GT->child(0)->root().infor;
+                //printf("%zu:%zu\n", Content.count(), Dtemp->Content.count());
+                move(Dtemp);
+                //printf("%zu:%zu\n", Content.count(), Dtemp->Content.count());
+                delete Dtemp;
+                GT->child(0)->root().infor = NULL;
                 break;
             case DictPraser::_DICTIONARY_DICTIONARY_:
+                GT->root().infor = GT->child(1)->root().infor;
+                GT->child(1)->root().infor = NULL;
+                Dtemp = (dictionary*)GT->root().infor;
+                //printf("%zu\n", Dtemp->Content.count());
                 break;
             case DictPraser::_KVS_multi_:
+                Dtemp = (dictionary*)(GT->child(0)->root().infor);
+                KVtemp = (KV*)(GT->child(1)->root().infor);
+                //printf("???\n");
+                Dtemp->move(KVtemp);
+                //printf("???\n");
+                GT->child(0)->root().infor = NULL;
+                GT->child(1)->root().infor = NULL;
+                GT->root().infor = (void*)Dtemp;
+                //printf("%zu\n", Dtemp->Content.count());
                 break;
             case DictPraser::_KVS_single_:
+                Dtemp = new dictionary;
+                KVtemp = (KV*)(GT->child(0)->root().infor);
+                
+                Dtemp->move(KVtemp);
+                //printf("???\n");
+                GT->child(0)->root().infor = NULL;
+                GT->root().infor = (void*)Dtemp;
+                //printf("%zu\n", Dtemp->Content.count());
                 break;
             case DictPraser::_KV_colon_:
-                break;
             case DictPraser::_KV_value_:
+                KVtemp = (KV*)(GT->child(2)->root().infor);
+                //printf("label:%zu, child(2)%zu", GT->child(2)->root().label, (size_t)GT->child(2));
+                //printf("KVtemp:%zu, %zu, ", (size_t)KVtemp, KVtemp->Count);
+                //if (KVtemp->T == string_) printf("_KV_value_%s\n", KVtemp->Content[0].ss);
+                Ctemp = eme.GetWord(GT->child(0)->root().site);
+                KVtemp->setName(Ctemp);
+                GT->root().infor = (void*)KVtemp;
+                GT->child(2)->root().infor = NULL;
+                //printf("KVtemp%zu, <%s> \n", KVtemp->Count, Ctemp);
                 break;
             case DictPraser::_VALUE_multi_:
+                GT->root().infor = GT->child(1)->root().infor;
+                GT->child(1)->root().infor = NULL;
                 break;
             case DictPraser::_VALUE_single_:
+                KVtemp = new KV();
+                tempI = (tempInfor*)(GT->child(0)->root().infor);
+                KVtemp->setType(tempI->T);
+                KVtemp->append(tempI->E);
+                //if (tempI->T == string_) printf("_VALUE_single_%s\n", tempI->E.ss);
+                //printf("label: %zu, KVtemp(single):%zu, ", GT->root().label, (size_t)KVtemp);
+                free(tempI);
+                GT->root().infor = (void*)KVtemp;
+                //printf("KVtemp(single):%zu, %zu\n", KVtemp->Count, (size_t)GT->root().infor);
                 break;
             case DictPraser::_VALUE_nul_:
+                KVtemp = new KV();
+                KVtemp->setType(null_);
+                GT->root().infor = (void*)KVtemp;
                 break;
             case DictPraser::_UNITS_multi_:
+                KVtemp = (KV*)(GT->child(0)->root().infor);
+                GT->child(0)->root().infor = NULL;
+                tempI = (tempInfor*)(GT->child(2)->root().infor);
+                if (tempI->T != KVtemp->T) return -233;
+                KVtemp->append(tempI->E);
+                free(tempI);
+                GT->root().infor = (void*)KVtemp;
                 break;
             case DictPraser::_UNITS_single_:
+                KVtemp = new KV();
+                tempI = (tempInfor*)(GT->child(0)->root().infor);
+                KVtemp->setType(tempI->T);
+                KVtemp->append(tempI->E);
+                free(tempI);
+                GT->root().infor = (void*)KVtemp;
                 break;
+            case DictPraser::_UNIT_string_:
+            case DictPraser::_UNIT_integer_:
+            case DictPraser::_UNIT_real_:
             case DictPraser::_UNIT_NULL_:
-                break;
             case DictPraser::_UNIT_null_:
-                break;
             case DictPraser::_UNIT_true_:
-                break;
             case DictPraser::_UNIT_false_:
-                break;
             case DictPraser::_UNIT_dictionary_:
+                tempI = (tempInfor*)malloc(sizeof(tempInfor));
+                tempI->E = buildUnit(T, eme, GT);
+                tempI->T = T;
+                //if (T == string_) printf("KL%s\n", tempI->E.ss);
+                GT->root().infor = (void*)tempI;
                 break;
             default:
-                break;
-            }
-        }
-        else
-        {
-            site_ = GT->root().site;
-            if (GT->root().rules) RR = (DictPraser::rules)GT->root().site;
-            switch (RR)
-            {
-            case DictPraser::_all_all_:
-
-                break;
-            case DictPraser::_DICTIONARY_DICTIONARY_:
-                break;
-            case DictPraser::_KVS_multi_:
-                break;
-            case DictPraser::_KVS_single_:
-                break;
-            case DictPraser::_KV_colon_:
-                break;
-            case DictPraser::_KV_value_:
-                break;
-            case DictPraser::_VALUE_multi_:
-                break;
-            case DictPraser::_VALUE_single_:
-                break;
-            case DictPraser::_VALUE_nul_:
-                break;
-            case DictPraser::_UNITS_multi_:
-                break;
-            case DictPraser::_UNITS_single_:
-                break;
-            case DictPraser::_UNIT_NULL_:
-                break;
-            case DictPraser::_UNIT_null_:
-                break;
-            case DictPraser::_UNIT_true_:
-                break;
-            case DictPraser::_UNIT_false_:
-                break;
-            case DictPraser::_UNIT_dictionary_:
-                break;
-            default:
+                error = -7;
+                return error;
                 break;
             }
         }
@@ -2131,7 +2238,52 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
     }
     return error;
 }
-
+dictionary::element dictionary::buildUnit(dictionary::Ktype& T, const Morpheme& eme, GLTree* GT)
+{
+     element E;
+     DictPraser::rules RR;
+     BufferChar BC;
+     E.bb = true;
+     RR = (DictPraser::rules)GT->root().site;
+     switch (RR)
+     {
+     case DictPraser::_UNIT_string_:
+         T = string_;
+         BC = eme.GetWord(GT->child(0)->root().site);
+         E.ss = BC.DequeueString();
+         break;
+     case DictPraser::_UNIT_integer_:
+         T = int_;
+         BC = eme.GetWord(GT->child(0)->root().site);
+         E.ii = BC.DequeueInt();
+         break;
+     case DictPraser::_UNIT_real_:
+         T = float_;
+         BC = eme.GetWord(GT->child(0)->root().site);
+         E.ff = BC.DequeueReal();
+         break;
+     case DictPraser::_UNIT_NULL_:
+     case DictPraser::_UNIT_null_:
+         T = null_;
+         break;
+     case DictPraser::_UNIT_true_:
+         T = bool_;
+         E.bb = true;
+         break;
+     case DictPraser::_UNIT_false_:
+         T = bool_;
+         E.bb = false;
+         break;
+     case DictPraser::_UNIT_dictionary_:
+         T = dictionary_;
+         E.dd = (dictionary*)(GT->child(0)->root().infor);
+         GT->child(0)->root().infor = NULL;
+         break;
+     default:
+         break;
+     }
+     return E;
+}
 
 int DictReg::next(int state, const char c)
 {
@@ -2538,18 +2690,18 @@ int DictReg::GroupGet(int accept)
     }
     return 0;
 }
-const size_t DictPraser::StateCount = 27;
+const size_t DictPraser::StateCount = 30;
 const size_t DictPraser::NonTerminalCount = 7;
 const size_t DictPraser::TerminalCount = 24;
-const size_t DictPraser::RulesCount = 16;
-const int DictPraser::GOTO[27][7] = { \
+const size_t DictPraser::RulesCount = 19;
+const int DictPraser::GOTO[30][7] = { \
 {1, 6, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 14, 18, 1, 1, 1}, \
-{1, 1, 1, 102, 1, 1, 1}, \
+{1, 1, 1, 114, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
-{1, 34, 1, 1, 94, 1, 42}, \
+{1, 34, 1, 1, 106, 1, 42}, \
 {1, 34, 1, 1, 38, 1, 42}, \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
@@ -2558,11 +2710,14 @@ const int DictPraser::GOTO[27][7] = { \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
-{1, 34, 1, 1, 1, 66, 70}, \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
-{1, 34, 1, 1, 1, 1, 86}, \
+{1, 34, 1, 1, 1, 78, 82}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 34, 1, 1, 1, 1, 98}, \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1}, \
@@ -2571,36 +2726,39 @@ const int DictPraser::GOTO[27][7] = { \
 {1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1} };
 //==============================
-const int DictPraser::ACTION[27][25] = { \
+const int DictPraser::ACTION[30][25] = { \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 106, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 118, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 26, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 46, 50, 54, 58, 1, 1, 1, 1, 1, 10, 1, 1, 1, 62, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 46, 50, 54, 58, 1, 1, 1, 1, 1, 10, 1, 1, 1, 62, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 63, 1, 1, 63, 1, 1, 1, 1, 1, 1, 63, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 90, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 74, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 74, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 75, 1, 1, 75, 1, 1, 1, 1, 1, 1, 75, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 102, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 59, 1, 1, 59, 1, 1, 1, 1, 1, 1, 59, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 55, 1, 1, 55, 1, 1, 1, 1, 1, 1, 55, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 1, 1, 51, 1, 1, 1, 1, 1, 1, 51, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 55, 1, 1, 55, 1, 1, 1, 1, 1, 1, 55, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 47, 1, 1, 47, 1, 1, 1, 1, 1, 1, 47, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 46, 50, 54, 58, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 74, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 78, 1, 1, 1, 1, 1, 1, 82, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 71, 1, 1, 71, 1, 1, 1, 1, 1, 1, 71, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 67, 1, 1, 67, 1, 1, 1, 1, 1, 1, 67, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 63, 1, 1, 63, 1, 1, 1, 1, 1, 1, 63, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 59, 1, 1, 59, 1, 1, 1, 1, 1, 1, 59, 1, 1, 1, 1, 1}, \
+{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 86, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 90, 1, 1, 1, 1, 1, 1, 94, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 46, 50, 54, 58, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1}, \
 {1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 98, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {7, 1, 1, 1, 1, 1, 1, 1, 1, 7, 1, 1, 7, 1, 1, 1, 1, 1, 1, 7, 1, 1, 1, 1, 1} };
 //==============================
-const int DictPraser::RulesToSymbol[16] = { \
+const int DictPraser::RulesToSymbol[19] = { \
 0,\
 1,\
 2,\
@@ -2616,9 +2774,12 @@ const int DictPraser::RulesToSymbol[16] = { \
 6,\
 6,\
 6,\
+6,\
+6,\
+6,\
 6 };
 //==============================
-const int DictPraser::RulesLength[16] = { \
+const int DictPraser::RulesLength[19] = { \
 1,\
 3,\
 2,\
@@ -2629,6 +2790,9 @@ const int DictPraser::RulesLength[16] = { \
 1,\
 2,\
 3,\
+1,\
+1,\
+1,\
 1,\
 1,\
 1,\
@@ -2636,7 +2800,7 @@ const int DictPraser::RulesLength[16] = { \
 1,\
 1 };
 //==============================
-const char* const DictPraser::RulesName[16] = { \
+const char* const DictPraser::RulesName[19] = { \
 "all->DICTIONARY ",\
 "DICTIONARY->braceL KVS braceR ",\
 "KVS->KVS KV ",\
@@ -2648,11 +2812,16 @@ const char* const DictPraser::RulesName[16] = { \
 "VALUE->squareL squareR ",\
 "UNITS->UNITS comma UNIT ",\
 "UNITS->UNIT ",\
+"UNIT->string ",\
+"UNIT->integer ",\
+"UNIT->real ",\
 "UNIT->NULL ",\
 "UNIT->null ",\
 "UNIT->true ",\
 "UNIT->false ",\
 "UNIT->DICTIONARY " };
+
+
 
 
 using namespace hyperlex;
