@@ -1,0 +1,17 @@
+lexical:{
+    void: 
+    {
+        num: [0-9];
+        letter: [a-z]|[A-Z];
+    }
+    id: id(+1): (<letter> | _)(<letter> | _ | <num>)*;
+    division:
+	{
+		arrow: '-''>';
+		colon: ':';
+		dot: '.';
+        colon2: ':'':';
+        slash: '/';
+        backslash: '\\';
+	}
+};

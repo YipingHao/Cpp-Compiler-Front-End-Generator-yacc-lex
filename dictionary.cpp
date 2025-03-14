@@ -144,28 +144,135 @@ struct complex
 static bool compare(const char* str1, const char* str2);
 dictionary::element dictionary::search(dictionary::Ktype& T, const char* key)
 {
-    size_t i;
+    size_t i, j;
     element E;
     hyperlex::Morpheme eme;
-    eme.Build<complex>(key);
     vector<const char*> storage;
+    dictionary* target;
+
+    eme.Build<complex>(key);
+    target = this;
     for (i = 0; i < eme.GetCount(); i++)
     {
         if (eme[i].category == complex::_id___)
             storage.append(eme.GetWord(i));
     }
     E.dd = NULL;
-    for (i = 0; i < Content.count(); i++)
+    for (i = 1; i < storage.count(); i++)
     {
-        if (key == Content[i].key)
+        for (j = 0; j < target->Content.count(); j++)
         {
-            T = Content[i].T;
-            return Content[i].Content[0];
+            if (compare(storage[i - 1], target->Content[j].key))
+            {
+                if (target->Content[j].T == dictionary_)
+                {
+                    target = target->Content[j][0].dd;
+                    break;
+                }
+                else
+                {
+                    T == null_;
+                    return E;
+                }
+            }
+        }
+    }
+    for (j = 0; j < target->Content.count(); j++)
+    {
+        if (compare(storage[i - 1], target->Content[j].key))
+        {
+            T == target->Content[j].T;
+            E = target->Content[j][0];
+            return E;
         }
     }
     T = null_;
     return E;
 }
+dictionary::element* dictionary::search(size_t& count, dictionary::Ktype& T, const char* key)
+{
+    size_t i, j;
+    element*E;
+    hyperlex::Morpheme eme;
+    vector<const char*> storage;
+    dictionary* target;
+
+    target = this;
+    count = 0;
+    E = NULL;
+    eme.Build<complex>(key);
+    for (i = 0; i < eme.GetCount(); i++)
+    {
+        if (eme[i].category == complex::_id___)
+            storage.append(eme.GetWord(i));
+    }
+    
+    for (i = 1; i < storage.count(); i++)
+    {
+        for (j = 0; j < target->Content.count(); j++)
+        {
+            if (compare(storage[i - 1], target->Content[j].key))
+            {
+                if (target->Content[j].T == dictionary_)
+                {
+                    target = target->Content[j][0].dd;
+                    break;
+                }
+                else
+                {
+                    T == null_;
+                    return E;
+                }
+            }
+        }
+    }
+    for (j = 0; j < target->Content.count(); j++)
+    {
+        if (compare(storage[i - 1], target->Content[j].key))
+        {
+            T == target->Content[j].T;
+            E = target->Content[j].Content;
+            count = target->Content[j].count();
+            return E;
+        }
+    }
+    T = null_;
+    return E;
+}
+const char* dictionary::search(const char* Default_, const char* key)
+{
+    element E;
+    Ktype T;
+    E = search(T, key);
+    if (T == string_) return E.ss;
+    else return Default_;
+}
+bool dictionary::search(bool Default_, const char* key)
+{
+    element E;
+    Ktype T;
+    E = search(T, key);
+    if (T == bool_) return E.bb;
+    else return Default_;
+}
+long int dictionary::search(long int Default_, const char* key)
+{
+    element E;
+    Ktype T;
+    E = search(T, key);
+    if (T == int_) return E.ii;
+    else return Default_;
+}
+double dictionary::search(double Default_, const char* key)
+{
+    element E;
+    Ktype T;
+    E = search(T, key);
+    if (T == float_) return E.ff;
+    else return Default_;
+}
+
+
 
 void dictionary::print(FILE* fp) const
 {

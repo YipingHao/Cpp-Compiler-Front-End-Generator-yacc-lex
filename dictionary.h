@@ -58,6 +58,11 @@ namespace hyperlex
         void clear(void);
 
         element search(Ktype& T, const char* key);
+        element*search(size_t&count, Ktype& T, const char* key);
+        const char* search(const char* Default_, const char* key);
+        bool search(bool Default_, const char* key);
+        long int search(long int Default_, const char* key);
+        double search(double Default_, const char* key);
     private:
         typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor> GLTree;
         typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor>::PostIterator GTIter;

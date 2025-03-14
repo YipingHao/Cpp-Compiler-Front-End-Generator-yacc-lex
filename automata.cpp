@@ -5454,11 +5454,11 @@ const char* Gsheet::TypeToChar(Gsheet::type TT)
 		return "error";
 	}
 }
-const Gsheet::ErrorType Gsheet::ErrorTypeGet(void)
+Gsheet::ErrorType Gsheet::ErrorTypeGet(void)
 {
 	return ET;
 }
-const Gsheet::ErrorInfor Gsheet::ErrorInforGet(void)
+Gsheet::ErrorInfor Gsheet::ErrorInforGet(void)
 {
 	return EI;
 }

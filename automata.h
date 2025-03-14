@@ -1226,8 +1226,8 @@ namespace hyperlex
 		void CppStructPrint02(const char* name, FILE* fp, const grammerS* grammer)const;
 		// now site 0 is END-EOF, site 1-N Are N terminal symbol
 		static const char* TypeToChar(type TT);
-		const ErrorType ErrorTypeGet(void);
-		const ErrorInfor ErrorInforGet(void);
+		ErrorType ErrorTypeGet(void);
+		ErrorInfor ErrorInforGet(void);
 	private:
 		size_t StateCount;
 		size_t TerminalCount;
