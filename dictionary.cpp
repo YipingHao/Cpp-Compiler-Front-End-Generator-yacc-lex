@@ -1,5 +1,12 @@
 #include"dictionary.h"
 using namespace hyperlex;
+
+#define SizeMax ((size_t)0xffffffffffffffff)
+#define CharSize ((size_t)(1 << (sizeof(char) * 8 - 1)))
+
+static bool compare(const char* str1, const char* str2);
+static const char* Copy(const char* input);
+
 dictionary::dictionary()
 {
 
@@ -141,7 +148,7 @@ struct complex
     static int action(int state);
     static int GroupGet(int state);
 };
-static bool compare(const char* str1, const char* str2);
+
 dictionary::element dictionary::search(dictionary::Ktype& T, const char* key)
 {
     size_t i, j;
@@ -158,6 +165,7 @@ dictionary::element dictionary::search(dictionary::Ktype& T, const char* key)
             storage.append(eme.GetWord(i));
     }
     E.dd = NULL;
+    T = null_;
     for (i = 1; i < storage.count(); i++)
     {
         for (j = 0; j < target->Content.count(); j++)
@@ -169,24 +177,20 @@ dictionary::element dictionary::search(dictionary::Ktype& T, const char* key)
                     target = target->Content[j][0].dd;
                     break;
                 }
-                else
-                {
-                    T == null_;
-                    return E;
-                }
+                else return E;
             }
         }
+        if (j == target->Content.count()) return E;
     }
     for (j = 0; j < target->Content.count(); j++)
     {
         if (compare(storage[i - 1], target->Content[j].key))
         {
-            T == target->Content[j].T;
+            T = target->Content[j].T;
             E = target->Content[j][0];
             return E;
         }
     }
-    T = null_;
     return E;
 }
 dictionary::element* dictionary::search(size_t& count, dictionary::Ktype& T, const char* key)
@@ -200,6 +204,7 @@ dictionary::element* dictionary::search(size_t& count, dictionary::Ktype& T, con
     target = this;
     count = 0;
     E = NULL;
+    T = null_;
     eme.Build<complex>(key);
     for (i = 0; i < eme.GetCount(); i++)
     {
@@ -218,25 +223,21 @@ dictionary::element* dictionary::search(size_t& count, dictionary::Ktype& T, con
                     target = target->Content[j][0].dd;
                     break;
                 }
-                else
-                {
-                    T == null_;
-                    return E;
-                }
+                else return E;
             }
         }
+        if (j == target->Content.count()) return E;
     }
     for (j = 0; j < target->Content.count(); j++)
     {
         if (compare(storage[i - 1], target->Content[j].key))
         {
-            T == target->Content[j].T;
+            T = target->Content[j].T;
             E = target->Content[j].Content;
             count = target->Content[j].count();
             return E;
         }
     }
-    T = null_;
     return E;
 }
 const char* dictionary::search(const char* Default_, const char* key)
@@ -270,6 +271,81 @@ double dictionary::search(double Default_, const char* key)
     E = search(T, key);
     if (T == float_) return E.ff;
     else return Default_;
+}
+
+size_t dictionary::append(const char* key, dictionary::element value, dictionary::Ktype T)
+{
+    size_t i, j;
+    size_t site;
+    hyperlex::Morpheme eme;
+    vector<const char*> storage;
+    dictionary* target;
+    KV kv;
+    eme.Build<complex>(key);
+    target = this;
+    site = SizeMax;
+    for (i = 0; i < eme.GetCount(); i++)
+    {
+        if (eme[i].category == complex::_id___)
+            storage.append(eme.GetWord(i));
+    }
+    for (i = 1; i < storage.count(); i++)
+    {
+        for (j = 0; j < target->Content.count(); j++)
+        {
+            if (compare(storage[i - 1], target->Content[j].key))
+            {
+                if (target->Content[j].T == dictionary_)
+                {
+                    target = target->Content[j][0].dd;
+                    break;
+                }
+                else return site;
+            }
+        }
+        if(j == target->Content.count()) return site;
+    }
+    for (j = 0; j < target->Content.count(); j++)
+        if (compare(storage[i - 1], target->Content[j].key)) return site;
+    site = target->Content.count();
+    kv.setType(T);
+    kv.append(value);
+    target->Content.append(kv);
+    kv.Count = 0;
+    kv.Content = NULL;
+    return site;
+}
+size_t dictionary::append(const char* key, const char* value)
+{
+    element VV;
+    Ktype T;
+    T = string_;
+    VV.ss = (char*)Copy(value);
+    return (key, value, T);
+}
+size_t dictionary::append(const char* key, double value)
+{
+    element VV;
+    Ktype T;
+    T = float_;
+    VV.ff = value;
+    return (key, value, T);
+}
+size_t dictionary::append(const char* key, long int value)
+{
+    element VV;
+    Ktype T;
+    T = int_;
+    VV.ii = value;
+    return (key, value, T);
+}
+size_t dictionary::append(const char* key, bool value)
+{
+    element VV;
+    Ktype T;
+    T = bool_;
+    VV.bb = value;
+    return (key, value, T);
 }
 
 
@@ -1390,5 +1466,14 @@ static bool compare(const char* str1, const char* str2)
     for (i = 0; (str1[i] != '\0') && (str1[i] == str2[i]); i++);
     return str1[i] == str2[i];
 }
-
+static const char* Copy(const char* input)
+{
+    char* nnnn;
+    size_t length, i;
+    for (length = 0; input[length] != '\0'; length++);
+    length += 1;
+    nnnn = (char*)malloc(sizeof(char) * length);
+    for (i = 0; i < length; i++) nnnn[i] = input[i];
+    return nnnn;
+}
 

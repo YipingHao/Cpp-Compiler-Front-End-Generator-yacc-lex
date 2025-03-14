@@ -1599,6 +1599,16 @@ static int test_21(const char* output_path, hyperlex_old::ParaFile& pf)
     error = dick.build(input.ptr());
     std::cout << "error: " << error << std::endl;
     dick.print(stdout);
+
+    const char* here;
+    here = dick.search("None", "inputfile");
+    printf("here: %s\n", here);
+
+    here = dick.search("None", "output::default");
+    printf("output::default: %s\n", here);
+
+    here = dick.search("None", "output::information");
+    printf("output::information: %s\n", here);
     return 0;
 }
 
