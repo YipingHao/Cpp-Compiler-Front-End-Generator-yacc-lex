@@ -32,10 +32,9 @@ void BufferChar::operator<<(FILE* fp)
 	while (feof(fp) == 0)
 	{
 		c = (const char)getc(fp);
-		if((int)c != (int)EOF)
-			append(c);
+		append(c);
 	}
-			
+	if ((int)content[Rear - 1] == (int)EOF) Rear -= 1;
 }
 void BufferChar::operator=(const char* input)
 {
@@ -484,6 +483,8 @@ int Morpheme::accept(size_t index)const
 
 GrammarTree::GrammarTree()
 {
+	error_record01 = 0;
+	error_record02 = 0;
 	GT = NULL;
 }
 GrammarTree::~GrammarTree()
@@ -2012,6 +2013,8 @@ int InputPanel::buildGanalysis(const Morpheme& eme)
 	if (error != 0)
 	{
 		errorCode = ErrorinputGrammar;
+		errorInfor1 = Tree.error_record01;
+		errorInfor2 = Tree.error_record02;
 		return error;
 	}
 	//printf("Here?!\n");

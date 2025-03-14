@@ -433,6 +433,8 @@ namespace hyperlex
 		template<typename T> int build(const Morpheme& input);
 
 		tree<TreeInfor>* GT;
+		size_t error_record01;
+		size_t error_record02;
 	protected:
 	};
 	class RegularExp
@@ -943,6 +945,8 @@ namespace hyperlex
 				//TempTree.pop(GT);
 				break;
 			case T::error:
+				error_record01 = head;
+				error_record02 = (size_t)top;
 				error = temp;
 				DoNext = false;
 				break;
@@ -986,6 +990,8 @@ namespace hyperlex
 				}
 				else
 				{
+					error_record01 = head;
+					error_record02 = (size_t)top;
 					error = GoFull;
 					DoNext = false;
 				}

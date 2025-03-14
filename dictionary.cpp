@@ -1,0 +1,1287 @@
+#include"dictionary.h"
+using namespace hyperlex;
+dictionary::dictionary()
+{
+
+}
+dictionary::~dictionary()
+{
+    clear();
+}
+void dictionary::clear(void)
+{
+    size_t i;
+    for (i = 0; i < Content.count(); i++)
+    {
+        Content[i].ruin();
+    }
+    Content.clear();
+}
+dictionary::KV::KV()
+{
+    initial();
+}
+dictionary::KV::~KV()
+{
+    ruin();
+    free(key);
+}
+void dictionary::KV::ruin(void)
+{
+    clear();
+    free(Content);
+    Content = NULL;
+    free(key);
+    key = NULL;
+}
+void dictionary::KV::clear(void)
+{
+    size_t i;
+    for (i = 0; i < Count; ++i)
+    {
+        switch (T)
+        {
+        case string_: free(Content[i].ss); break;
+        case dictionary_: delete Content[i].dd; break;
+        default: break;
+        }
+    }
+    Count = 0;
+}
+void dictionary::KV::initial(void)
+{
+    key = NULL;
+    T = null_;
+    Content = NULL;
+    Capacity = 0;
+    Count = 0;
+}
+void dictionary::KV::recapacity(size_t NewSize)
+{
+    size_t i;
+    element* newContent = (element*)malloc(sizeof(element) * NewSize);
+    if (NewSize <= Count)
+    {
+        for (i = NewSize; i < Count; ++i)
+        {
+            switch (T) {
+            case string_:
+                free(Content[i].ss);
+                break;
+            case dictionary_:
+                delete Content[i].dd;
+                break;
+            }
+        }
+        Count = NewSize;
+    }
+    else
+    {
+        for (i = 0; i < Count; ++i) {
+            newContent[i] = Content[i];
+        }
+    }
+    free(Content);
+    Content = newContent;
+    Capacity = NewSize;
+}
+void dictionary::KV::append(const element& e)
+{
+    if (Count >= Capacity) recapacity(Capacity ? (Capacity + Capacity / 4 + 4) : 1);
+    Content[Count] = e;
+    Count++;
+}
+void dictionary::KV::setType(Ktype newType)
+{
+    if (T != newType) {
+        clear();
+        T = newType;
+    }
+}
+void dictionary::KV::setName(const char* newKey)
+{
+    size_t i;
+    free(key);
+    key = NULL;
+    if (!newKey) return;
+
+    size_t len = 0;
+    while (newKey[len] != '\0') ++len;
+
+    key = (char*)(malloc((len + 1) * sizeof(char)));
+    for (i = 0; i <= len; ++i)
+    {
+        key[i] = newKey[i];
+    }
+}
+
+size_t dictionary::KV::capacity() const { return Capacity; }
+size_t dictionary::KV::count() const { return Count; }
+dictionary::element& dictionary::KV::operator[](size_t i) { return Content[i]; }
+const dictionary::element& dictionary::KV::operator[](size_t i) const { return Content[i]; }
+
+struct complex
+{
+    enum regular
+    {
+        _id_ = 1,
+        _arrow_ = 2,
+        _colon_ = 3,
+        _dot_ = 4,
+        _colon2_ = 5,
+        _slash_ = 6,
+        _backslash_ = 7
+    };
+    enum group
+    {
+        _id___ = 1,
+        _division___ = 2
+    };
+    static int next(int state, const char c);
+    static int action(int state);
+    static int GroupGet(int state);
+};
+static bool compare(const char* str1, const char* str2);
+dictionary::element dictionary::search(dictionary::Ktype& T, const char* key)
+{
+    size_t i;
+    element E;
+    hyperlex::Morpheme eme;
+    eme.Build<complex>(key);
+    vector<const char*> storage;
+    for (i = 0; i < eme.GetCount(); i++)
+    {
+        if (eme[i].category == complex::_id___)
+            storage.append(eme.GetWord(i));
+    }
+    E.dd = NULL;
+    for (i = 0; i < Content.count(); i++)
+    {
+        if (key == Content[i].key)
+        {
+            T = Content[i].T;
+            return Content[i].Content[0];
+        }
+    }
+    T = null_;
+    return E;
+}
+
+void dictionary::print(FILE* fp) const
+{
+    print(fp, 0);
+    fprintf(fp, "\n");
+}
+void dictionary::PrintTab(FILE* fp, size_t count) const
+{
+    size_t i;
+    for (i = 0; i < count; ++i)
+    {
+        fprintf(fp, "\t");
+    }
+}
+void dictionary::print(FILE* fp, size_t indent) const
+{
+    fprintf(fp, "{\n");
+
+    for (size_t i = 0; i < Content.count(); ++i)
+    {
+        const KV& kv = Content[i];
+        PrintTab(fp, indent + 1);
+        fprintf(fp, "%s: ", kv.key ? kv.key : "(null)");
+        //continue;
+        // 根据类型打印内容
+        if (kv.Count != 1)
+        {
+            PrintArray(fp, kv, indent + 1);          // 基础类型紧凑打印
+        }
+        else
+        {
+            switch (kv.T) {
+            case int_:
+                fprintf(fp, "%ld", kv.Content[0].ii);
+                break;
+            case float_:
+                fprintf(fp, "%g", kv.Content[0].ff);
+                break;
+            case string_:
+                fprintf(fp, "\"%s\"", kv.Content[0].ss ? kv.Content[0].ss : "");
+                break;
+            case bool_:
+                fprintf(fp, "%s", kv.Content[0].bb ? "true" : "false");
+                break;
+            case dictionary_:
+                if (kv.Content[0].dd) {
+                    kv.Content[0].dd->print(fp, indent + 1);
+                }
+                else {
+                    fprintf(fp, "{}");
+                }
+                break;
+            default:
+                fprintf(fp, "null");
+            }
+        }
+        fprintf(fp, ";\n");
+    }
+
+    PrintTab(fp, indent);
+    fprintf(fp, "}");
+}
+void dictionary::PrintArray(FILE* fp, const KV& kv, size_t indent) const
+{
+    const bool isComplexType = (kv.T == dictionary_ || kv.T == string_);
+    //fprintf(fp, "%zu, indent: %zu", kv.Count, indent);
+    fprintf(fp, "[");
+    //return;
+    for (size_t j = 0; j < kv.Count; ++j)
+    {
+        //fprintf(fp, "%zu, indent: %zu\n", j, kv.Count);
+
+        //fprintf(fp, "===%zu, indent: %zu\n", j, kv.Count);
+        //continue;
+        // 打印单个元素
+        switch (kv.T) {
+        case int_:
+            fprintf(fp, "%ld", kv.Content[j].ii);
+            break;
+        case float_:
+            fprintf(fp, "%g", kv.Content[j].ff);
+            break;
+        case string_:
+            fprintf(fp, "\"%s\"", kv.Content[j].ss ? kv.Content[j].ss : "");
+            break;
+        case bool_:
+            fprintf(fp, "%s", kv.Content[j].bb ? "true" : "false");
+            break;
+        case dictionary_:
+            if (kv.Content[j].dd) {
+                kv.Content[j].dd->print(fp, indent);
+            }
+            else {
+                fprintf(fp, "{}");
+            }
+            break;
+        default:
+            fprintf(fp, "null");
+        }
+
+        // 元素分隔符
+        if (j != kv.Count - 1) {
+            if (isComplexType)
+            {
+                fprintf(fp, ",\n");
+                PrintTab(fp, indent + 1);
+            }
+            else
+                fprintf(fp, ", ");
+        }
+    }
+    fprintf(fp, "]");
+}
+
+struct DictReg
+{
+    enum regular
+    {
+        _id_ = 1,
+        _integer_ = 2,
+        _real_ = 3,
+        _string_ = 4,
+        _false_ = 5,
+        _true_ = 6,
+        _null_ = 7,
+        _NULL_ = 8,
+        _semicolon_ = 9,
+        _colon_ = 10,
+        _dot_ = 11,
+        _comma_ = 12,
+        _value_ = 13,
+        _braceL_ = 14,
+        _braceR_ = 15,
+        _left_ = 16,
+        _right_ = 17,
+        _squareL_ = 18,
+        _squareR_ = 19,
+        _anntationS_ = 20,
+        _anntationM_ = 21,
+        _spaces_ = 22,
+        _enters_ = 23,
+        _tab_ = 24
+    };
+    enum group
+    {
+        _id___ = 1,
+        _number___ = 2,
+        _string___ = 3,
+        _reserved___ = 4,
+        _division___ = 5,
+        _value___ = 6,
+        _braket___ = 7,
+        _anntation___ = 8,
+        _format___ = 9
+    };
+    static int next(int state, const char c);
+    static int action(int state);
+    static int GroupGet(int state);
+};
+struct DictPraser
+{
+    enum type
+    {
+        accept = 0,
+        error = 1,
+        push = 2,
+        reduce = 3
+    };
+    enum nonterminal
+    {
+        _all_ = 0,
+        _DICTIONARY_ = 1,
+        _KVS_ = 2,
+        _KV_ = 3,
+        _VALUE_ = 4,
+        _UNITS_ = 5,
+        _UNIT_ = 6
+    };
+    enum rules
+    {
+        _all_all_ = 0,
+        _DICTIONARY_DICTIONARY_ = 1,
+        _KVS_multi_ = 2,
+        _KVS_single_ = 3,
+        _KV_colon_ = 4,
+        _KV_value_ = 5,
+        _VALUE_multi_ = 6,
+        _VALUE_single_ = 7,
+        _VALUE_nul_ = 8,
+        _UNITS_multi_ = 9,
+        _UNITS_single_ = 10,
+        _UNIT_string_ = 11,
+        _UNIT_integer_ = 12,
+        _UNIT_real_ = 13,
+        _UNIT_NULL_ = 14,
+        _UNIT_null_ = 15,
+        _UNIT_true_ = 16,
+        _UNIT_false_ = 17,
+        _UNIT_dictionary_ = 18
+    };
+    static const size_t StateCount;
+    static const size_t NonTerminalCount;
+    static const size_t TerminalCount;
+    static const size_t RulesCount;
+    static const int GOTO[30][7];
+    static const int ACTION[30][25];
+    static const int RulesToSymbol[19];
+    static const int RulesLength[19];
+    static const char* const RulesName[19];
+};
+
+
+
+
+
+int dictionary::build(FILE* fp)
+{
+    Morpheme eme;
+    int error;
+    clear();
+    error = eme.Build<DictReg>(fp);
+    if (error != 0)
+    {
+        //errorCode = ErrorinputLEXICAL;
+        return error;
+    }
+    NeglectNullToken(eme);
+    //eme.Demo(stdout);
+    error = buildGanalysis(eme);
+    if (error != 0) return error;
+    //errorCode = NoError;
+    return 0;
+}
+int dictionary::build(const char* input)
+{
+    Morpheme eme;
+    int error;
+    clear();
+    //initial();
+    error = eme.Build<DictReg>(input);
+    if (error != 0)
+    {
+        //errorCode = ErrorinputLEXICAL;
+        return error;
+    }
+    NeglectNullToken(eme);
+    //eme.Demo(stdout);
+    error = buildGanalysis(eme);
+    if (error != 0) return error;
+    //errorCode = NoError;
+    return 0;
+}
+void dictionary::move(dictionary* source)
+{
+    size_t i;
+    clear();
+    Content.recount(source->Content.count());
+    for (i = 0; i < source->Content.count(); i++)
+    {
+        Content[i] = source->Content[i];
+    }
+    source->Content.clear();
+}
+void dictionary::move(KV*& source)
+{
+    Content.append(*source);
+    source->Count = 0;
+    source->Content = NULL;
+    source->key = NULL;
+    delete source;
+    source = NULL;
+}
+
+void dictionary::NeglectNullToken(Morpheme& eme) const
+{
+    size_t i;
+    DictReg::regular T;
+    DictReg::group G;
+    for (i = 0; i < eme.GetCount(); i++)
+    {
+        T = (DictReg::regular)(eme[i].accept);
+        G = (DictReg::group)(eme[i].category);
+        if (G == DictReg::_format___ || G == DictReg::_anntation___)
+        {
+            eme.valid(i) = false;
+        }
+    }
+    return;
+}
+int dictionary::buildGanalysis(const Morpheme& eme)
+{
+    int error;
+    GrammarTree Tree;
+    error = Tree.build<DictPraser>(eme);
+    if (error != 0)
+    {
+        //errorCode = ErrorinputGrammar;
+        return error;
+    }
+    //printf("Here?!\n");
+    //Tree.Demo(stdout, eme, DictPraser::RulesName);
+    //printf("Here?!\n");
+    error = buildAll(eme, Tree);
+    //printf("Here?!:%d\n", error);
+    //Tree.Demo(stdout, eme, DictPraser::RulesName);
+    //printf("Here?!\n");
+    if (error != 0) return error;
+    //printf("Here?!:%d\n", error);
+    return error;
+}
+int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
+{
+    int error;
+    struct tempInfor
+    {
+        Ktype T;
+        element E;
+    }*tempI;
+    Ktype T;
+    GLTree* GT;
+    KV* KVtemp;
+    GTIter iterator;
+    DictPraser::rules RR;
+    size_t site_;
+    const char* Ctemp;
+    dictionary* Dtemp;
+    error = 0;
+    iterator.initial(Tree.GT);
+    while (iterator.still())
+    {
+        GT = iterator.target();
+        site_ = GT->root().site;
+        if (iterator.state() != 0 && GT->root().rules)
+        {
+            //printf("label:%zu, %zu\n", GT->root().label, (size_t)GT);
+            RR = (DictPraser::rules)GT->root().site;
+            switch (RR)
+            {
+            case DictPraser::_all_all_:
+                Dtemp = (dictionary*)GT->child(0)->root().infor;
+                //printf("%zu:%zu\n", Content.count(), Dtemp->Content.count());
+                move(Dtemp);
+                //printf("%zu:%zu\n", Content.count(), Dtemp->Content.count());
+                delete Dtemp;
+                GT->child(0)->root().infor = NULL;
+                break;
+            case DictPraser::_DICTIONARY_DICTIONARY_:
+                GT->root().infor = GT->child(1)->root().infor;
+                GT->child(1)->root().infor = NULL;
+                Dtemp = (dictionary*)GT->root().infor;
+                //printf("%zu\n", Dtemp->Content.count());
+                break;
+            case DictPraser::_KVS_multi_:
+                Dtemp = (dictionary*)(GT->child(0)->root().infor);
+                KVtemp = (KV*)(GT->child(1)->root().infor);
+                //printf("???\n");
+                Dtemp->move(KVtemp);
+                //printf("???\n");
+                GT->child(0)->root().infor = NULL;
+                GT->child(1)->root().infor = NULL;
+                GT->root().infor = (void*)Dtemp;
+                //printf("%zu\n", Dtemp->Content.count());
+                break;
+            case DictPraser::_KVS_single_:
+                Dtemp = new dictionary;
+                KVtemp = (KV*)(GT->child(0)->root().infor);
+
+                Dtemp->move(KVtemp);
+                //printf("???\n");
+                GT->child(0)->root().infor = NULL;
+                GT->root().infor = (void*)Dtemp;
+                //printf("%zu\n", Dtemp->Content.count());
+                break;
+            case DictPraser::_KV_colon_:
+            case DictPraser::_KV_value_:
+                KVtemp = (KV*)(GT->child(2)->root().infor);
+                //printf("label:%zu, child(2)%zu", GT->child(2)->root().label, (size_t)GT->child(2));
+                //printf("KVtemp:%zu, %zu, ", (size_t)KVtemp, KVtemp->Count);
+                //if (KVtemp->T == string_) printf("_KV_value_%s\n", KVtemp->Content[0].ss);
+                Ctemp = eme.GetWord(GT->child(0)->root().site);
+                KVtemp->setName(Ctemp);
+                GT->root().infor = (void*)KVtemp;
+                GT->child(2)->root().infor = NULL;
+                //printf("KVtemp%zu, <%s> \n", KVtemp->Count, Ctemp);
+                break;
+            case DictPraser::_VALUE_multi_:
+                GT->root().infor = GT->child(1)->root().infor;
+                GT->child(1)->root().infor = NULL;
+                break;
+            case DictPraser::_VALUE_single_:
+                KVtemp = new KV();
+                tempI = (tempInfor*)(GT->child(0)->root().infor);
+                KVtemp->setType(tempI->T);
+                KVtemp->append(tempI->E);
+                //if (tempI->T == string_) printf("_VALUE_single_%s\n", tempI->E.ss);
+                //printf("label: %zu, KVtemp(single):%zu, ", GT->root().label, (size_t)KVtemp);
+                free(tempI);
+                GT->root().infor = (void*)KVtemp;
+                //printf("KVtemp(single):%zu, %zu\n", KVtemp->Count, (size_t)GT->root().infor);
+                break;
+            case DictPraser::_VALUE_nul_:
+                KVtemp = new KV();
+                KVtemp->setType(null_);
+                GT->root().infor = (void*)KVtemp;
+                break;
+            case DictPraser::_UNITS_multi_:
+                KVtemp = (KV*)(GT->child(0)->root().infor);
+                GT->child(0)->root().infor = NULL;
+                tempI = (tempInfor*)(GT->child(2)->root().infor);
+                if (tempI->T != KVtemp->T) return -233;
+                KVtemp->append(tempI->E);
+                free(tempI);
+                GT->root().infor = (void*)KVtemp;
+                break;
+            case DictPraser::_UNITS_single_:
+                KVtemp = new KV();
+                tempI = (tempInfor*)(GT->child(0)->root().infor);
+                KVtemp->setType(tempI->T);
+                KVtemp->append(tempI->E);
+                free(tempI);
+                GT->root().infor = (void*)KVtemp;
+                break;
+            case DictPraser::_UNIT_string_:
+            case DictPraser::_UNIT_integer_:
+            case DictPraser::_UNIT_real_:
+            case DictPraser::_UNIT_NULL_:
+            case DictPraser::_UNIT_null_:
+            case DictPraser::_UNIT_true_:
+            case DictPraser::_UNIT_false_:
+            case DictPraser::_UNIT_dictionary_:
+                tempI = (tempInfor*)malloc(sizeof(tempInfor));
+                tempI->E = buildUnit(T, eme, GT);
+                tempI->T = T;
+                //if (T == string_) printf("KL%s\n", tempI->E.ss);
+                GT->root().infor = (void*)tempI;
+                break;
+            default:
+                error = -7;
+                return error;
+                break;
+            }
+        }
+        iterator.next();
+    }
+    return error;
+}
+dictionary::element dictionary::buildUnit(dictionary::Ktype& T, const Morpheme& eme, GLTree* GT)
+{
+    element E;
+    DictPraser::rules RR;
+    BufferChar BC;
+    E.bb = true;
+    RR = (DictPraser::rules)GT->root().site;
+    switch (RR)
+    {
+    case DictPraser::_UNIT_string_:
+        T = string_;
+        BC = eme.GetWord(GT->child(0)->root().site);
+        E.ss = BC.DequeueString();
+        break;
+    case DictPraser::_UNIT_integer_:
+        T = int_;
+        BC = eme.GetWord(GT->child(0)->root().site);
+        E.ii = BC.DequeueInt();
+        break;
+    case DictPraser::_UNIT_real_:
+        T = float_;
+        BC = eme.GetWord(GT->child(0)->root().site);
+        E.ff = BC.DequeueReal();
+        break;
+    case DictPraser::_UNIT_NULL_:
+    case DictPraser::_UNIT_null_:
+        T = null_;
+        break;
+    case DictPraser::_UNIT_true_:
+        T = bool_;
+        E.bb = true;
+        break;
+    case DictPraser::_UNIT_false_:
+        T = bool_;
+        E.bb = false;
+        break;
+    case DictPraser::_UNIT_dictionary_:
+        T = dictionary_;
+        E.dd = (dictionary*)(GT->child(0)->root().infor);
+        GT->child(0)->root().infor = NULL;
+        break;
+    default:
+        break;
+    }
+    return E;
+}
+
+int DictReg::next(int state, const char c)
+{
+    switch (state)
+    {
+    case 0:
+        if (c == (char)9) return 24;
+        else if (c == (char)10) return 23;
+        else if (c == ' ') return 22;
+        else if (c == '\"') return 25;
+        else if (c == '(') return 16;
+        else if (c == ')') return 17;
+        else if (c == '+') return 39;
+        else if (c == ',') return 12;
+        else if (c == '-') return 39;
+        else if (c == '.') return 11;
+        else if (c == '/') return 45;
+        else if ('0' <= c && c <= '9') return 2;
+        else if (c == ':') return 10;
+        else if (c == ';') return 9;
+        else if (c == '=') return 13;
+        else if ('A' <= c && c <= 'M') return 1;
+        else if (c == 'N') return 28;
+        else if ('O' <= c && c <= 'Z') return 1;
+        else if (c == '[') return 18;
+        else if (c == ']') return 19;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'e') return 1;
+        else if (c == 'f') return 34;
+        else if ('g' <= c && c <= 'm') return 1;
+        else if (c == 'n') return 35;
+        else if ('o' <= c && c <= 's') return 1;
+        else if (c == 't') return 36;
+        else if ('u' <= c && c <= 'z') return 1;
+        else if (c == '{') return 14;
+        else if (c == '}') return 15;
+        else return 0;
+    case 1:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 2:
+        if (c == '.') return 47;
+        else if ('0' <= c && c <= '9') return 2;
+        else return 0;
+    case 3:
+        if ('0' <= c && c <= '9') return 3;
+        else if (c == 'E') return 46;
+        else if (c == 'e') return 46;
+        else return 0;
+    case 4:
+        return 0;
+    case 5:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 6:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 7:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 8:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 9:
+        return 0;
+    case 10:
+        return 0;
+    case 11:
+        return 0;
+    case 12:
+        return 0;
+    case 13:
+        return 0;
+    case 14:
+        return 0;
+    case 15:
+        return 0;
+    case 16:
+        return 0;
+    case 17:
+        return 0;
+    case 18:
+        return 0;
+    case 19:
+        return 0;
+    case 20:
+        return 0;
+    case 21:
+        if ((char)0 <= c && c <= ')') return 38;
+        else if (c == '*') return 44;
+        else if ('+' <= c && c <= (char)127) return 38;
+        else return 0;
+    case 22:
+        if (c == ' ') return 22;
+        else return 0;
+    case 23:
+        if (c == (char)10) return 23;
+        else return 0;
+    case 24:
+        return 0;
+    case 25:
+        if (' ' <= c && c <= '!') return 40;
+        else if ('#' <= c && c <= '~') return 40;
+        else return 0;
+    case 26:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'K') return 1;
+        else if (c == 'L') return 8;
+        else if ('M' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 27:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'K') return 1;
+        else if (c == 'L') return 26;
+        else if ('M' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 28:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'T') return 1;
+        else if (c == 'U') return 27;
+        else if ('V' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 29:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'd') return 1;
+        else if (c == 'e') return 6;
+        else if ('f' <= c && c <= 'z') return 1;
+        else return 0;
+    case 30:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'k') return 1;
+        else if (c == 'l') return 7;
+        else if ('m' <= c && c <= 'z') return 1;
+        else return 0;
+    case 31:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'k') return 1;
+        else if (c == 'l') return 30;
+        else if ('m' <= c && c <= 'z') return 1;
+        else return 0;
+    case 32:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'r') return 1;
+        else if (c == 's') return 41;
+        else if ('t' <= c && c <= 'z') return 1;
+        else return 0;
+    case 33:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'k') return 1;
+        else if (c == 'l') return 32;
+        else if ('m' <= c && c <= 'z') return 1;
+        else return 0;
+    case 34:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if (c == 'a') return 33;
+        else if ('b' <= c && c <= 'z') return 1;
+        else return 0;
+    case 35:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 't') return 1;
+        else if (c == 'u') return 31;
+        else if ('v' <= c && c <= 'z') return 1;
+        else return 0;
+    case 36:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'q') return 1;
+        else if (c == 'r') return 42;
+        else if ('s' <= c && c <= 'z') return 1;
+        else return 0;
+    case 37:
+        if ('0' <= c && c <= '9') return 37;
+        else return 0;
+    case 38:
+        if ((char)0 <= c && c <= ')') return 38;
+        else if (c == '*') return 44;
+        else if ('+' <= c && c <= (char)127) return 38;
+        else return 0;
+    case 39:
+        if ('0' <= c && c <= '9') return 2;
+        else return 0;
+    case 40:
+        if (' ' <= c && c <= '!') return 40;
+        else if (c == '\"') return 4;
+        else if ('#' <= c && c <= '~') return 40;
+        else return 0;
+    case 41:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'd') return 1;
+        else if (c == 'e') return 5;
+        else if ('f' <= c && c <= 'z') return 1;
+        else return 0;
+    case 42:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 't') return 1;
+        else if (c == 'u') return 29;
+        else if ('v' <= c && c <= 'z') return 1;
+        else return 0;
+    case 43:
+        if ((char)0 <= c && c <= (char)9) return 43;
+        else if (c == (char)10) return 20;
+        else if ((char)11 <= c && c <= (char)127) return 43;
+        else return 0;
+    case 44:
+        if ((char)0 <= c && c <= ')') return 38;
+        else if (c == '*') return 44;
+        else if ('+' <= c && c <= '.') return 38;
+        else if (c == '/') return 21;
+        else if ('0' <= c && c <= (char)127) return 38;
+        else return 0;
+    case 45:
+        if (c == '*') return 38;
+        else if (c == '/') return 43;
+        else return 0;
+    case 46:
+        if (c == '+') return 48;
+        else if (c == '-') return 48;
+        else if ('0' <= c && c <= '9') return 37;
+        else return 0;
+    case 47:
+        if ('0' <= c && c <= '9') return 3;
+        else return 0;
+    case 48:
+        if ('0' <= c && c <= '9') return 37;
+        else return 0;
+    }
+    return 0;
+}
+int DictReg::action(int state)
+{
+    switch (state)
+    {
+    case 1:
+        return 1;//id: id
+    case 2:
+        return 2;//number: integer
+    case 3:
+        return 3;//number: real
+    case 4:
+        return 4;//string: string
+    case 5:
+        return 5;//reserved: false
+    case 6:
+        return 6;//reserved: true
+    case 7:
+        return 7;//reserved: null
+    case 8:
+        return 8;//reserved: NULL
+    case 9:
+        return 9;//division: semicolon
+    case 10:
+        return 10;//division: colon
+    case 11:
+        return 11;//division: dot
+    case 12:
+        return 12;//division: comma
+    case 13:
+        return 13;//value: value
+    case 14:
+        return 14;//braket: braceL
+    case 15:
+        return 15;//braket: braceR
+    case 16:
+        return 16;//braket: left
+    case 17:
+        return 17;//braket: right
+    case 18:
+        return 18;//braket: squareL
+    case 19:
+        return 19;//braket: squareR
+    case 20:
+        return 20;//anntation: anntationS
+    case 21:
+        return 21;//anntation: anntationM
+    case 22:
+        return 22;//format: spaces
+    case 23:
+        return 23;//format: enters
+    case 24:
+        return 24;//format: tab
+    case 26:
+        return 1;//id: id
+    case 27:
+        return 1;//id: id
+    case 28:
+        return 1;//id: id
+    case 29:
+        return 1;//id: id
+    case 30:
+        return 1;//id: id
+    case 31:
+        return 1;//id: id
+    case 32:
+        return 1;//id: id
+    case 33:
+        return 1;//id: id
+    case 34:
+        return 1;//id: id
+    case 35:
+        return 1;//id: id
+    case 36:
+        return 1;//id: id
+    case 37:
+        return 3;//number: real
+    case 41:
+        return 1;//id: id
+    case 42:
+        return 1;//id: id
+    }
+    return 0;
+}
+int DictReg::GroupGet(int accept)
+{
+    switch (accept)
+    {
+    case 1:
+        return 1;//id: id
+    case 2:
+        return 2;//number: integer
+    case 3:
+        return 2;//number: real
+    case 4:
+        return 3;//string: string
+    case 5:
+        return 4;//reserved: false
+    case 6:
+        return 4;//reserved: true
+    case 7:
+        return 4;//reserved: null
+    case 8:
+        return 4;//reserved: NULL
+    case 9:
+        return 5;//division: semicolon
+    case 10:
+        return 5;//division: colon
+    case 11:
+        return 5;//division: dot
+    case 12:
+        return 5;//division: comma
+    case 13:
+        return 6;//value: value
+    case 14:
+        return 7;//braket: braceL
+    case 15:
+        return 7;//braket: braceR
+    case 16:
+        return 7;//braket: left
+    case 17:
+        return 7;//braket: right
+    case 18:
+        return 7;//braket: squareL
+    case 19:
+        return 7;//braket: squareR
+    case 20:
+        return 8;//anntation: anntationS
+    case 21:
+        return 8;//anntation: anntationM
+    case 22:
+        return 9;//format: spaces
+    case 23:
+        return 9;//format: enters
+    case 24:
+        return 9;//format: tab
+    }
+    return 0;
+}
+const size_t DictPraser::StateCount = 30;
+const size_t DictPraser::NonTerminalCount = 7;
+const size_t DictPraser::TerminalCount = 24;
+const size_t DictPraser::RulesCount = 19;
+const int DictPraser::GOTO[30][7] = { \
+{1, 6, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 14, 18, 1, 1, 1}, \
+{1, 1, 1, 114, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 34, 1, 1, 106, 1, 42}, \
+{1, 34, 1, 1, 38, 1, 42}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 34, 1, 1, 1, 78, 82}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 34, 1, 1, 1, 1, 98}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1} };
+//==============================
+const int DictPraser::ACTION[30][25] = { \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 118, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 26, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 74, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 74, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 75, 1, 1, 75, 1, 1, 1, 1, 1, 1, 75, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 102, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 1, 1, 51, 1, 1, 1, 1, 1, 1, 51, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 55, 1, 1, 55, 1, 1, 1, 1, 1, 1, 55, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 47, 1, 1, 47, 1, 1, 1, 1, 1, 1, 47, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 71, 1, 1, 71, 1, 1, 1, 1, 1, 1, 71, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 67, 1, 1, 67, 1, 1, 1, 1, 1, 1, 67, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 63, 1, 1, 63, 1, 1, 1, 1, 1, 1, 63, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 59, 1, 1, 59, 1, 1, 1, 1, 1, 1, 59, 1, 1, 1, 1, 1}, \
+{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 86, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 90, 1, 1, 1, 1, 1, 1, 94, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1}, \
+{1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{7, 1, 1, 1, 1, 1, 1, 1, 1, 7, 1, 1, 7, 1, 1, 1, 1, 1, 1, 7, 1, 1, 1, 1, 1} };
+//==============================
+const int DictPraser::RulesToSymbol[19] = { \
+0,\
+1,\
+2,\
+2,\
+3,\
+3,\
+4,\
+4,\
+4,\
+5,\
+5,\
+6,\
+6,\
+6,\
+6,\
+6,\
+6,\
+6,\
+6 };
+//==============================
+const int DictPraser::RulesLength[19] = { \
+1,\
+3,\
+2,\
+1,\
+4,\
+4,\
+3,\
+1,\
+2,\
+3,\
+1,\
+1,\
+1,\
+1,\
+1,\
+1,\
+1,\
+1,\
+1 };
+//==============================
+const char* const DictPraser::RulesName[19] = { \
+"all->DICTIONARY ",\
+"DICTIONARY->braceL KVS braceR ",\
+"KVS->KVS KV ",\
+"KVS->KV ",\
+"KV->id colon VALUE semicolon ",\
+"KV->id value VALUE semicolon ",\
+"VALUE->squareL UNITS squareR ",\
+"VALUE->UNIT ",\
+"VALUE->squareL squareR ",\
+"UNITS->UNITS comma UNIT ",\
+"UNITS->UNIT ",\
+"UNIT->string ",\
+"UNIT->integer ",\
+"UNIT->real ",\
+"UNIT->NULL ",\
+"UNIT->null ",\
+"UNIT->true ",\
+"UNIT->false ",\
+"UNIT->DICTIONARY " };
+//==============================
+int complex::next(int state, const char c)
+{
+    switch (state)
+    {
+    case 0:
+        if (c == '-') return 8;
+        else if (c == '.') return 4;
+        else if (c == '/') return 6;
+        else if (c == ':') return 3;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '\\') return 7;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 1:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 2:
+        return 0;
+    case 3:
+        if (c == ':') return 5;
+        else return 0;
+    case 4:
+        return 0;
+    case 5:
+        return 0;
+    case 6:
+        return 0;
+    case 7:
+        return 0;
+    case 8:
+        if (c == '>') return 2;
+        else return 0;
+    }
+    return 0;
+}
+int complex::action(int state)
+{
+    switch (state)
+    {
+    case 1:
+        return 1;//id: id
+    case 2:
+        return 2;//division: arrow
+    case 3:
+        return 3;//division: colon
+    case 4:
+        return 4;//division: dot
+    case 5:
+        return 5;//division: colon2
+    case 6:
+        return 6;//division: slash
+    case 7:
+        return 7;//division: backslash
+    }
+    return 0;
+}
+int complex::GroupGet(int accept)
+{
+    switch (accept)
+    {
+    case 1:
+        return 1;//id: id
+    case 2:
+        return 2;//division: arrow
+    case 3:
+        return 2;//division: colon
+    case 4:
+        return 2;//division: dot
+    case 5:
+        return 2;//division: colon2
+    case 6:
+        return 2;//division: slash
+    case 7:
+        return 2;//division: backslash
+    }
+    return 0;
+}
+
+static bool compare(const char* str1, const char* str2)
+{
+    size_t i;
+    for (i = 0; (str1[i] != '\0') && (str1[i] == str2[i]); i++);
+    return str1[i] == str2[i];
+}
+
+
