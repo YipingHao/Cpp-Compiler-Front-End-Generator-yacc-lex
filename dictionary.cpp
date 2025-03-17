@@ -9,7 +9,9 @@ static const char* Copy(const char* input);
 
 dictionary::dictionary()
 {
-
+    errorCode = buildUndone;
+    errorInfor1 = 0;
+    errorInfor2 = 0;
 }
 dictionary::~dictionary()
 {
@@ -23,6 +25,11 @@ void dictionary::clear(void)
         Content[i].ruin();
     }
     Content.clear();
+    LexicalSource.clear();
+
+    errorCode = buildUndone;
+    errorInfor1 = 0;
+    errorInfor2 = 0;
 }
 dictionary::KV::KV()
 {
@@ -352,8 +359,62 @@ size_t dictionary::append(const char* key, bool value)
 
 void dictionary::print(FILE* fp) const
 {
+    if (errorCode != NoError)
+    {
+        ErrorDemo(fp);
+        return;
+    }
     print(fp, 0);
     fprintf(fp, "\n");
+}
+void dictionary::ErrorDemo(FILE* fp) const
+{
+    //const char* s_temp_1, * s_temp_2;
+    size_t i, record;
+    switch (errorCode)
+    {
+    case hyperlex::dictionary::NoError:
+        fprintf(fp, "No Error!\n");
+        break;
+    case hyperlex::dictionary::ConflictRegGroupName:
+        break;
+    case hyperlex::dictionary::repeatRegName:
+        break;
+    case hyperlex::dictionary::missingId:
+        break;
+    case hyperlex::dictionary::repeatGGroupName:
+        break;
+    case hyperlex::dictionary::repeatGName:
+        break;
+    case hyperlex::dictionary::ErrorNonTernimal:
+        break;
+    case hyperlex::dictionary::WorngRuleBody:
+        break;
+    case hyperlex::dictionary::missingIdinRegdef:
+        break;
+    case dictionary::ErrorinputLEXICAL:
+        fprintf(fp, "ErrorinputLEXICAL: \n");
+        break;
+    case dictionary::ErrorinputGrammar:
+        fprintf(fp, "ErrorinputGrammar: Something was wrong when parsing of line:");
+        record = LexicalSource[errorInfor1].line;
+        fprintf(fp, "%zu\n", record);
+        for (i = 0; i < LexicalSource.GetCount(); i++)
+        {
+            if (record == LexicalSource[i].line)
+            {
+                if (i == errorInfor1)
+                    fprintf(fp, "| %s |", LexicalSource.GetWord(i));
+                else
+                    fprintf(fp, "%s", LexicalSource.GetWord(i));
+            }
+        }
+        break;
+    case hyperlex::dictionary::buildUndone:
+        break;
+    default:
+        break;
+    }
 }
 void dictionary::PrintTab(FILE* fp, size_t count) const
 {
@@ -566,39 +627,45 @@ struct DictPraser
 
 int dictionary::build(FILE* fp)
 {
-    Morpheme eme;
+    //Morpheme eme;
     int error;
     clear();
-    error = eme.Build<DictReg>(fp);
+    error = LexicalSource.Build<DictReg>(fp);
     if (error != 0)
     {
         //errorCode = ErrorinputLEXICAL;
         return error;
     }
-    NeglectNullToken(eme);
+    NeglectNullToken(LexicalSource);
     //eme.Demo(stdout);
-    error = buildGanalysis(eme);
+    error = buildGanalysis(LexicalSource);
     if (error != 0) return error;
     //errorCode = NoError;
+    LexicalSource.clear();
     return 0;
 }
 int dictionary::build(const char* input)
 {
-    Morpheme eme;
+    //Morpheme eme;
     int error;
     clear();
     //initial();
-    error = eme.Build<DictReg>(input);
+    error = LexicalSource.Build<DictReg>(input);
     if (error != 0)
     {
         //errorCode = ErrorinputLEXICAL;
         return error;
     }
-    NeglectNullToken(eme);
+    NeglectNullToken(LexicalSource);
     //eme.Demo(stdout);
-    error = buildGanalysis(eme);
-    if (error != 0) return error;
+    error = buildGanalysis(LexicalSource);
+    if (error != 0)
+    {
+
+        return error;
+    }
     //errorCode = NoError;
+    LexicalSource.clear();
     return 0;
 }
 void dictionary::move(dictionary* source)
@@ -645,7 +712,9 @@ int dictionary::buildGanalysis(const Morpheme& eme)
     error = Tree.build<DictPraser>(eme);
     if (error != 0)
     {
-        //errorCode = ErrorinputGrammar;
+        errorCode = ErrorinputGrammar;
+        errorInfor1 = Tree.error_record01;
+        errorInfor2 = Tree.error_record02;
         return error;
     }
     //printf("Here?!\n");

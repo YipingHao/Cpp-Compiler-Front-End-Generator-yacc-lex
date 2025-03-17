@@ -403,6 +403,7 @@ void Morpheme::append(const BufferChar& input, int accept, int category)
 	temp.length = length__;
 	temp.begin = offset__;
 	temp.valid = true;
+	temp.line = 0;
 	lex.append(temp);
 	return;
 }
@@ -418,6 +419,7 @@ void Morpheme::AppendEnd(int TerminalCount)
 	temp.accept = TerminalCount;
 	temp.category = TerminalCount;
 	temp.length = 1;
+	temp.line = 0;
 	temp.begin = storage.count() - 2;
 	lex.append(temp);
 }
@@ -455,6 +457,19 @@ void Morpheme::CountReset(size_t NewCount)
 	count = NewCount;
 }
 
+void Morpheme::clear(void)
+{
+	count = 0;
+	lex.clear();
+	storage.clear();
+}
+void Morpheme::copy(const Morpheme& source)
+{
+	count = source.count;
+	lex.copy(source.lex);
+	storage.copy(source.storage);
+}
+
 bool& Morpheme::valid(size_t site)
 {
 	return lex[site].valid;
@@ -479,6 +494,26 @@ bool Morpheme::still(size_t index) const
 int Morpheme::accept(size_t index)const
 {
 	return lex[index].accept;
+}
+size_t Morpheme::CountEnter(const char* unit)
+{
+	size_t i, Entercount;
+	Entercount = 0;
+	for (i = 0; unit[i] != '\0'; i++)
+		Entercount += (unit[i] == '\n' ? 1 : 0);
+	return Entercount;
+}
+void Morpheme::SetLine(void)
+{
+	const char* temp;
+	size_t i, LineNo;
+	LineNo = 0;
+	for (i = 0; i < count; i++)
+	{
+		lex[i].line = LineNo;
+		temp = GetWord(i);
+		LineNo += CountEnter(temp);
+	}
 }
 
 GrammarTree::GrammarTree()
@@ -1593,7 +1628,9 @@ void InputPanel::clear(void)
 
 	free(RootName);
 	RootName = NULL;
-	 
+	
+	LexicalSource.clear();
+
 	GrammarEnclosed = false;
 	errorCode = NoError;
 	errorInfor1 = 0;
@@ -1695,7 +1732,7 @@ void InputPanel::demo(FILE* fp) const
 void InputPanel::ErrorDemo(FILE* fp) const
 {
 	const char* s_temp_1, * s_temp_2; 
-	size_t i, j;
+	size_t i, j, record;
 	switch (errorCode)
 	{
 	case InputPanel::NoError:
@@ -1748,7 +1785,19 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		fprintf(fp, "ErrorinputLEXICAL: \n");
 		break;
 	case InputPanel::ErrorinputGrammar:
-		fprintf(fp, "ErrorinputGrammar: \n");
+		fprintf(fp, "ErrorinputGrammar: Something was wrong when parsing of line:");
+		record = LexicalSource[errorInfor1].line;
+		fprintf(fp, "%zu\n", record);
+		for (i = 0; i < LexicalSource.GetCount(); i++)
+		{
+			if (record == LexicalSource[i].line)
+			{
+				if (i == errorInfor1)
+					fprintf(fp, "| %s |", LexicalSource.GetWord(i));
+				else
+					fprintf(fp, "%s", LexicalSource.GetWord(i));
+			}
+		}
 		break;
 	case InputPanel::buildUndone:
 		fprintf(fp, "buildUndone: has not been built.\n");
@@ -1969,38 +2018,38 @@ int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 
 int InputPanel::build(FILE* fp)
 {
-	Morpheme eme;
+	//Morpheme eme;
 	int error;
 	clear();
 	initial();
-	error = eme.Build<Reg>(fp);
+	error = LexicalSource.Build<Reg>(fp);
 	if (error != 0)
 	{
 		errorCode = ErrorinputLEXICAL;
 		return error;
 	}
-	NeglectNullToken(eme);
+	NeglectNullToken(LexicalSource);
 	//eme.Demo(stdout);
-	error = buildGanalysis(eme);
+	error = buildGanalysis(LexicalSource);
 	if (error != 0) return error;
 	errorCode = NoError;
 	return 0;
 }
 int InputPanel::build(const char* input)
 {
-	Morpheme eme;
+	//Morpheme LexicalSource;
 	int error;
 	clear();
 	initial();
-	error = eme.Build<Reg>(input);
+	error = LexicalSource.Build<Reg>(input);
 	if (error != 0)
 	{
 		errorCode = ErrorinputLEXICAL;
 		return error;
 	}
-	NeglectNullToken(eme);
+	NeglectNullToken(LexicalSource);
 	//eme.Demo(stdout);
-	error = buildGanalysis(eme);
+	error = buildGanalysis(LexicalSource);
 	if (error != 0) return error;
 	errorCode = NoError;
 	return 0;
@@ -2046,6 +2095,12 @@ void InputPanel::NeglectNullToken(Morpheme& eme) const
 		//}
 	}
 	//eme.CountReset(site);
+	//vector<bool> line;
+	//line.recount(256);
+	//line.value(false);
+	//line[(size_t)(Reg::_enters_)] = true;
+	//line[(size_t)(Reg::_anntationS_)] = true;
+	//eme.SetLine(line.ptr());
 	return;
 }
 int InputPanel::buildAll(const Morpheme& eme, GrammarTree& Tree)

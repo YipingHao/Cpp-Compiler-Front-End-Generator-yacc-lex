@@ -374,6 +374,7 @@ namespace hyperlex
 			size_t length;
 			size_t begin;
 			bool valid;
+			size_t line;
 		};
 		Morpheme();
 		~Morpheme();
@@ -394,11 +395,13 @@ namespace hyperlex
 		template<typename T> int Build(FILE* fp);
 
 		//size_t index;
-		
-		size_t initial(void)const;
-		size_t next(size_t index)const;
+		void clear(void);
+		void copy(const Morpheme& source);
+
+		size_t initial(void) const;
+		size_t next(size_t index) const;
 		bool still(size_t index) const;
-		int accept(size_t index)const;
+		int accept(size_t index) const;
 	protected:
 		size_t count;
 		//list<size_t> begin;
@@ -406,7 +409,8 @@ namespace hyperlex
 		vector<result> lex;
 		vector<char> storage;
 
-		
+		void SetLine(void);
+		size_t CountEnter(const char* unit);
 
 		template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
 	};
@@ -433,6 +437,8 @@ namespace hyperlex
 		template<typename T> int build(const Morpheme& input);
 
 		tree<TreeInfor>* GT;
+		//error_record01 = lexical unit number;
+		//error_record02 = (size_t)top content of stack;
 		size_t error_record01;
 		size_t error_record02;
 	protected:
@@ -578,6 +584,9 @@ namespace hyperlex
 		size_t errorInfor2;
 		const char* errorInfor3;
 		bool errorInfor4;
+
+		Morpheme LexicalSource;
+
 
 		void initial(void);
 		void clear(void);
@@ -796,6 +805,7 @@ namespace hyperlex
 			}
 		}
 		AppendEnd(0);
+		SetLine();
 		return 0;
 	}
 	template<typename T> int Morpheme::Build(const char* reg)
@@ -817,6 +827,7 @@ namespace hyperlex
 			}
 		}
 		AppendEnd(0);
+		SetLine();
 		return 0;
 	}
 	template<typename T> bool Morpheme::RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate)

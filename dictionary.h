@@ -46,12 +46,27 @@ namespace hyperlex
             element& operator[](size_t i);
             const element& operator[](size_t i) const;
         };
-
+        enum errorType
+        {
+            NoError = 0,
+            ConflictRegGroupName = 1,
+            repeatRegName = 2,
+            missingId = 3,
+            repeatGGroupName = 4,
+            repeatGName = 5,
+            ErrorNonTernimal,
+            WorngRuleBody,
+            missingIdinRegdef,
+            ErrorinputLEXICAL,
+            ErrorinputGrammar,
+            buildUndone,
+        };
 
 
         dictionary();
         ~dictionary();
         void print(FILE* fp) const;
+        void ErrorDemo(FILE* fp) const;
         int build(FILE* fp);
         int build(const char* input);
         void move(dictionary* source);
@@ -74,6 +89,12 @@ namespace hyperlex
         typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor> GLTree;
         typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor>::PostIterator GTIter;
         hyperlex::vector<KV> Content;
+
+        Morpheme LexicalSource;
+
+        errorType errorCode;
+        size_t errorInfor1;
+        size_t errorInfor2;
 
         void move(KV*& source);
 
