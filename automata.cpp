@@ -446,7 +446,7 @@ char Morpheme::GetChar(size_t site) const
 	input = storage.ptr(lex[site].begin);
 	head = 1;
 	if (input[0] != '\'') return input[0];
-	else CharGet(error, input, lex[site].length, head);
+	else return CharGet(error, input, lex[site].length, head);
 }
 void Morpheme::UnitMove(size_t from, size_t to)
 {
@@ -5891,7 +5891,7 @@ char hyperlex::CharGet(int& error, const char* list, size_t end, size_t& head)
 		temp = PostfixSwitch(c);
 		if (temp == -1) error = -1;
 	}
-	result = temp;
+	result = (char)temp;
 	return result;
 }
 
