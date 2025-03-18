@@ -1823,7 +1823,7 @@ void InputPanel::demoL(FILE* fp) const
 		for (j = 0; j < group->regs.count(); j++)
 		{
 			content = group->regs[j];
-			fprintf(fp, "\t\t[%ld]%s(%d): ", content->accept, content->name ? content->name : "None", content->priority);
+			fprintf(fp, "\t\t[%ld]%s(%ld): ", content->accept, content->name ? content->name : "None", content->priority);
 			content->reg->Demo(stdout);
 			fprintf(fp, ";\n");
 		}
@@ -1988,7 +1988,7 @@ int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 	ET = Gsheet0.ErrorTypeGet();
 	lr0->Demo(infor, &gs);
 	Gsheet0.Demo(infor);
-	if (ET == NoError)
+	if (ET == Gsheet::NoError)
 	{
 		Gsheet0.CppStructPrint01(nameG, output, &gs);
 		printGName(output, infor, nameG);
@@ -2002,7 +2002,7 @@ int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 	ET = Gsheet1.ErrorTypeGet();
 	lr1->Demo(infor, &gs);
 	Gsheet1.Demo(infor);
-	if (ET == NoError)
+	if (ET == Gsheet::NoError)
 	{
 		Gsheet1.CppStructPrint01(nameG, output, &gs);
 		printGName(output, infor, nameG);
