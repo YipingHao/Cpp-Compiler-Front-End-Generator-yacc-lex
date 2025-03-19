@@ -5,7 +5,7 @@ C++编译器前端生成器:按照编译器领域经典教科书——龙书上�
 它只有两个文件，automata.cpp,automata.h。词法分析不支持向前看（话说这个功能需要的人很多吗？）词法分析目前也不支持中文，只支持ASCII编码的文件。对于一般用户，这可能是个大问题。目前还没来得及改进。词法分析器支持NFA,到DFA的转换并支持DFA的状态缩减。
 ## 软件架构
 项目用到了一些模板类，均为作者手写并包含在了automata.h中，这些类被包含在了一个命名空间中。
-就像cjson一样只有两个代码文件，对于用户而言相当轻量化。这个生成器没有名字，简称为无名生成器。其中还有两个文件是dictionary.cpp和dictionary.h这列那个文件是处理数据交换文件用的，不设计本项目的核心功能，用户可以直接将它忽略。
+就像cjson一样只有两个代码文件，对于用户而言相当轻量化。这个生成器没有名字，简称为无名生成器。其中还有两个代码文件是dictionary.cpp和dictionary.h这两个文件是处理数据交换文件用的，不涉及本项目的核心功能，用户可以直接将它忽略。
 
 ## 安装教程
 
@@ -310,8 +310,14 @@ grammar: ****: {
  如果`all`没有被用户输入的词法规则定义为词法单元(终结符号)那么all不能出现在文法产生式体内，否则报错。反之`all`被定义为词法单元，当`all`出现在文法产生式体内它会被视为一个终结符号。如果`void`被用户输入的词法规则定义为一个词法单元(终结符号)，那么它将不能表达一个空产生式，换言之整个，输入文件系统不能再接受空符号。
 
 ####   产生式定义
-每一个产生式体都是单纯的重复非终结符号和终结符号对应的标识符和保留字。当然需要用空格分割它们。定义结束后分号是必要的，不可缺少。产生式体中的标识符如果不是词法单元，那么就会被识别为非终结符号，如果分析结束后没有找到此符号的定义则会报错。
-
+每一个产生式体都是单纯的重复非终结符号和终结符号对应的标识符和保留字。当然需要用空格分割它们。定义结束后分号是必要的，不可缺少。产生式体中的标识符如果不是词法单元，那么就会被识别为非终结符号，如果分析结束后没有找到此符号的定义则会报错。如果`void`没有被用户输入的词法规则定义为一个词法单元(终结符号)，那么它可以表示一个空单元。如下文中`legal: void;`所示。什么都不写（如下文中`illegal: ;`所示）是非法的。
+```
+    EMPTY:{
+	    legal: void;
+	    illegal: ;
+    }
+```
+不推荐使用空产生式。本软件处理空产生式的长度时可能会出bug。
 ## 输出文件格式
 相较于输出一个词法分析器加上文法分析器的完整代码，我们更倾向于输出词法分析器和文法分析器的”驱动表“。这种做法有更高的灵活度。如果用户不像动手写分析器，我们提供两个类将输出的”驱动表“转化为完整代码。
 ### 1.  词法分析器输出格式
@@ -426,6 +432,8 @@ public:
 		int category;
 		size_t length;
 		size_t begin;
+		bool valid;
+		size_t line;
 	};
 	Morpheme();
 	~Morpheme();
@@ -440,20 +448,30 @@ public:
 	const result& operator[](const size_t target) const;
 
 	char GetChar(size_t site) const;
+	bool& valid(size_t site);
 
 	template<typename T> int Build(const char* reg);
 	template<typename T> int Build(FILE* fp);
+
+	void clear(void);
+	void copy(const Morpheme& source);
+
+	size_t initial(void) const;
+	size_t next(size_t index) const;
+	bool still(size_t index) const;
+	int accept(size_t index) const;
 protected:
 	size_t count;
-	//list<size_t> begin;
-	//list<size_t> length;
 	vector<result> lex;
 	vector<char> storage;
+
+	void SetLine(void);
+	size_t CountEnter(const char* unit);
+
 	template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
 };
 ```
-其中 `struct result` 是每一个词法单元的信息， `int accept`是词法单元的编号，对应`struct <nameL>`中的`enum regular`， `category`是词法单元的种类，对应`struct <nameL>`中的`enum group`。 `size_t length`是词法单元的字符串长度， `size_t begin`是它在存储中首地址的偏移。所有的词法单元对应的字符串按输入文件的顺序存储在`protected:vector<char> storage`中。
-其中每一个词法单元对应的字符串末尾都添加了`'\0'`。`size_t count;`是识别到的词法单元数目，等于`lex.count()`。`lex`存储全体词法单元信息。
+其中 `struct result` 是每一个词法单元的信息， `int accept`是词法单元的编号，对应`struct <nameL>`中的`enum regular`， `category`是词法单元的种类，对应`struct <nameL>`中的`enum group`。 `size_t length`是词法单元的字符串长度， `size_t begin`是它在存储中首地址的偏移。`valid`记录一个词法单元是否会出现在文法分析中。`valid`默认是`true`，它可以使用`bool& valid(size_t site);`方法进行访问或者手动修改。 `line`是词法单元在代码文本中的行号，行号从`0`开始，如果一个词法单元占据了多个行，那么`line`存储它第一行的行号。行号是词法分析结束后自动进行的。所有的词法单元对应的字符串按输入文件的顺序存储在`protected:vector<char> storage`中。其中每一个词法单元对应的字符串末尾都添加了`'\0'`。`size_t count;`是识别到的词法单元数目，等于`lex.count()`。`lex`存储全体词法单元信息。
 #### 2. 对输入进行词法分析
 ```
 template<typename T> int Build(const char* reg);
@@ -479,7 +497,7 @@ int sample(input)
     return error;
 }
 ```
-
+运行成功返回值是`0`。然而这个过程几乎不会返回其他值，遇到未见的词法单元会将它们识别为未见单元，未见单元的`accept`值是0。
 #### 3. 常用成员函数
 
 `void Demo(FILE* fp) const;`展示词法分析的结果。
@@ -487,6 +505,19 @@ int sample(input)
 `const char* GetWord(size_t site) const;`返回第`target`个词法单元对应的字符串在`all`中的首地址。`target`合法范围是从`0`到`count-1`。不做范围检测。不可以对返回的指针释放内存。
 `char* Copy(size_t site) const;`返回第`target`个词法单元对应的字符串。`target`合法范围是从`0`到`count-1`。不做范围检测。使用结束后应该对返回的指针释放内存。此成员函数返回的字符串指针的内存由`malloc`分配。
 `size_t GetCount(void) const;` 返回成员变量`size_t count;`的值。
+
+`void clear(void);` 清空当前类中内容，但是不释放占据存储。
+`void copy(const Morpheme& source);`拷贝一个词法分析结果。
+
+
+#### 4. 返回下一个词法单元
+
+有时候丢弃一些词法单元可以方便文法分析，这些词法单元包括空格换行注释TAB等等。`result.valid`记录一个词法单元是否会出现在文法分析中。它可以使用`bool& valid(size_t site);`方法进行访问或者手动修改。没有用户修改时`result.valid`默认是`true`。使用`size_t initial(void) const;`方法返回第一个`valid`设置为`true`的词法单元的地址偏移。
+使用`size_t next(size_t index) const;`方法返回地址偏移为`index`的下一个`valid`设置为`true`的词法单元的地址偏移 。
+使用`bool still(size_t index) const;`方法返回地址偏移`index`是否还在合法范围(`0`到`count-1`)之内。
+使用`int accept(size_t index) const;`方法返回地址偏移为`index`的词法单元的编号。(对应`struct <nameL>`中的`enum regular`)。
+
+
 ### 4. `class GrammarTree` 使用简介
 #### 1. 定义概览
 在automata.h定义如下:
@@ -508,6 +539,9 @@ public:
 	template<typename T> int build(const Morpheme& input);
 
 	tree<TreeInfor>* GT;
+
+        size_t error_record01;
+        size_t error_record02;
 protected:
 };
 
@@ -568,8 +602,8 @@ struct Reg
 struct Panel
 {
 	enum type{/*definations*/};
-    enum nonterminal{/*definations*/};
-    enum rules{/*definations*/};
+        enum nonterminal{/*definations*/};
+        enum rules{/*definations*/};
 	static const size_t StateCount;
 	static const size_t NonTerminalCount;
 	static const size_t TerminalCount;
@@ -623,12 +657,19 @@ void sample(GrammarTree & input)
 
 ```
 
+#### 4. 文法分析报错
+
+成功的文法分析返回0。否则返回`static const int GOTO[StateCount][NonTerminalCount];`或者`static const int ACTION[StateCount][TerminalCount];`中对应的报错单元。当文法分析报错时`error_record01`记录文法分析中报错时遇到的下一个词法单元的位置，`error_record02`记录文法分析中报错时当前栈顶的状态。
+将报错信息变的人类可理解是个LR文法分析中的麻烦问题。本软件在这个领域做的很少，功能不强。
+
 ## 软件架构简介与版本
 
 ### 代码中的垃圾
   由于无名生成器分析用户文件所用的词法分析器和文法分析器也是由无名生成器自动生成的。为了完成这一自举，代码中留下了很多无用的脚手架。
+
 ### 已知问题
 目前版本为1.0也就是刚刚可以用的地步。目前有一个小bug没有修：空产生式会导致打印的文法分析表的产生式长度一项有一些异常。下个小版本修理这个东西。
+
 ### 异常与内存管理
 本软件不抛出任何异常。内部混合使用malloc与new，并且使用时不检查返回值是否为NULL。可以做到malloc与free绑定，new与delete绑定。
 
@@ -637,6 +678,10 @@ void sample(GrammarTree & input)
 
 ### C++版本
 依据C++03版本，没有现代C++的高级特性。
+
+### 下标检查
+全局没有下表检查，所以需要用户保证输入的下标正确。
+
 
 ## 附录
 
