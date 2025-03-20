@@ -48,10 +48,14 @@ lexical:{
 		angleL: '<';
 		angleR: '>';
 	}
-	anntation:
+	void:
+    {
+        AC:(['\0'-'\51']|['\53'-'\56']|['\60'-'\177']);
+    }
+    anntation:
 	{
 		anntationS: '/''/'(['\0'-'\11']|['\13'-'\177'])*'\n';
-		anntationM: '/''*'(['\0'-'\177'])*'*'+'/';
+		anntationM: '/''*'('/'|<AC>|'*'+<AC>)*'*'+'/';
 	}
 	RegSymbol:
 	{

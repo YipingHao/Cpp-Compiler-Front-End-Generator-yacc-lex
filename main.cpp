@@ -1526,6 +1526,9 @@ static int test_20(const char* output_path, hyperlex_old::ParaFile& pf)
     BufferChar input;
     BufferChar temp;
     hyperlex_old::CFile CF;
+    std::string OutputLabel2, OutputLabel;
+    OutputLabel = pf.GetString("OutputLabel", "lexer");
+    OutputLabel2 = pf.GetString("OutputLabel2", "parser");
     int error;
     //int 哈哈哈;
     //哈哈哈;
@@ -1568,10 +1571,12 @@ static int test_20(const char* output_path, hyperlex_old::ParaFile& pf)
     std::cout << "error: " << error << std::endl;
     IP.demo(stdout);
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-    error = IP.printL(stdout, "regular");
+    
+    
+    error = IP.printL(stdout, OutputLabel.c_str());
     std::cout << "error: " << error << std::endl;
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-    error = IP.printG(stdout, stdout, "panel");
+    error = IP.printG(stdout, stdout, OutputLabel2.c_str());
     std::cout << "error: " << error << std::endl;
 }
 

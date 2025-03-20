@@ -43,15 +43,19 @@ lexical:{
 		squareL: '[';
 		squareR: ']';
     };
+    void:
+    {
+        AC:(['\0'-'\51']|['\53'-'\56']|['\60'-'\177']);
+    }
     anntation:
 	{
 		anntationS: '/''/'(['\0'-'\11']|['\13'-'\177'])*'\n';
-		anntationM: '/''*'(['\0'-'\177'])*'*'+'/';
+		anntationM: '/''*'('/'|<AC>|'*'+<AC>)*'*'+'/';
 	}
 	format:
 	{
 		spaces: ' '+;
-		enters: '\n'+;
+		enters: ('\n'| '\r''\n')+;
 		tab: '\t';
 	}
 };

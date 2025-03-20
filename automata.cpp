@@ -6520,10 +6520,7 @@ int Reg::next(int state, const char c)
 	case 23:
 		return 0;
 	case 24:
-		if ((char)0 <= c && c <= ')') return 44;
-		else if (c == '*') return 53;
-		else if ('+' <= c && c <= (char)127) return 44;
-		else return 0;
+		return 0;
 	case 25:
 		return 0;
 	case 26:

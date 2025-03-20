@@ -569,6 +569,10 @@ struct DictReg
     static int action(int state);
     static int GroupGet(int state);
 };
+
+
+
+
 struct DictPraser
 {
     enum type
@@ -625,6 +629,7 @@ struct DictPraser
 
 
 
+
 int dictionary::build(FILE* fp)
 {
     //Morpheme eme;
@@ -637,7 +642,7 @@ int dictionary::build(FILE* fp)
         return error;
     }
     NeglectNullToken(LexicalSource);
-    //eme.Demo(stdout);
+    //LexicalSource.Demo(stdout);
     error = buildGanalysis(LexicalSource);
     if (error != 0) return error;
     //errorCode = NoError;
@@ -657,7 +662,7 @@ int dictionary::build(const char* input)
         return error;
     }
     NeglectNullToken(LexicalSource);
-    //eme.Demo(stdout);
+    //LexicalSource.Demo(stdout);
     error = buildGanalysis(LexicalSource);
     if (error != 0)
     {
@@ -918,15 +923,16 @@ int DictReg::next(int state, const char c)
     case 0:
         if (c == (char)9) return 24;
         else if (c == (char)10) return 23;
+        else if (c == (char)13) return 25;
         else if (c == ' ') return 22;
-        else if (c == '\"') return 25;
+        else if (c == '\"') return 39;
         else if (c == '(') return 16;
         else if (c == ')') return 17;
-        else if (c == '+') return 39;
+        else if (c == '+') return 44;
         else if (c == ',') return 12;
-        else if (c == '-') return 39;
+        else if (c == '-') return 44;
         else if (c == '.') return 11;
-        else if (c == '/') return 45;
+        else if (c == '/') return 46;
         else if ('0' <= c && c <= '9') return 2;
         else if (c == ':') return 10;
         else if (c == ';') return 9;
@@ -954,13 +960,13 @@ int DictReg::next(int state, const char c)
         else if ('a' <= c && c <= 'z') return 1;
         else return 0;
     case 2:
-        if (c == '.') return 47;
+        if (c == '.') return 48;
         else if ('0' <= c && c <= '9') return 2;
         else return 0;
     case 3:
         if ('0' <= c && c <= '9') return 3;
-        else if (c == 'E') return 46;
-        else if (c == 'e') return 46;
+        else if (c == 'E') return 47;
+        else if (c == 'e') return 47;
         else return 0;
     case 4:
         return 0;
@@ -1013,21 +1019,18 @@ int DictReg::next(int state, const char c)
     case 20:
         return 0;
     case 21:
-        if ((char)0 <= c && c <= ')') return 38;
-        else if (c == '*') return 44;
-        else if ('+' <= c && c <= (char)127) return 38;
-        else return 0;
+        return 0;
     case 22:
         if (c == ' ') return 22;
         else return 0;
     case 23:
         if (c == (char)10) return 23;
+        else if (c == (char)13) return 25;
         else return 0;
     case 24:
         return 0;
     case 25:
-        if (' ' <= c && c <= '!') return 40;
-        else if ('#' <= c && c <= '~') return 40;
+        if (c == (char)10) return 23;
         else return 0;
     case 26:
         if ('0' <= c && c <= '9') return 1;
@@ -1082,7 +1085,7 @@ int DictReg::next(int state, const char c)
         else if ('A' <= c && c <= 'Z') return 1;
         else if (c == '_') return 1;
         else if ('a' <= c && c <= 'r') return 1;
-        else if (c == 's') return 41;
+        else if (c == 's') return 40;
         else if ('t' <= c && c <= 'z') return 1;
         else return 0;
     case 33:
@@ -1113,7 +1116,7 @@ int DictReg::next(int state, const char c)
         else if ('A' <= c && c <= 'Z') return 1;
         else if (c == '_') return 1;
         else if ('a' <= c && c <= 'q') return 1;
-        else if (c == 'r') return 42;
+        else if (c == 'r') return 41;
         else if ('s' <= c && c <= 'z') return 1;
         else return 0;
     case 37:
@@ -1121,18 +1124,14 @@ int DictReg::next(int state, const char c)
         else return 0;
     case 38:
         if ((char)0 <= c && c <= ')') return 38;
-        else if (c == '*') return 44;
+        else if (c == '*') return 43;
         else if ('+' <= c && c <= (char)127) return 38;
         else return 0;
     case 39:
-        if ('0' <= c && c <= '9') return 2;
+        if (' ' <= c && c <= '!') return 45;
+        else if ('#' <= c && c <= '~') return 45;
         else return 0;
     case 40:
-        if (' ' <= c && c <= '!') return 40;
-        else if (c == '\"') return 4;
-        else if ('#' <= c && c <= '~') return 40;
-        else return 0;
-    case 41:
         if ('0' <= c && c <= '9') return 1;
         else if ('A' <= c && c <= 'Z') return 1;
         else if (c == '_') return 1;
@@ -1140,7 +1139,7 @@ int DictReg::next(int state, const char c)
         else if (c == 'e') return 5;
         else if ('f' <= c && c <= 'z') return 1;
         else return 0;
-    case 42:
+    case 41:
         if ('0' <= c && c <= '9') return 1;
         else if ('A' <= c && c <= 'Z') return 1;
         else if (c == '_') return 1;
@@ -1148,31 +1147,39 @@ int DictReg::next(int state, const char c)
         else if (c == 'u') return 29;
         else if ('v' <= c && c <= 'z') return 1;
         else return 0;
-    case 43:
-        if ((char)0 <= c && c <= (char)9) return 43;
+    case 42:
+        if ((char)0 <= c && c <= (char)9) return 42;
         else if (c == (char)10) return 20;
-        else if ((char)11 <= c && c <= (char)127) return 43;
+        else if ((char)11 <= c && c <= (char)127) return 42;
         else return 0;
-    case 44:
+    case 43:
         if ((char)0 <= c && c <= ')') return 38;
-        else if (c == '*') return 44;
+        else if (c == '*') return 43;
         else if ('+' <= c && c <= '.') return 38;
         else if (c == '/') return 21;
         else if ('0' <= c && c <= (char)127) return 38;
         else return 0;
+    case 44:
+        if ('0' <= c && c <= '9') return 2;
+        else return 0;
     case 45:
-        if (c == '*') return 38;
-        else if (c == '/') return 43;
+        if (' ' <= c && c <= '!') return 45;
+        else if (c == '\"') return 4;
+        else if ('#' <= c && c <= '~') return 45;
         else return 0;
     case 46:
-        if (c == '+') return 48;
-        else if (c == '-') return 48;
-        else if ('0' <= c && c <= '9') return 37;
+        if (c == '*') return 38;
+        else if (c == '/') return 42;
         else return 0;
     case 47:
-        if ('0' <= c && c <= '9') return 3;
+        if (c == '+') return 49;
+        else if (c == '-') return 49;
+        else if ('0' <= c && c <= '9') return 37;
         else return 0;
     case 48:
+        if ('0' <= c && c <= '9') return 3;
+        else return 0;
+    case 49:
         if ('0' <= c && c <= '9') return 37;
         else return 0;
     }
@@ -1254,9 +1261,9 @@ int DictReg::action(int state)
         return 1;//id: id
     case 37:
         return 3;//number: real
-    case 41:
+    case 40:
         return 1;//id: id
-    case 42:
+    case 41:
         return 1;//id: id
     }
     return 0;
@@ -1316,6 +1323,10 @@ int DictReg::GroupGet(int accept)
     }
     return 0;
 }
+
+
+
+
 const size_t DictPraser::StateCount = 30;
 const size_t DictPraser::NonTerminalCount = 7;
 const size_t DictPraser::TerminalCount = 24;
