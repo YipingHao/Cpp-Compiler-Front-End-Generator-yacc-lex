@@ -645,7 +645,7 @@ int dictionary::build(FILE* fp)
     //LexicalSource.Demo(stdout);
     error = buildGanalysis(LexicalSource);
     if (error != 0) return error;
-    //errorCode = NoError;
+    errorCode = NoError;
     LexicalSource.clear();
     return 0;
 }
@@ -669,7 +669,7 @@ int dictionary::build(const char* input)
 
         return error;
     }
-    //errorCode = NoError;
+    errorCode = NoError;
     LexicalSource.clear();
     return 0;
 }
