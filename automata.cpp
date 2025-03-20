@@ -448,6 +448,23 @@ char Morpheme::GetChar(size_t site) const
 	if (input[0] != '\'') return input[0];
 	else return CharGet(error, input, lex[site].length, head);
 }
+double Morpheme::GetReal(size_t site) const
+{
+	int state;
+	size_t Head;
+	size_t Rear;
+	Head = lex[site].begin;
+	Rear = Head + lex[site].length;
+	return RealGet(state, storage.ptr(), Rear, Head);
+}
+long int Morpheme::GetInt(size_t site) const
+{
+	size_t Head;
+	size_t Rear;
+	Head = lex[site].begin;
+	Rear = Head + lex[site].length;
+	return IntGet(storage.ptr(), Rear, Head);
+}
 void Morpheme::UnitMove(size_t from, size_t to)
 {
 	lex[to] = lex[from];

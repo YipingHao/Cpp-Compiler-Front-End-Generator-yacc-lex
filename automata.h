@@ -389,6 +389,8 @@ namespace hyperlex
 		const result& operator[](const size_t target) const;
 
 		char GetChar(size_t site) const;
+		double GetReal(size_t site) const;
+		long int GetInt(size_t site) const;
 		bool& valid(size_t site);
 
 		template<typename T> int Build(const char* reg);
