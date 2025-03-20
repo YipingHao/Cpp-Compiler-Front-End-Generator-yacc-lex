@@ -1,8 +1,0 @@
-terminal->add | multi | left | right | id;
-
-
-E->T Ep;
-Ep->add T Ep | epsilon;
-T->F Tp;
-Tp->multi F Tp | epsilon;
-F->left E right | id;

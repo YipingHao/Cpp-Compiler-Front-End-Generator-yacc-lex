@@ -1,6 +1,0 @@
-terminal->c | d;
-
-Sp->S;
-S->C C;
-C-> c C | d;
-

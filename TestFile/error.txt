@@ -1,6 +1,0 @@
-terminal->value | multi | id;
-
-Sp->S;
-S->L value R | R;
-L->multi R | id;
-R->L;
