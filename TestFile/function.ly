@@ -8,9 +8,9 @@ lexical:{
 	id: id(+1): (<letter> | _)(<letter> | _ | <num>)*;
 	number: 
     {
-        integer(+3): <sign><num>+;
-        real(+1):  <integer>'.'<num>+((e|E)<integer>)?;
-    }
+		integer(+3): <sign><num>+;
+		realC(+1):  <integer>'.'<num>+((e|E)<integer>)?;
+	}
 	reserved(+5):
 	{
 		funct;
@@ -76,10 +76,10 @@ lexical:{
 	}
 	operation:
 	{
-		minus: '-';
-		multi: '*';        //zero or more
-		add: '+';        //one or more
-		division: '/';    //zero or one, not wildcard
+		sub: '-';
+		add: '+';     
+		multi: '*';       
+		div: '/';   
 	}
 	value: value: '=';		
 };
@@ -96,7 +96,7 @@ grammar: FUNCTION:
 	{
 		input: input id;
 		para: para id;
-		paras para id squareL integer squareR;
+		paras: para id squareL integer squareR;
 	}
     FUNCTWORD: 
     {
@@ -121,11 +121,10 @@ grammar: FUNCTION:
 	RETURN: return EXP_RIGHT semicolon;
 	EXPRESSIONS:
 	{
-		single: EXPRESSION
+		single: EXPRESSION;
 		multi: EXPRESSIONS EXPRESSION; 
 	}
 	EXPRESSION: ID value EXP_RIGHT semicolon;
-	
 	EXP_RIGHT:
 	{
 		single: EXP_MUL;
@@ -149,12 +148,12 @@ grammar: FUNCTION:
 		id: ID;
 		call: CALL;
 		const: CONST;
-		complex：left EXP_RIGHT right；
+		complex: left EXP_RIGHT right;
 	}
 	CONST:
 	{
 		integer: integer;
-		real: real;
+		real: realC;
 	}
 	ID:
 	{

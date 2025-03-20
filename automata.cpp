@@ -1766,9 +1766,9 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		for (i = 0; i < NontTerminal.count() && i < GrammarG.count(); i++)
 			fprintf(fp, "symbol[%zu]: %s, %s\n", i, NontTerminal[i], GrammarG[i]->name);
 		for (j = i; j < NontTerminal.count(); j++)
-			fprintf(fp, "symbol[%zu]: %s, None\n", i, NontTerminal[i]);
+			fprintf(fp, "symbol[%zu]: %s, None\n", j, NontTerminal[j]);
 		for (j = i; j < GrammarG.count(); j++)
-			fprintf(fp, "symbol[%zu]: None, %s\n", i, GrammarG[i]->name);
+			fprintf(fp, "symbol[%zu]: None, %s\n", j, GrammarG[j]->name);
 		break;
 	case InputPanel::WorngRuleBody:
 		fprintf(fp, "WorngRuleBody: symbol 'all' can not appear in rule body as a non-ternimal symbol.\n");
