@@ -85,6 +85,7 @@ namespace hyperlex
 		tree();
 		~tree();
 		void clear(void);
+		void append(tree<T>* rear);
 		void build(vector<tree<T>*>& input);
 		void build(vector<tree<T>*>& input, size_t offset);
 		void PostOrderTraversal(vector<tree<T>*>& output);
@@ -112,7 +113,7 @@ namespace hyperlex
 			
 		};
 	private:
-		array<tree<T>*> childs;
+		vector<tree<T>*> childs;
 		T content;
 		tree<T>* parent;
 		size_t No;
@@ -1531,7 +1532,7 @@ namespace hyperlex
 		PostOrderTraversal(deleted);
 		for (i = 1; i < deleted.count(); i++)
 			delete deleted[i - 1];
-		childs.Free();
+		childs.recapacity(0);
 	}
 	template <class T> void tree<T>::PostOrderTraversal(vector<tree<T>*>& output)
 	{
@@ -1540,7 +1541,7 @@ namespace hyperlex
 		tree<T>* here;
 		bool label;
 		size_t i;
-		for (i = childs.length(); i != 0; i--)
+		for (i = childs.count(); i != 0; i--)
 		{
 			StackSite.append(childs[i - 1]);
 			StackState.append(false);
@@ -1555,7 +1556,7 @@ namespace hyperlex
 				StackSite.append(here);
 				StackState.append(true);
 
-				for (i = here->childs.length(); i != 0; i--)
+				for (i = here->childs.count(); i != 0; i--)
 				{
 					StackSite.append(here->childs[i - 1]);
 					StackState.append(false);
@@ -1564,10 +1565,16 @@ namespace hyperlex
 		}
 		output.append((tree<T>*)this);
 	}
+	template <class T> void tree<T>::append(tree<T>* rear)
+	{
+		childs.append(rear);
+		rear->parent = this;
+		rear->No = childs.count() - 1;
+	}
 	template <class T> void tree<T>::build(vector<tree<T>*>& input)
 	{
 		size_t i;
-		childs.Realloc(input.count());
+		childs.recount(input.count());
 		for (i = 0; i < input.count(); i++)
 		{
 			childs[i] = input[i];
@@ -1580,10 +1587,10 @@ namespace hyperlex
 		size_t i;
 		if (input.count() <= offset)
 		{
-			childs.Realloc(0);
+			childs.recount(0);
 			return;
 		}
-		childs.Realloc(input.count() - offset);
+		childs.recount(input.count() - offset);
 		for (i = 0; i < input.count() - offset; i++)
 		{
 			childs[i] = input[i + offset];
@@ -1602,7 +1609,7 @@ namespace hyperlex
 
 	template <class T> size_t tree<T>::ChildCount(void) const
 	{
-		return childs.length();
+		return childs.count();
 	}
 	template <class T> tree<T>* tree<T>::child(size_t No) const
 	{
@@ -1640,7 +1647,7 @@ namespace hyperlex
 				stack.append(parent);
 				here = parent.target;
 				now.state = 0;
-				for (i = here->childs.length(); i != 0; i--)
+				for (i = here->childs.count(); i != 0; i--)
 				{
 					now.target = here->childs[i - 1];
 					stack.append(now);
