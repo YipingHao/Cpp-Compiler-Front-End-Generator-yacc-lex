@@ -795,6 +795,7 @@ namespace hyperlex
 		BufferChar result;
 		BufferChar intermediate;
 		int accept;
+		int error = 0;
 		char now;
 		input << fp;
 		while (RunBuild<T>(accept, result, input, intermediate))
@@ -804,12 +805,13 @@ namespace hyperlex
 			{
 				input.dequeue(now);
 				result.append(now);
-				append(result, 0, T::GroupGet(0));
+				append(result, -1, -1);
+				error = -1;
 			}
 		}
 		AppendEnd(0);
 		SetLine();
-		return 0;
+		return error;
 	}
 	template<typename T> int Morpheme::Build(const char* reg)
 	{
@@ -817,6 +819,7 @@ namespace hyperlex
 		BufferChar result;
 		BufferChar intermediate;
 		int accept;
+		int error = 0;
 		char now;
 		input = reg;
 		while (RunBuild<T>(accept, result, input, intermediate))
@@ -826,12 +829,13 @@ namespace hyperlex
 			{
 				input.dequeue(now);
 				result.append(now);
-				append(result, 0, T::GroupGet(0));
+				append(result, -1, -1);
+				error = -1;
 			}
 		}
 		AppendEnd(0);
 		SetLine();
-		return 0;
+		return error;
 	}
 	template<typename T> bool Morpheme::RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate)
 	{
@@ -1053,6 +1057,7 @@ namespace hyperlex
 			size_t symbol;
 			size_t length;
 			size_t begin;
+			size_t LengthWithoutVoid;
 		};
 		enum ErrorCode
 		{
@@ -1094,7 +1099,6 @@ namespace hyperlex
 	private:
 		
 		void FirstBiuld(void);
-		bool IfaRuleEpsilon(size_t site) const;
 		bool IfEpsilon(long long int site) const;
 		bool FirstOr(long long int symbol, bool* to) const;
 		bool Or(const bool* from, bool* to) const;

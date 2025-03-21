@@ -317,7 +317,13 @@ grammar: ****: {
 	    illegal: ;
     }
 ```
-不推荐使用空产生式。本软件处理空产生式的长度时可能会出bug。
+出现一些无意义的空单元并不影响程序运行的正确。
+```
+    Nonsense:{
+	    many_void: void void;
+	    void_in_a_rule: unit1 void unit2;
+    }
+```
 ## 输出文件格式
 相较于输出一个词法分析器加上文法分析器的完整代码，我们更倾向于输出词法分析器和文法分析器的”驱动表“。这种做法有更高的灵活度。如果用户不像动手写分析器，我们提供两个类将输出的”驱动表“转化为完整代码。
 ### 1.  词法分析器输出格式
@@ -384,7 +390,7 @@ struct <nameG>
 	static const char* const RulesName[RulesCount];
 };
 ```
-其中枚举类型`type`是文法分析动作种类与整数的关系。成员数组`ACTION[StateCount][TerminalCount]`存储当前状态下，当前终结符号下该有的动作。成员数组`GOTO[StateCount][NonTerminalCount]`存储当前状态下，当前非终结符号下该有的动作。存储的`int`值是对4取模得到动作种类，除以整数4才得到具体的动作。对于`GOTO`而言有意义的动作种类只有两个`push`和`error`，然而存储是还是用了四个状态。`RulesToSymbol`存储当前产生式对应的非终结符号，`RulesToSymbol`存储当前产生式的长度，`RulesName` 存储当前产生式的名字。
+其中枚举类型`type`是文法分析动作种类与整数的关系。成员数组`ACTION[StateCount][TerminalCount]`存储当前状态下，当前终结符号下该有的动作。成员数组`GOTO[StateCount][NonTerminalCount]`存储当前状态下，当前非终结符号下该有的动作。存储的`int`值是对4取模得到动作种类，除以整数4才得到具体的动作。对于`GOTO`而言有意义的动作种类只有两个`push`和`error`，然而存储是还是用了四个状态。`RulesToSymbol`存储当前产生式对应的非终结符号，`RulesToSymbol`存储当前产生式的长度，注意如果`void`代表空符号，那么`void`的数目不会计入产生式的长度。`RulesName` 存储当前产生式的名字。
 
 其中枚举类型`nonterminal`可以帮助将定义的非终结符号和程序产生的编号对应起来。其中枚举类型`rules`可以帮助将定义的文法产生式和它们的编号对应起来。可以用枚举类型`rules`寻址`RulesToSymbol`，`RulesToSymbol`和`RulesName`。可以用枚举类型`nonterminal`寻址`GOTO[StateCount][NonTerminalCount]`第二个维度。样例输入文件输出的结构体作为一个例子出现在说明的最后部分的附录中。
 
@@ -405,8 +411,8 @@ case <nameG>::push:
 	break;
 case <nameG>::reduce:
     //规约状态到information
-    int symbol = T::RulesToSymbol[information];
-    int length = T::RulesLength[information];
+    int symbol = <nameG>::RulesToSymbol[information];
+    int length = <nameG>::RulesLength[information];
     //弹出栈顶length个元素，我们规约得到的符号是symbol
     temp = <nameG>::GOTO[stack.top()][symbol];
     nextState = temp / 4;
@@ -669,7 +675,7 @@ void sample(GrammarTree & input)
 
 ### 已知问题
 目前版本为1.0也就是刚刚可以用的地步。目前有一个小bug没有修：空产生式会导致打印的文法分析表的产生式长度一项有一些异常。下个小版本修理这个东西。
-
+好了，上述bug修了。没有问题了。
 ### 异常与内存管理
 本软件不抛出任何异常。内部混合使用malloc与new，并且使用时不检查返回值是否为NULL。可以做到malloc与free绑定，new与delete绑定。
 
@@ -807,7 +813,7 @@ int regular::GroupGet(int accept)
 ```
 #### 读入文件sample.txt后软件输出的文法分析器
 ```
-struct panel
+struct SamplePraser
 {
         enum type
         {
@@ -830,13 +836,13 @@ struct panel
                 _all_all_ = 0,
                 _LEFT_LEFT_ = 1,
                 _EXP_EXP_ = 2,
-                _RIGHT_multi_ = 3,
-                _RIGHT_single_ = 4,
-                _MULTI_multi_ = 5,
-                _MULTI_single_ = 6,
-                _UNIT_alot_ = 7,
+                _RIGHT_single_ = 3,
+                _RIGHT_multi_ = 4,
+                _MULTI_single_ = 5,
+                _MULTI_multi_ = 6,
+                _UNIT_const_ = 7,
                 _UNIT_xyz_ = 8,
-                _UNIT_const_ = 9
+                _UNIT_alot_ = 9
         };
         static const size_t StateCount;
         static const size_t NonTerminalCount;
@@ -848,11 +854,11 @@ struct panel
         static const int RulesLength[10];
         static const char* const RulesName[10];
 };
-const size_t panel::StateCount = 17;
-const size_t panel::NonTerminalCount = 6;
-const size_t panel::TerminalCount = 7;
-const size_t panel::RulesCount = 10;
-const int panel::GOTO[17][6] = { \
+const size_t SamplePraser::StateCount = 17;
+const size_t SamplePraser::NonTerminalCount = 6;
+const size_t SamplePraser::TerminalCount = 7;
+const size_t SamplePraser::RulesCount = 10;
+const int SamplePraser::GOTO[17][6] = { \
 {1, 6, 10, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1}, \
@@ -871,26 +877,26 @@ const int panel::GOTO[17][6] = { \
 {1, 1, 1, 1, 1, 66}, \
 {1, 1, 1, 1, 1, 1}};
 //==============================
-const int panel::ACTION[17][8] = { \
+const int SamplePraser::ACTION[17][8] = { \
 {1, 14, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 18, 1, 1}, \
 {0, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 7, 1, 1}, \
 {1, 34, 38, 1, 1, 1, 42, 1}, \
 {11, 1, 1, 50, 1, 1, 1, 1}, \
-{19, 1, 1, 19, 62, 1, 1, 19}, \
-{27, 1, 1, 27, 27, 1, 1, 27}, \
+{15, 1, 1, 15, 62, 1, 1, 15}, \
+{23, 1, 1, 23, 23, 1, 1, 23}, \
 {35, 1, 1, 35, 35, 1, 1, 35}, \
-{39, 1, 1, 39, 39, 1, 1, 39}, \
+{31, 1, 1, 31, 31, 1, 1, 31}, \
 {1, 34, 38, 1, 1, 1, 42, 1}, \
 {1, 1, 1, 50, 1, 1, 1, 54}, \
 {1, 34, 38, 1, 1, 1, 42, 1}, \
-{31, 1, 1, 31, 31, 1, 1, 31}, \
-{15, 1, 1, 15, 62, 1, 1, 15}, \
+{39, 1, 1, 39, 39, 1, 1, 39}, \
+{19, 1, 1, 19, 62, 1, 1, 19}, \
 {1, 34, 38, 1, 1, 1, 42, 1}, \
-{23, 1, 1, 23, 23, 1, 1, 23}};
+{27, 1, 1, 27, 27, 1, 1, 27}};
 //==============================
-const int panel::RulesToSymbol[10] = { \
+const int SamplePraser::RulesToSymbol[10] = { \
 0,\
 1,\
 2,\
@@ -902,28 +908,29 @@ const int panel::RulesToSymbol[10] = { \
 5,\
 5};
 //==============================
-const int panel::RulesLength[10] = { \
+const int SamplePraser::RulesLength[10] = { \
 1,\
-1,\
-3,\
-3,\
 1,\
 3,\
 1,\
 3,\
 1,\
-1};
+3,\
+1,\
+1,\
+3};
 //==============================
-const char* const panel::RulesName[10] = { \
+const char* const SamplePraser::RulesName[10] = { \
 "all->EXP ",\
 "LEFT->id ",\
 "EXP->LEFT value RIGHT ",\
-"RIGHT->RIGHT sum MULTI ",\
 "RIGHT->MULTI ",\
-"MULTI->MULTI multi UNIT ",\
+"RIGHT->RIGHT sum MULTI ",\
 "MULTI->UNIT ",\
-"UNIT->left RIGHT right ",\
+"MULTI->MULTI multi UNIT ",\
+"UNIT->integer ",\
 "UNIT->id ",\
-"UNIT->integer "};
+"UNIT->left RIGHT right "};
+
 
 ```

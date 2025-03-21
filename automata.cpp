@@ -4112,7 +4112,7 @@ grammerS::~grammerS()
 int grammerS::build(const InputPanel& input)
 {
 	//return 0;
-	size_t i, prefix_here, j, k; 
+	size_t i, prefix_here, j, k, countTemp; 
 	production PP;
 	const char* Stemp;
 	InputPanel::Rules* ruleTemp;
@@ -4154,6 +4154,7 @@ int grammerS::build(const InputPanel& input)
 			PP.begin = all.count();
 			ruleTemp = input.GrammarG[i]->rules[j];
 			PP.length = ruleTemp->formula.count();
+			countTemp = 0;
 			for (k = 0; k < PP.length; k++)
 			{
 				Inttemp = ruleTemp->formula[k];
@@ -4167,9 +4168,12 @@ int grammerS::build(const InputPanel& input)
 					else 
 						Inttemp = -(Inttemp - 1) - 1;
 				}
+				if (Inttemp != epsilon) countTemp += 1;
 				all.append((long long int)Inttemp);
 			}
+			PP.LengthWithoutVoid = countTemp;
 			rules[prefix[i] + j] = PP;
+			
 		}
 	}
 
@@ -4348,6 +4352,7 @@ int grammerS::build(BufferChar& input)
 	size_t Count_;
 	list<const char*> nameTemp;
 	PP.symbol = 0;
+	PP.LengthWithoutVoid = 0;
 	state = 0;
 	from = 0;
 	Count_ = 0;
@@ -4484,6 +4489,15 @@ int grammerS::build(BufferChar& input)
 		{
 			rules[prefix[i] + j].symbol = i;
 		}
+	}
+	for (i = 0; i < rules.count(); i++)
+	{
+		Count_ = 0;
+		for (j = rules[i].begin; j < rules[i].begin + rules[i].length; j++)
+		{
+			if (all[j] != epsilon) Count_ += 1;
+		}
+		rules[i].LengthWithoutVoid = Count_;
 	}
 	//return 0;
 	FirstBiuld();
@@ -4643,11 +4657,11 @@ void grammerS::Demo(FILE* fp, size_t rule, size_t dot) const
 	long long int index;
 	PP = rules[rule];
 	fprintf(fp, "%s->",name[PP.symbol]);
-	if ((PP.length == 1) && all[PP.begin] == epsilon)
-	{
-		fprintf(fp, "@");
-	}
-	else
+	//if ((PP.length == 1) && all[PP.begin] == epsilon)
+	//{
+	//	fprintf(fp, "@");
+	//}
+	//else
 	{
 		for (i = 0; i < PP.length; i++)
 		{
@@ -4656,6 +4670,8 @@ void grammerS::Demo(FILE* fp, size_t rule, size_t dot) const
 			index = all[PP.begin + i];
 			if (index >= 0)
 				fprintf(fp, "%s ", name[index]);
+			else if(index == epsilon)
+				fprintf(fp, "void ");
 			else
 				fprintf(fp, "%s ", ternimal[-index - 1]);
 		}
@@ -4761,10 +4777,6 @@ void grammerS::FirstBiuld(void)
 		}
 	} while (change);
 
-}
-bool grammerS::IfaRuleEpsilon(size_t site) const
-{
-	return all[rules[site].begin] == epsilon;
 }
 bool grammerS::IfEpsilon(long long int site) const
 {
@@ -4896,9 +4908,10 @@ LR0::LR0(const grammerS* G)
 	{
 		length__ = G->rules[i].length;
 		vect = G->vector(i);
-		if (length__ == 1 && vect[0] == G->epsilon)
-			count__ = 1;
-		else count__ = length__ + 1;
+		//if (length__ == 1 && vect[0] == G->epsilon)
+		//	count__ = 1;
+		//else count__ = length__ + 1;
+		count__ = length__ + 1;
 		RulesPrefix.append(prefix_);
 		prefix_ += count__;
 		RulesCount.append(count__);
@@ -4910,18 +4923,19 @@ LR0::LR0(const grammerS* G)
 		count__ = RulesCount[i];
 		vect = G->vector(i);
 		for (j = 0; j + 1 < count__; j++)
+		//for (j = 0; j < count__; j++)
 		{
 			graph[prefix_ + j].dot = j;
 			graph[prefix_ + j].rules = i;
-			graph.append(prefix_ + j, prefix_ + j + 1, false, vect[j]);
+			graph.append(prefix_ + j, prefix_ + j + 1, vect[j] == G->epsilon, vect[j]);
 			if (vect[j] < (long long int)0) continue;
 			//NonT = vect[j];
 			for (k = 0; k < G->degeneracy[vect[j]]; k++)
 			{
 				l = G->prefix[vect[j]] + k;
 				graph.append(prefix_ + j, RulesPrefix[l], true, G->epsilon);
-				if(RulesCount[l]==1) 
-					graph.append(prefix_ + j, prefix_ + j + 1, true, G->epsilon);
+				//if(RulesCount[l]==1) 
+				//	graph.append(prefix_ + j, prefix_ + j + 1, true, G->epsilon);
 			}
 		}
 		graph[prefix_ + count__ - 1].dot = j;
@@ -5032,19 +5046,20 @@ LR1::LR1(const grammerS* G)
 
 	while (stack.pop(now) != 0)
 	{
-		Demo(stdout, now, G);
+		//Demo(stdout, now, G);
 		I = graph[now];
 		RulesLength_ = G->rules[I.rules].length;
 		List_ = G->vector(I.rules);
 		if (I.dot == RulesLength_) continue;
-		if ((List_[0] == G->epsilon) && (RulesLength_ == 1)) continue;
+		//if ((List_[0] == G->epsilon) && (RulesLength_ == 1)) continue;
 		To.dot = I.dot + 1;
 		To.rules = I.rules;
 		To.symbol = I.symbol;
 		NewV = SearchAppend(To, IfAppend);
 		if (IfAppend) stack.append(NewV);
 		Symbol__ = List_[I.dot];
-		graph.append(now, NewV, false, Symbol__);
+		//graph.append(now, NewV, false, Symbol__);
+		graph.append(now, NewV, Symbol__ == G->epsilon, Symbol__);
 		//compute FIRST(beta symbol)
 		beta__.refresh();
 		for (i = I.dot + 1; i < RulesLength_; i++)
@@ -5070,11 +5085,11 @@ LR1::LR1(const grammerS* G)
 						graph.append(now, NewV, true, G->epsilon);
 					}
 				}
-				if (G->IfaRuleEpsilon(i))
-				{
-					NewV = SearchAppend(To, IfAppend);
-					graph.append(now, NewV, true, G->epsilon);
-				}
+				//if (G->IfaRuleEpsilon(i))
+				//{
+				//	NewV = SearchAppend(To, IfAppend);
+				//	graph.append(now, NewV, true, G->epsilon);
+				//}
 			}
 		}
 		
@@ -5737,8 +5752,8 @@ void Gsheet::CppStructPrint02(const char* name, FILE* fp, const grammerS* gramme
 	fprintf(fp, "const int %s::RulesLength[%zu] = { \\ \n", name, RulesCount);
 	for (i = 0; i < RulesCount; i++)
 	{
-		if (i + 1 < RulesCount) fprintf(fp, "%d,\\\n", RulesLength[i]);
-		else fprintf(fp, "%d};\n", RulesLength[i]);
+		if (i + 1 < RulesCount) fprintf(fp, "%d,\\\n", grammer->rules[i].LengthWithoutVoid);
+		else fprintf(fp, "%d};\n", grammer->rules[i].LengthWithoutVoid);
 	}
 	fprintf(fp, "//==============================\n");//
 	fprintf(fp, "const char* const %s::RulesName[%zu] = { \\ \n\"", name, RulesCount);

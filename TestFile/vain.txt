@@ -1,0 +1,23 @@
+lexical:{
+	reservered:
+	{
+		aa: a;
+		bb: b;
+	}
+	operator:	
+	{
+		sum: '+';
+		multi: '*';
+	}
+};
+grammar: EXP:
+{
+	EXP: aa BB aa; 
+	BB:
+	{
+		vain: void;
+		multi: BB bb;
+	}
+}
+
+
