@@ -1418,158 +1418,7 @@ static const char* Copy(const char* input)
 }
 
 
-struct Reg
-{
-	enum regular
-	{
-		_identifier_ = 1,
-		_integer_ = 2,
-		_CommonChar_ = 3,
-		_idChar_ = 4,
-		_lexical_ = 5,
-		_grammar_ = 6,
-		_void_ = 7,
-		_all_ = 8,
-		_spaces_ = 9,
-		_enters_ = 10,
-		_tab_ = 11,
-		_semicolon_ = 12,
-		_colon_ = 13,
-		_dot_ = 14,
-		_braceL_ = 15,
-		_braceR_ = 16,
-		_left_ = 17,
-		_right_ = 18,
-		_squareL_ = 19,
-		_squareR_ = 20,
-		_angleL_ = 21,
-		_angleR_ = 22,
-		_anntationS_ = 23,
-		_anntationM_ = 24,
-		_range_ = 25,
-		_star_ = 26,
-		_plus_ = 27,
-		_question_ = 28,
-		_or_ = 29
-	};
-	enum group
-	{
-		_identifier___ = 1,
-		_const___ = 2,
-		_reserved___ = 3,
-		_format___ = 4,
-		_division___ = 5,
-		_braket___ = 6,
-		_annotation___ = 7,
-		_RegSymbol___ = 8
-	};
-	static int next(int state, const char c);
-	static int action(int state);
-	static int GroupGet(int state);
-};
-struct Panel
-{
-	enum type
-	{
-		accept = 0,
-		error = 1,
-		push = 2,
-		reduce = 3
-	};
-	enum nonterminal
-	{
-		_all_ = 0,
-		_TEXT_ = 1,
-		_LEXICAL_ = 2,
-		_RegGROUP_ = 3,
-		_REGDEFS_ = 4,
-		_RegDEF_ = 5,
-		_RegGROUPNAME_ = 6,
-		_RegNAME_ = 7,
-		_RegNAMEHead_ = 8,
-		_REGBODY_ = 9,
-		_REGEXPRESSor_ = 10,
-		_REGEXPRESS_ = 11,
-		_RegCOMPLEX_ = 12,
-		_RegNODE_ = 13,
-		_RegLEAF_ = 14,
-		_RegCHAR_ = 15,
-		_GRAMMAR_ = 16,
-		_GrammerDEF_ = 17,
-		_GnameFORMULAS_ = 18,
-		_GFORMULA_ = 19,
-		_GFORMULAUnit_ = 20,
-		_END_ = 21,
-		_BEGIN_ = 22
-	};
-	enum rules
-	{
-		_all_all_ = 0,
-		_TEXT_LG_ = 1,
-		_TEXT_OnlyL_ = 2,
-		_LEXICAL_multi_ = 3,
-		_LEXICAL_single_ = 4,
-		_RegGROUP_multi_ = 5,
-		_RegGROUP_single_ = 6,
-		_REGDEFS_multi_ = 7,
-		_REGDEFS_single_ = 8,
-		_RegDEF_full_ = 9,
-		_RegDEF_default_ = 10,
-		_RegGROUPNAME_priority_ = 11,
-		_RegGROUPNAME_bare_ = 12,
-		_RegGROUPNAME_blocks_ = 13,
-		_RegNAME_priority_ = 14,
-		_RegNAME_bare_ = 15,
-		_RegNAMEHead_aid_ = 16,
-		_RegNAMEHead_aall_ = 17,
-		_RegNAMEHead_agrammar_ = 18,
-		_RegNAMEHead_alexical_ = 19,
-		_RegNAMEHead_avoid_ = 20,
-		_REGBODY_REGBODY_ = 21,
-		_REGEXPRESSor_ororor_ = 22,
-		_REGEXPRESSor_single_ = 23,
-		_REGEXPRESS_multi_ = 24,
-		_REGEXPRESS_single_ = 25,
-		_RegCOMPLEX_multi3_ = 26,
-		_RegCOMPLEX_multi2_ = 27,
-		_RegCOMPLEX_multi1_ = 28,
-		_RegCOMPLEX_single_ = 29,
-		_RegNODE_replace_ = 30,
-		_RegNODE_braket_ = 31,
-		_RegNODE_single_ = 32,
-		_RegLEAF_range_ = 33,
-		_RegLEAF_single2_ = 34,
-		_RegLEAF_single_ = 35,
-		_RegCHAR_id_ = 36,
-		_RegCHAR_commom_ = 37,
-		_GRAMMAR_multi_ = 38,
-		_GRAMMAR_single_ = 39,
-		_GrammerDEF_multi_ = 40,
-		_GrammerDEF_single_ = 41,
-		_GnameFORMULAS_multi_ = 42,
-		_GnameFORMULAS_single_ = 43,
-		_GFORMULA_more_ = 44,
-		_GFORMULA_unit_ = 45,
-		_GFORMULAUnit_aall_ = 46,
-		_GFORMULAUnit_aid_ = 47,
-		_GFORMULAUnit_agrammar_ = 48,
-		_GFORMULAUnit_alexical_ = 49,
-		_GFORMULAUnit_avoid_ = 50,
-		_END_half_ = 51,
-		_END_full_ = 52,
-		_BEGIN_BEGIN_ = 53
-	};
 
-	static const size_t StateCount;
-	static const size_t NonTerminalCount;
-	static const size_t TerminalCount;
-	static const size_t RulesCount;
-	static const int GOTO[95][23];
-	static const int ACTION[95][30];
-	static const int RulesToSymbol[54];
-	static const int RulesLength[54];
-	static const char* const RulesName[54];
-};
 
 
 
@@ -1749,7 +1598,7 @@ void InputPanel::demo(FILE* fp) const
 void InputPanel::ErrorDemo(FILE* fp) const
 {
 	const char* s_temp_1, * s_temp_2; 
-	size_t i, j, record;
+	size_t i, j, record, uintTemp;
 	switch (errorCode)
 	{
 	case InputPanel::NoError:
@@ -1807,7 +1656,8 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		fprintf(fp, "%zu\n", record);
 		for (i = 0; i < LexicalSource.GetCount(); i++)
 		{
-			if (record == LexicalSource[i].line)
+			uintTemp = LexicalSource[i].line;
+			if (record == uintTemp || uintTemp + 1 == record)
 			{
 				if (i == errorInfor1)
 					fprintf(fp, "| %s |", LexicalSource.GetWord(i));
@@ -2033,6 +1883,160 @@ int InputPanel::printG(FILE* output, FILE* infor, const char* nameG)const
 }
 
 
+struct Reg
+{
+	enum regular
+	{
+		_identifier_ = 1,
+		_integer_ = 2,
+		_CommonChar_ = 3,
+		_idChar_ = 4,
+		_lexical_ = 5,
+		_grammar_ = 6,
+		_void_ = 7,
+		_all_ = 8,
+		_spaces_ = 9,
+		_enters_ = 10,
+		_tab_ = 11,
+		_semicolon_ = 12,
+		_colon_ = 13,
+		_dot_ = 14,
+		_braceL_ = 15,
+		_braceR_ = 16,
+		_left_ = 17,
+		_right_ = 18,
+		_squareL_ = 19,
+		_squareR_ = 20,
+		_angleL_ = 21,
+		_angleR_ = 22,
+		_anntationS_ = 23,
+		_anntationM_ = 24,
+		_range_ = 25,
+		_star_ = 26,
+		_plus_ = 27,
+		_question_ = 28,
+		_or_ = 29
+	};
+	enum group
+	{
+		_identifier___ = 1,
+		_const___ = 2,
+		_reserved___ = 3,
+		_format___ = 4,
+		_division___ = 5,
+		_braket___ = 6,
+		_annotation___ = 7,
+		_RegSymbol___ = 8
+	};
+	static int next(int state, const char c);
+	static int action(int state);
+	static int GroupGet(int state);
+};
+struct Panel
+{
+	enum type
+	{
+		accept = 0,
+		error = 1,
+		push = 2,
+		reduce = 3
+	};
+	enum nonterminal
+	{
+		_all_ = 0,
+		_TEXT_ = 1,
+		_LEXICAL_ = 2,
+		_RegGROUP_ = 3,
+		_REGDEFS_ = 4,
+		_RegDEF_ = 5,
+		_RegGROUPNAME_ = 6,
+		_RegNAME_ = 7,
+		_RegNAMEHead_ = 8,
+		_REGBODY_ = 9,
+		_REGEXPRESSor_ = 10,
+		_REGEXPRESS_ = 11,
+		_RegCOMPLEX_ = 12,
+		_RegNODE_ = 13,
+		_RegLEAF_ = 14,
+		_RegCHAR_ = 15,
+		_GRAMMAR_ = 16,
+		_GrammerDEF_ = 17,
+		_GnameFORMULAS_ = 18,
+		_GFORMULA_ = 19,
+		_GFORMULAUnit_ = 20,
+		_END_ = 21,
+		_BEGIN_ = 22
+	};
+	enum rules
+	{
+		_all_all_ = 0,
+		_TEXT_OnlyL_ = 1,
+		_TEXT_LG_ = 2,
+		_LEXICAL_single_ = 3,
+		_LEXICAL_multi_ = 4,
+		_RegGROUP_single_ = 5,
+		_RegGROUP_multi_ = 6,
+		_REGDEFS_single_ = 7,
+		_REGDEFS_multi_ = 8,
+		_RegDEF_default_ = 9,
+		_RegDEF_full_ = 10,
+		_RegGROUPNAME_blocks_ = 11,
+		_RegGROUPNAME_bare_ = 12,
+		_RegGROUPNAME_priority_ = 13,
+		_RegNAME_bare_ = 14,
+		_RegNAME_priority_ = 15,
+		_RegNAMEHead_avoid_ = 16,
+		_RegNAMEHead_alexical_ = 17,
+		_RegNAMEHead_agrammar_ = 18,
+		_RegNAMEHead_aall_ = 19,
+		_RegNAMEHead_aid_ = 20,
+		_REGBODY_REGBODY_ = 21,
+		_REGEXPRESSor_single_ = 22,
+		_REGEXPRESSor_ororor_ = 23,
+		_REGEXPRESS_single_ = 24,
+		_REGEXPRESS_multi_ = 25,
+		_RegCOMPLEX_single_ = 26,
+		_RegCOMPLEX_multi1_ = 27,
+		_RegCOMPLEX_multi2_ = 28,
+		_RegCOMPLEX_multi3_ = 29,
+		_RegNODE_single_ = 30,
+		_RegNODE_braket_ = 31,
+		_RegNODE_replace_ = 32,
+		_RegLEAF_single_ = 33,
+		_RegLEAF_single2_ = 34,
+		_RegLEAF_range_ = 35,
+		_RegCHAR_commom_ = 36,
+		_RegCHAR_id_ = 37,
+		_GRAMMAR_single_ = 38,
+		_GRAMMAR_multi_ = 39,
+		_GrammerDEF_single_ = 40,
+		_GrammerDEF_multi_ = 41,
+		_GnameFORMULAS_single_ = 42,
+		_GnameFORMULAS_multi_ = 43,
+		_GFORMULA_unit_ = 44,
+		_GFORMULA_more_ = 45,
+		_GFORMULAUnit_avoid_ = 46,
+		_GFORMULAUnit_alexical_ = 47,
+		_GFORMULAUnit_agrammar_ = 48,
+		_GFORMULAUnit_aid_ = 49,
+		_GFORMULAUnit_aall_ = 50,
+		_END_full_ = 51,
+		_END_half_ = 52,
+		_BEGIN_BEGIN_ = 53
+	};
+
+
+	static const size_t StateCount;
+	static const size_t NonTerminalCount;
+	static const size_t TerminalCount;
+	static const size_t RulesCount;
+	static const int GOTO[95][23];
+	static const int ACTION[95][30];
+	static const int RulesToSymbol[54];
+	static const int RulesLength[54];
+	static const char* const RulesName[54];
+};
+
 int InputPanel::build(FILE* fp)
 {
 	//Morpheme eme;
@@ -2138,12 +2142,12 @@ int InputPanel::buildAll(const Morpheme& eme, GrammarTree& Tree)
 			site_ = GT->root().site;
 			if ((RegularExp*)GT->root().rules)
 			{
-				if (site_ == 1)
+				if (site_ == Panel::_TEXT_OnlyL_)
 				{
 					error = buildL(eme, GT->child(2));
 					break;
 				}
-				else if(site_ == 2)
+				else if(site_ == Panel::_TEXT_LG_)
 				{
 					error = buildL(eme, GT->child(2));
 					if (error != 0) return error;
@@ -2160,6 +2164,8 @@ int InputPanel::buildAll(const Morpheme& eme, GrammarTree& Tree)
 	}
 	return error;
 }
+
+
 
 int InputPanel::buildL(const Morpheme& eme, GLTree* Tree)
 {
@@ -2182,17 +2188,17 @@ int InputPanel::buildL(const Morpheme& eme, GLTree* Tree)
 
 			if ((RegularExp*)GT->root().rules){
 				//printf("here: %zu\n", site_);
-				switch (site_)
+				switch ((Panel::rules)site_)
 				{
 				//No[3], case RegGROUP: prefix: 5, degeneracy: 4
-				case 5: //3: RegGROUP, No[0] production rules: RegGROUP->RegGROUPNAME colon RegDEF
-				case 6: //3: RegGROUP, No[1] production rules: RegGROUP->RegGROUPNAME BEGIN REGDEFS END
+				case Panel::_RegGROUP_single_: //3: RegGROUP, No[0] production rules: RegGROUP->RegGROUPNAME colon RegDEF
+				case Panel::_RegGROUP_multi_: //3: RegGROUP, No[1] production rules: RegGROUP->RegGROUPNAME BEGIN REGDEFS END
 					//printf("ghghhere: %zu\n", GT->ChildCount());
 					//printf("ghghhere: %zu\n", (size_t)GT->child(0));
 					error = RegGroupName(GroupNow, eme, GT->child(0));
 					if (error != 0) return error;
 					break;
-				case 9: //5: RegDEF, No[0] production rules: RegDEF->RegNAME semicolon
+				case Panel::_RegDEF_default_: //5: RegDEF, No[0] production rules: RegDEF->RegNAME semicolon
 					error = RegName(RegNow, GroupNow, eme, GT->child(0));
 					if (error != 0) return error;
 					Regu = RegG[GroupNow]->regs[RegNow];
@@ -2200,7 +2206,7 @@ int InputPanel::buildL(const Morpheme& eme, GLTree* Tree)
 					Regu->reg->set(Regu->name);
 					//RegG[GroupNow]->regs[RegNow]->reg->Demo(stdout);
 					break;
-				case 10: //5: RegDEF, No[1] production rules: RegDEF->RegNAME colon REGBODY semicolon
+				case Panel::_RegDEF_full_: //5: RegDEF, No[1] production rules: RegDEF->RegNAME colon REGBODY semicolon
 					//printf("here\n");
 					error = RegName(RegNow, GroupNow, eme, GT->child(0));
 					//printf("here: %d\n", error);
@@ -2359,59 +2365,59 @@ int InputPanel::RegBuild(size_t RegNow, size_t group, const Morpheme& eme, GLTre
 				switch (site_)
 				{
 				//No[9], case REGBODY: prefix: 21, degeneracy: 1
-				case 21: //9: REGBODY, No[0] production rules: REGBODY->REGEXPRESSor
+				case Panel::_REGBODY_REGBODY_: //9: REGBODY, No[0] production rules: REGBODY->REGEXPRESSor
 				//No[10], case REGEXPRESSor: prefix: 22, degeneracy: 2
-				case 22: //10: REGEXPRESSor, No[0] production rules: REGEXPRESSor->REGEXPRESS
+				case Panel::_REGEXPRESSor_single_: //10: REGEXPRESSor, No[0] production rules: REGEXPRESSor->REGEXPRESS
 					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
 					GT->child(0)->root().infor = NULL;
 					break;
-				case 23: //10: REGEXPRESSor, No[1] production rules: REGEXPRESSor->REGEXPRESSor or REGEXPRESS
+				case Panel::_REGEXPRESSor_ororor_: //case 23: 10: REGEXPRESSor, No[1] production rules: REGEXPRESSor->REGEXPRESSor or REGEXPRESS
 					TreeNow = new RegularExp;
 					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
 					Rtemp = (RegularExp*)(GT->child(2)->root().infor);
 					TreeNow->set(Ltemp, Rtemp, RegularExp::Alternation);
 					break;
 					//No[11], case REGEXPRESS: prefix: 24, degeneracy: 2
-				case 24: //11: REGEXPRESS, No[0] production rules: REGEXPRESS->RegCOMPLEX
+				case Panel::_REGEXPRESS_single_: //case 24: 11: REGEXPRESS, No[0] production rules: REGEXPRESS->RegCOMPLEX
 					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
 					GT->child(0)->root().infor = NULL;
 					break;
-				case 25: //11: REGEXPRESS, No[1] production rules: REGEXPRESS->REGEXPRESS RegCOMPLEX
+				case Panel::_REGEXPRESS_multi_: //case 25: 11: REGEXPRESS, No[1] production rules: REGEXPRESS->REGEXPRESS RegCOMPLEX
 					TreeNow = new RegularExp;
 					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
 					Rtemp = (RegularExp*)(GT->child(1)->root().infor);
 					TreeNow->set(Ltemp, Rtemp, RegularExp::Concatenation);
 					break;
 					//No[12], case RegCOMPLEX: prefix: 26, degeneracy: 4
-				case 26: //12: RegCOMPLEX, No[0] production rules: RegCOMPLEX->RegNODE
+				case Panel::_RegCOMPLEX_single_: //case 26:12: RegCOMPLEX, No[0] production rules: RegCOMPLEX->RegNODE
 					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
 					GT->child(0)->root().infor = NULL;
 					break;
-				case 27: //12: RegCOMPLEX, No[1] production rules: RegCOMPLEX->RegCOMPLEX plus
+				case Panel::_RegCOMPLEX_multi1_: //case 27:12: RegCOMPLEX, No[1] production rules: RegCOMPLEX->RegCOMPLEX plus
 					TreeNow = new RegularExp;
 					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
 					TreeNow->set(Ltemp, RegularExp::OneOrMore);
 					break;
-				case 28: //12: RegCOMPLEX, No[2] production rules: RegCOMPLEX->RegCOMPLEX star
+				case Panel::_RegCOMPLEX_multi2_: //case 28:12: RegCOMPLEX, No[2] production rules: RegCOMPLEX->RegCOMPLEX star
 					TreeNow = new RegularExp;
 					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
 					TreeNow->set(Ltemp, RegularExp::ZeroOrMore);
 					break;
-				case 29: //12: RegCOMPLEX, No[3] production rules: RegCOMPLEX->RegCOMPLEX question
+				case Panel::_RegCOMPLEX_multi3_: //case 29:12: RegCOMPLEX, No[3] production rules: RegCOMPLEX->RegCOMPLEX question
 					TreeNow = new RegularExp;
 					Ltemp = (RegularExp*)(GT->child(0)->root().infor);
 					TreeNow->set(Ltemp, RegularExp::ZeroOrOne);
 					break;
 				//No[13], case RegNODE: prefix: 30, degeneracy: 3
-				case 30: //13: RegNODE, No[0] production rules: RegNODE->RegLEAF
+				case Panel::_RegNODE_single_: //case 30:13: RegNODE, No[0] production rules: RegNODE->RegLEAF
 					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
 					GT->child(0)->root().infor = NULL;
 					break;
-				case 31: //13: RegNODE, No[1] production rules: RegNODE->left REGEXPRESSor right
+				case Panel::_RegNODE_braket_: //case 31:13: RegNODE, No[1] production rules: RegNODE->left REGEXPRESSor right
 					TreeNow = (RegularExp*)(GT->child(1)->root().infor);
 					GT->child(1)->root().infor = NULL;
 					break;
-				case 32: //13: RegNODE, No[2] production rules: RegNODE->angleL identifier angleR
+				case Panel::_RegNODE_replace_: //case 32:13: RegNODE, No[2] production rules: RegNODE->angleL identifier angleR
 					idName = eme.GetWord(GT->child(1)->root().site);
 					TreeNow = new RegularExp;
 					if (RegSearch(i, j, idName))
@@ -2427,15 +2433,15 @@ int InputPanel::RegBuild(size_t RegNow, size_t group, const Morpheme& eme, GLTre
 					}
 					break;
 				//No[14], case RegLEAF: prefix: 33, degeneracy: 3
-				case 33: //14: RegLEAF, No[0] production rules: RegLEAF->RegCHAR
+				case Panel::_RegLEAF_single_: //case 33:14: RegLEAF, No[0] production rules: RegLEAF->RegCHAR
 					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
 					GT->child(0)->root().infor = NULL;
 					break;
-				case 34: //14: RegLEAF, No[1] production rules: RegLEAF->squareL RegCHAR squareR
+				case Panel::_RegLEAF_single2_: //case 34:14: RegLEAF, No[1] production rules: RegLEAF->squareL RegCHAR squareR
 					TreeNow = (RegularExp*)(GT->child(1)->root().infor);
 					GT->child(1)->root().infor = NULL;
 					break;
-				case 35: //14: RegLEAF, No[2] production rules: RegLEAF->squareL RegCHAR range RegCHAR squareR
+				case Panel::_RegLEAF_range_: //case 35: 14: RegLEAF, No[2] production rules: RegLEAF->squareL RegCHAR range RegCHAR squareR
 					TreeNow = new RegularExp;
 					Ltemp = (RegularExp*)(GT->child(1)->root().infor);
 					Rtemp = (RegularExp*)(GT->child(3)->root().infor);
@@ -2446,8 +2452,8 @@ int InputPanel::RegBuild(size_t RegNow, size_t group, const Morpheme& eme, GLTre
 					Rtemp = NULL;
 					break;
 				//No[15], case RegCHAR: prefix: 36, degeneracy: 2
-				case 36: //15: RegCHAR, No[0] production rules: RegCHAR->CommonChar
-				case 37: //15: RegCHAR, No[1] production rules: RegCHAR->idChar
+				case Panel::_RegCHAR_commom_: //case 36:15: RegCHAR, No[0] production rules: RegCHAR->CommonChar
+				case Panel::_RegCHAR_id_: //case 37:15: RegCHAR, No[1] production rules: RegCHAR->idChar
 					TreeNow = (RegularExp*)(GT->child(0)->root().infor);
 					GT->child(0)->root().infor = NULL;
 					break;
@@ -2502,7 +2508,7 @@ int InputPanel::buildRules(const Morpheme& eme, GLTree* Tree)
 	GTIter iterator;
 	int error;
 	GLTree* GT;
-
+	bool tempBool;
 	size_t site_;
 	size_t groupNow;
 	iterator.initial(Tree);
@@ -2511,33 +2517,37 @@ int InputPanel::buildRules(const Morpheme& eme, GLTree* Tree)
 	while (iterator.still())
 	{
 		GT = iterator.target();
-		if (iterator.state() == 0)
+		site_ = GT->root().site;
+		tempBool = (RegularExp*)GT->root().rules;
+		if (iterator.state() == 0 && tempBool)
 		{
-			site_ = GT->root().site;
-			//printf("here! %zu\n", site_);
-			if ((RegularExp*)GT->root().rules) {
-				switch (site_) {
-					//No[17], case GrammerDEF: prefix: 40, degeneracy: 2
-				case 40: //17: GrammerDEF, No[0] production rules: GrammerDEF->identifier colon GFORMULA semicolon
-					error = GrammarGroup(groupNow, eme, GT->child(0));
-					if (error != 0) return error;
-					error = RulesAppend(groupNow, GT->child(0), eme, GT->child(2));
-					if (error != 0) return error;
-					break;
-				case 41: //17: GrammerDEF, No[1] production rules: GrammerDEF->identifier BEGIN GnameFORMULAS END
-					error = GrammarGroup(groupNow, eme, GT->child(0));
-					if (error != 0) return error;
-					break;
-					//No[18], case GnameFORMULAS: prefix: 42, degeneracy: 2
-				case 42: //18: GnameFORMULAS, No[0] production rules: GnameFORMULAS->identifier colon GFORMULA semicolon
-					error = RulesAppend(groupNow, GT->child(0), eme, GT->child(2));
-					if (error != 0) return error;
-					break;
-				case 43: //18: GnameFORMULAS, No[1] production rules: GnameFORMULAS->GnameFORMULAS identifier colon GFORMULA semicolon
-					error = RulesAppend(groupNow, GT->child(1), eme, GT->child(3));
-					if (error != 0) return error;
-					break;
-				}
+			switch (site_) {
+				//No[17], case GrammerDEF: prefix: 40, degeneracy: 2
+			case Panel::_GrammerDEF_single_: //case 40:17: GrammerDEF, No[0] production rules: GrammerDEF->identifier colon GFORMULA semicolon
+				error = GrammarGroup(groupNow, eme, GT->child(0));
+				if (error != 0) return error;
+				error = RulesAppend(groupNow, GT->child(0), eme, GT->child(2));
+				if (error != 0) return error;
+				break;
+			case Panel::_GrammerDEF_multi_: //case 41:17: GrammerDEF, No[1] production rules: GrammerDEF->identifier BEGIN GnameFORMULAS END
+				error = GrammarGroup(groupNow, eme, GT->child(0));
+				if (error != 0) return error;
+				break;
+			}
+		}
+		else if (tempBool)
+		{
+			switch (site_)
+			{
+				//No[18], case GnameFORMULAS: prefix: 42, degeneracy: 2
+			case Panel::_GnameFORMULAS_single_: //case 42: 18: GnameFORMULAS, No[0] production rules: GnameFORMULAS->identifier colon GFORMULA semicolon
+				error = RulesAppend(groupNow, GT->child(0), eme, GT->child(2));
+				if (error != 0) return error;
+				break;
+			case Panel::_GnameFORMULAS_multi_: //case 43: 18: GnameFORMULAS, No[1] production rules: GnameFORMULAS->GnameFORMULAS identifier colon GFORMULA semicolon
+				error = RulesAppend(groupNow, GT->child(1), eme, GT->child(3));
+				if (error != 0) return error;
+				break;
 			}
 		}
 		iterator.next();
@@ -2634,11 +2644,11 @@ int InputPanel::RulesAppend(size_t GroupSite, GLTree* Name, const Morpheme& eme,
 			if ((RegularExp*)GT->root().rules) {
 				switch (site_) {
 					//No[19], case GFORMULA: prefix: 44, degeneracy: 2
-				case 44: //19: GFORMULA, No[0] production rules: GFORMULA->GFORMULAUnit
+				case Panel::_GFORMULA_unit_: //case 44:19: GFORMULA, No[0] production rules: GFORMULA->GFORMULAUnit
 					symbolName = eme.GetWord(GT->child(0)->child(0)->root().site);
 					RR->formula.append(SymbolAdd(symbolName));
 					break;
-				case 45: //19: GFORMULA, No[1] production rules: GFORMULA->GFORMULA GFORMULAUnit
+				case Panel::_GFORMULA_more_: //case 45: 19: GFORMULA, No[1] production rules: GFORMULA->GFORMULA GFORMULAUnit
 					symbolName = eme.GetWord(GT->child(1)->child(0)->root().site);
 					RR->formula.append(SymbolAdd(symbolName));
 					break;

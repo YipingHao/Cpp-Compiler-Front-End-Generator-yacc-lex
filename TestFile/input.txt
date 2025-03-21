@@ -28,7 +28,7 @@ lexical:{
 	format:
 	{
 		spaces: ' '+;
-		enters: '\n'+;
+		enters: ('\n'| '\r''\n')+;
 		tab: '\t';
 	}
 	division:
