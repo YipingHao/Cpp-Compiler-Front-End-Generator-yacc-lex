@@ -131,14 +131,17 @@ grammar: TEXT: {
 		multi: GRAMMAR GrammerDEF;
 	}	
 	GrammerDEF:{
-		single: identifier colon GFORMULA semicolon;
-		//single2: identifier colon identifier colon GFORMULA semicolon;
-		multi: identifier BEGIN GnameFORMULAS END;
-		
+		single: GNameALL colon GFORMULA semicolon;
+		multi: GNameALL BEGIN GnameFORMULAS END;
 	}
 	GnameFORMULAS:{
 		single: identifier colon GFORMULA semicolon;
 		multi: GnameFORMULAS identifier colon GFORMULA semicolon;
+	}
+	GNameALL:
+	{
+		explicit: identifier;
+		implicit: angleL identifier angleR;
 	}
 	GFORMULA:{
 		unit: GFORMULAUnit;
@@ -153,10 +156,10 @@ grammar: TEXT: {
 		agrammar: grammar;
 		aall: all;
 		aid: identifier;// a single lexical unit;
+		//aImplicit: left identifier right; // an over disign
 		group: squareL identifier squareR;
 		// use a group of lexical unit instead of a single one
 	};
-
 
 	END:{
 		full: braceR semicolon;

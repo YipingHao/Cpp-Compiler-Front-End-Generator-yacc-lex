@@ -98,7 +98,7 @@ grammar: FUNCTION:
 		para: para id;
 		paras: para id squareL integer squareR;
 	}
-    FUNCTWORD: 
+    (FUNCTWORD): 
     {
         function: function;
         funct: funct;
@@ -118,7 +118,7 @@ grammar: FUNCTION:
 		single: def id semicolon;
 		multi: def id squareL integer squareR semicolon;
 	}
-	RETURN: return EXP_RIGHT semicolon;
+	RETURN: (return) EXP_RIGHT (semicolon);
 	EXPRESSIONS:
 	{
 		single: EXPRESSION;
