@@ -2880,7 +2880,7 @@ long int InputPanel::WildcardToSymbol(long int symbol, const Morpheme& eme, bool
 
 		Arule = new Rules;
 		Arule->SetName("first");
-		if(plus) Arule->formula.append((long int)( - 1));
+		if(!plus) Arule->formula.append((long int)( - 1));
 		else Arule->formula.append(symbol);
 		GG->rules.append(Arule);
 

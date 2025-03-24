@@ -324,6 +324,169 @@ grammar: ****: {
 	    void_in_a_rule: unit1 void unit2;
     }
 ```
+####   语法糖1:使用一组词法单元
+
+我们在定义词法规则的正则表达式的时候强行要求用户对正则表达式分组。每一组都有组名。我们可以用正则表达式的组名加上方括号来代替具体的某一个正则表达式。
+```
+lexical:{
+    void: 
+    {
+        num: [0-9];
+        letter: [a-z]|[A-Z];
+    }
+    id: id(+5): (<letter> | _) (<letter> | _ | <num>)+;
+    number: {integer: ('-'|'+')?<num>+;}
+    operator1:
+    {
+        sum: '+';
+        sub: '-';
+    }
+    operator2:
+    {
+        multi: '*';
+        div: '/';
+    }
+    value: value: '=';
+    braket:
+    {
+        left:'(';
+        right: ')';
+    };
+};
+grammar: EXP:
+{
+    LEFT: id;
+    EXP: LEFT value RIGHT; 
+    RIGHT:{
+        single: MULTI;
+        multi: RIGHT [operator1] MULTI; //(MULTI * UNIT)
+    }
+    MULTI: 
+    {
+        single: UNIT;
+        multi: MULTI [operator2] UNIT; //(MULTI * UNIT)
+    }
+    UNIT: 
+    {
+        const: integer;
+        xyz: id;
+        alot: left RIGHT right;//(RIGHT)
+    }
+}
+```
+这种功能的事项原理是隐形文法符号。
+
+####  语法糖2:隐形文法符号（非终结符号）
+
+我们有些文法符号我们并不想让它拥有单独的抽象文法树AST上的节点,那么我们可以将它们的名字用尖括号括起来，同时在别的产生式体内引用的时候也要带上尖括号。
+
+```
+        Key_Value:  id <ValueGive> VALUE semicolon;
+        <ValueGive>:
+        {
+                value :colon value ;
+                colon :colon ;
+        };
+        VALUE:{/* ......  */}
+```
+这样的文法符号称之为隐形文法符号。当我们的程序构造抽象文法树AST时遇到隐形文法符号对应的节点`B`，会把`B`的全部子节点依次插入到`B`的父节点`A`的子节点数组，然后删去节点`B`。依次插入`B`的子节点数组的起始位置正是`B`的位置。在`B`之后的子节点则依次顺序后延。
+
+```
+tree[a]:  Key_Value:  id <ValueGive> VALUE semicolon;
+        child[4]: tree[a + 1] tree[a + 2] tree[a + 3] tree[a + 4];
+tree[a + 1]: id;
+        child[0]:
+tree[a + 2]: <ValueGive> : colon value; 
+        child[1]: tree[a + 5] tree[a + 6]
+tree[a + 3]: VALUE: /* ......  */;
+        child[?]: /* ......  */
+tree[a + 4]: semicolon;
+        child[0]: 
+tree[a + 5]: colon;
+        child[0]: 
+tree[a + 6]: value;
+        child[0]: 
+```
+比如上述AST会变成如下的样子
+```
+tree[a]:  Key_Value:  id <ValueGive> VALUE semicolon;
+        child[5]: tree[a + 1] tree[a + 5] tree[a + 6] tree[a + 3] tree[a + 4];
+tree[a + 1]: id;
+        child[0]:
+tree[a + 3]: VALUE: /* ......  */;
+        child[?]: /* ......  */
+tree[a + 4]: semicolon;
+        child[0]: 
+tree[a + 5]: colon;
+        child[0]: 
+tree[a + 6]: value;
+        child[0]: 
+```
+使用一组词法单元的实现方式就是自动生成了一个隐形文法符号和它的产生式。这种自动插入会在输出中暴露给用户的。对于
+```
+    RIGHT:{
+        single: MULTI;
+        multi: RIGHT [operator1] MULTI; //(MULTI * UNIT)
+    }
+    MULTI: 
+    {
+        single: UNIT;
+        multi: MULTI [operator2] UNIT; //(MULTI * UNIT)
+    }
+```
+我们自动插入:
+```
+        [operator1]:
+        {
+                sum: sum;
+                sub: sub;
+        }
+        [operator2]:
+        {
+                multi: multi;
+                div: div;
+        }
+
+```
+后文通配符产生式的实现原理也是隐形文法符号。
+####  语法糖3:通配符产生式
+
+定义正则表达式里面我们常常用的星号和加号来表示一个单元重复任意正数次或任意多次。很多时候一个文法符号的文法规则是另一个文法单元的大量重复，这是我们就可以定义通配符产生式来描述这种情况，就像正则表达式里面那样。
+```
+        ANY_AA: AA*;
+        Key_ValueS: Key_Value+;
+        ABCD:
+        {
+                manyC: [CC]+;
+                manyC: DD+;
+                AA:AA;
+        }
+        illegal:
+        {
+                illegal: [CC]+ [CC];
+                illegal: AA DD+;
+        }
+```
+但是请注意使用通配符产生式的产生式体只能是一个文法符号(终结符或者非终结符)加上一个通配符，不能出现第三个其余符号。
+
+```
+        ANY_AA: [AA]+;
+        ANY_BB: BB*;
+```
+会在程序内部转化成；
+```
+        ANY_AA: <[AA]+>;
+        <[AA]+>:{
+                single:[AA];
+                multi: <[AA]+> [AA];
+        }
+        ANY_BB: <BB*>;
+        <BB*>:{
+                single:void;
+                multi: <BB*> BB;
+        }
+```
+
 ## 输出文件格式
 相较于输出一个词法分析器加上文法分析器的完整代码，我们更倾向于输出词法分析器和文法分析器的”驱动表“。这种做法有更高的灵活度。如果用户不像动手写分析器，我们提供两个类将输出的”驱动表“转化为完整代码。
 ### 1.  词法分析器输出格式
