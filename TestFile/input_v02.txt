@@ -156,7 +156,7 @@ grammar: TEXT: {
 		agrammar: grammar;
 		aall: all;
 		aid: identifier;// a single lexical unit;
-		//aImplicit: left identifier right; // an over disign
+		aImplicit: angleL identifier angleR; 
 		group: squareL identifier squareR;
 		// use a group of lexical unit instead of a single one
 	};
