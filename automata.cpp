@@ -465,6 +465,12 @@ long int Morpheme::GetInt(size_t site) const
 	Rear = Head + lex[site].length;
 	return IntGet(storage.ptr(), Rear, Head);
 }
+char* Morpheme::GetString(size_t site) const
+{
+	BufferChar BC;
+	BC = GetWord(site);
+	return BC.DequeueString();
+}
 void Morpheme::UnitMove(size_t from, size_t to)
 {
 	lex[to] = lex[from];

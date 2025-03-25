@@ -393,6 +393,7 @@ namespace hyperlex
 		char GetChar(size_t site) const;
 		double GetReal(size_t site) const;
 		long int GetInt(size_t site) const;
+		char* GetString(size_t site) const;
 		bool& valid(size_t site);
 
 		template<typename T> int Build(const char* reg);
