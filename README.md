@@ -48,6 +48,7 @@ demo方法展示读入文件的信息，如果发现输入文件有一些错误�
 如果用户输入的文法超过了这两种文法分析器生成器的能力，`printG`返回2。此时`FILE*output`不会有任何输出。如果`InputPanel`没有正确的完成对输入文件的解析，调用`printG`返回-1。
 
 ####  5.使用范例
+这是调用`InputPanel`的一个例子，例子对应的输入文件就在下文，文件的输出则在此文档的最末尾。可以请读者先简单阅读一下输入输出的例子。
 ```
 int sample(void) {
     InputPanel panel;
@@ -66,7 +67,7 @@ int sample(void) {
     // 生成DFA代码
     FILE* dfaOut = fopen("DFA.cpp", "w");
     if (!dfaOut) return -6;
-    int printLResult = panel.printL(dfaOut, "LexerDFA");
+    int printLResult = panel.printL(dfaOut, "SampleLexer");
     if (printLResult != 0) {
         fclose(dfaOut);
         return printLResult;
@@ -78,7 +79,7 @@ int sample(void) {
     if (!parserOut) return -7;
     if (!infoOut) return -8;
 
-    int printGResult = panel.printG(parserOut, infoOut, "ParserTable");
+    int printGResult = panel.printG(parserOut, infoOut, "SamplePraser");
     
     fclose(input);
     fclose(dfaOut);
@@ -389,7 +390,7 @@ grammar: EXP:
         };
         VALUE:{/* ......  */}
 ```
-这样的文法符号称之为隐形文法符号。当我们的程序构造抽象文法树AST时遇到隐形文法符号对应的节点`B`，会把`B`的全部子节点依次插入到`B`的父节点`A`的子节点数组，然后删去节点`B`。依次插入`B`的子节点数组的起始位置正是`B`的位置。在`B`之后的子节点则依次顺序后延。
+这样的文法符号称之为隐形文法符号。当我们的程序构造抽象文法树AST时遇到隐形文法符号对应的节点`B`，会把`B`的全部子节点依次插入到`B`的父节点`A`的子节点数组，然后删去节点`B`。依次插入`B`的子节点数组的起始位置正是`B`的位置。在`B`之后的子节点则依次顺序后延。本程序的输出是词法分析器和文法分析器的驱动表，如果用户可以进一步的调用本程序的语法树构造和词法单元表等功能。对于一个不准备进一步调用本程序的语法树模块的用户，隐形文法符号的用处也许不大。一个符号是否隐形，它在文法分析表中的对应状态无改变。
 
 ```
 tree[a]:  Key_Value:  id <ValueGive> VALUE semicolon;
@@ -422,7 +423,7 @@ tree[a + 5]: colon;
 tree[a + 6]: value;
         child[0]: 
 ```
-使用一组词法单元的实现方式就是自动生成了一个隐形文法符号和它的产生式。这种自动插入会在输出中暴露给用户的。对于
+使用一组词法单元的实现方式就是自动生成了一个隐形文法符号和它的产生式。这种自动插入会在驱动表的输出中暴露给用户的。对于
 ```
     RIGHT:{
         single: MULTI;
@@ -448,7 +449,19 @@ tree[a + 6]: value;
         }
 
 ```
-后文通配符产生式的实现原理也是隐形文法符号。
+后文通配符产生式的实现原理也是隐形文法符号。也可以将某些文法符号对应的一组产生式的某一个的名字用尖括号括起来，变成隐形产生式。
+```
+    RIGHT:{
+        <invisible>: MULTI;
+        multi: RIGHT [operator1] MULTI; //(MULTI * UNIT)
+    }
+    MULTI: 
+    {
+        <invisible>: UNIT;
+        multi: MULTI [operator2] UNIT; //(MULTI * UNIT)
+    }
+```
+对文法符号用尖括号括起来后，再把它的对应的一组产生式的某几个的名字用尖括号括起来，无意义但是也无冲突。程序都把它们全体视作隐形。
 ####  语法糖3:通配符产生式
 
 定义正则表达式里面我们常常用的星号和加号来表示一个单元重复任意正数次或任意多次。很多时候一个文法符号的文法规则是另一个文法单元的大量重复，这是我们就可以定义通配符产生式来描述这种情况，就像正则表达式里面那样。
@@ -528,19 +541,19 @@ struct <nameG>
 		push = 2,
 		reduce = 3
 	};
-    enum nonterminal
-    {
+        enum nonterminal
+        {
 		nonterminal_name00 = 0,
 		nonterminal_name01 = 1,
 		//大量重复
-        nonterminal_namelast = NonTerminalCount - 1
+                nonterminal_namelast = NonTerminalCount - 1
 	};
-    enum rules
-    {
+        enum rules
+        {
 		rules_name00 = 0,
 		rules_name01 = 1,
 		//大量重复
-        rules_namelast = RulesCount - 1
+                rules_namelast = RulesCount - 1
 	};
 	static const size_t StateCount;
 	static const size_t NonTerminalCount;
@@ -551,11 +564,12 @@ struct <nameG>
 	static const int RulesToSymbol[RulesCount];
 	static const int RulesLength[RulesCount];
 	static const char* const RulesName[RulesCount];
+        static const int Implicit[RulesCount];
 };
 ```
-其中枚举类型`type`是文法分析动作种类与整数的关系。成员数组`ACTION[StateCount][TerminalCount]`存储当前状态下，当前终结符号下该有的动作。成员数组`GOTO[StateCount][NonTerminalCount]`存储当前状态下，当前非终结符号下该有的动作。存储的`int`值是对4取模得到动作种类，除以整数4才得到具体的动作。对于`GOTO`而言有意义的动作种类只有两个`push`和`error`，然而存储是还是用了四个状态。`RulesToSymbol`存储当前产生式对应的非终结符号，`RulesToSymbol`存储当前产生式的长度，注意如果`void`代表空符号，那么`void`的数目不会计入产生式的长度。`RulesName` 存储当前产生式的名字。
+其中枚举类型`type`是文法分析动作种类与整数的关系。成员数组`ACTION[StateCount][TerminalCount]`存储当前状态下，当前终结符号下该有的动作。成员数组`GOTO[StateCount][NonTerminalCount]`存储当前状态下，当前非终结符号下该有的动作。存储的`int`值是对4取模得到动作种类，除以整数4才得到具体的动作。对于`GOTO`而言有意义的动作种类只有两个`push`和`error`，然而存储是还是用了四个状态。`RulesToSymbol`存储当前产生式对应的非终结符号，`RulesToSymbol`存储当前产生式的长度，注意如果`void`代表空符号，那么`void`的数目不会计入产生式的长度。`RulesName` 存储当前产生式对应的字符串，这个字符串可以在打印抽象语法树的时候有所帮助。`Implicit`存储对应产生式的是否是隐式的，如果是则为`1`反之为`0`。这个是无名生成器自带的抽象语法树构造器必须的信息。如果用户放弃无名生成器自带的抽象语法树构造器，转而自己构造抽象语法树构造器，这个信息也是有帮助的。
 
-其中枚举类型`nonterminal`可以帮助将定义的非终结符号和程序产生的编号对应起来。其中枚举类型`rules`可以帮助将定义的文法产生式和它们的编号对应起来。可以用枚举类型`rules`寻址`RulesToSymbol`，`RulesToSymbol`和`RulesName`。可以用枚举类型`nonterminal`寻址`GOTO[StateCount][NonTerminalCount]`第二个维度。样例输入文件输出的结构体作为一个例子出现在说明的最后部分的附录中。
+其中枚举类型`nonterminal`可以帮助将定义的非终结符号和程序产生的编号对应起来。其中枚举类型`rules`可以帮助将定义的文法产生式和它们的编号对应起来。可以用枚举类型`rules`寻址`RulesToSymbol`，`RulesToSymbol`，`RulesName`和`Implicit`。可以用枚举类型`nonterminal`寻址`GOTO[StateCount][NonTerminalCount]`第二个维度。样例输入文件输出的结构体作为一个例子出现在说明的最后部分的附录中。隐式的非终结符号和产生式在这两个枚举类型中是被注释的状态，当然用户也可以在看到它们后手动解除注释并且另命它名。
 
 ```
 int temp = <nameG>::ACTION[top][input[head].accept];
@@ -617,6 +631,8 @@ public:
 	const result& operator[](const size_t target) const;
 
 	char GetChar(size_t site) const;
+        double GetReal(size_t site) const;
+        long int GetInt(size_t site) const;
 	bool& valid(size_t site);
 
 	template<typename T> int Build(const char* reg);
@@ -688,6 +704,8 @@ int sample(input)
 
 
 ### 4. `class GrammarTree` 使用简介
+这个类对应一个抽象语法树。
+
 #### 1. 定义概览
 在automata.h定义如下:
 ```
@@ -782,6 +800,8 @@ struct Panel
 	static const int RulesToSymbol[RulesCount];
 	static const int RulesLength[RulesCount];
 	static const char* const RulesName[RulesCount];
+        static const int Implicit[RulesCount];
+
 };
 int sample(input)
 {
@@ -859,7 +879,7 @@ void sample(GrammarTree & input)
 #### 读入文件sample.txt后软件输出的词法分析器
 
 ```
-struct regular
+struct SampleLexer
 {
         enum regular
         {
@@ -883,7 +903,7 @@ struct regular
         static int action(int state);
         static int GroupGet(int state);
 };
-int regular::next(int state, const char c)
+int SampleLexer::next(int state, const char c)
 {
         switch (state)
         {
@@ -931,7 +951,7 @@ int regular::next(int state, const char c)
         }
         return 0;
 }
-int regular::action(int state)
+int SampleLexer::action(int state)
 {
         switch (state)
         {
@@ -952,7 +972,7 @@ int regular::action(int state)
         }
         return 0;
 }
-int regular::GroupGet(int accept)
+int SampleLexer::GroupGet(int accept)
 {
         switch (accept)
         {
@@ -973,6 +993,7 @@ int regular::GroupGet(int accept)
         }
         return 0;
 }
+
 ```
 #### 读入文件sample.txt后软件输出的文法分析器
 ```
@@ -985,6 +1006,19 @@ struct SamplePraser
                 push = 2,
                 reduce = 3
         };
+        enum rules
+        {
+                all_all_ = 0,
+                LEFT_LEFT_ = 1,
+                EXP_EXP_ = 2,
+                RIGHT_single_ = 3,
+                RIGHT_multi_ = 4,
+                MULTI_single_ = 5,
+                MULTI_multi_ = 6,
+                UNIT_const_ = 7,
+                UNIT_xyz_ = 8,
+                UNIT_alot_ = 9
+        };
         enum nonterminal
         {
                 _all_ = 0,
@@ -993,19 +1027,6 @@ struct SamplePraser
                 _RIGHT_ = 3,
                 _MULTI_ = 4,
                 _UNIT_ = 5
-        };
-        enum rules
-        {
-                _all_all_ = 0,
-                _LEFT_LEFT_ = 1,
-                _EXP_EXP_ = 2,
-                _RIGHT_single_ = 3,
-                _RIGHT_multi_ = 4,
-                _MULTI_single_ = 5,
-                _MULTI_multi_ = 6,
-                _UNIT_const_ = 7,
-                _UNIT_xyz_ = 8,
-                _UNIT_alot_ = 9
         };
         static const size_t StateCount;
         static const size_t NonTerminalCount;
@@ -1016,6 +1037,7 @@ struct SamplePraser
         static const int RulesToSymbol[10];
         static const int RulesLength[10];
         static const char* const RulesName[10];
+        static const int Implicit[10];
 };
 const size_t SamplePraser::StateCount = 17;
 const size_t SamplePraser::NonTerminalCount = 6;
@@ -1094,6 +1116,18 @@ const char* const SamplePraser::RulesName[10] = { \
 "UNIT->integer ",\
 "UNIT->id ",\
 "UNIT->left RIGHT right "};
+//==============================
+const int SamplePraser::Implicit[10] = { \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0};
 
 
 ```
