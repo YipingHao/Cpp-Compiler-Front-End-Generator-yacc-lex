@@ -537,6 +537,7 @@ namespace hyperlex
 		{
 			const char* name;
 			vector<long int> formula;
+			bool implicit;
 			Rules();
 			~Rules();
 			void SetName(const char* input);
@@ -625,13 +626,14 @@ namespace hyperlex
 		void addAllGroup(void);
 		void addAllGroup02(void);
 		int GrammarGroup(size_t& GroupSite, const Morpheme& eme, GLTree* Tree);
-		int RulesAppend(size_t GroupSite, const char* inputName, const Morpheme& eme, GLTree* Tree);
+		int RulesAppend(size_t GroupSite, GLTree* Name, const Morpheme& eme, GLTree* Tree);
 		long int UnitToSymbol(GLTree* Tree, const Morpheme& eme);
 		long int WildcardToSymbol(long int symbol, const Morpheme& eme, bool plus);
 		void addTerminal(void);
 		long int SymbolAdd(const char* symbol);
 		long int UnitRegGroupAdd(const char* symbol);
 		int NonTerminalSort(void);
+		void ImplicitAdd(void);
 	};
 
 }
@@ -998,7 +1000,7 @@ namespace hyperlex
 				begin_ = TempTree.count() - length;
 
 				TreeNow = new tree<TreeInfor>;
-				TreeNow->root().implicit = (bool)T::Implicit[(size_t)symbol];
+				TreeNow->root().implicit = (bool)T::Implicit[(size_t)information];
 				TreeNow->root().rules = true;
 				TreeNow->root().site = information;
 				TreeNow->root().infor = NULL;

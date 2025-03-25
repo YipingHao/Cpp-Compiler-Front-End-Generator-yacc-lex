@@ -135,8 +135,8 @@ grammar: TEXT: {
 		multi: GNameALL BEGIN GnameFORMULAS END;
 	}
 	GnameFORMULAS:{
-		single: identifier colon GFORMULA semicolon;
-		multi: GnameFORMULAS identifier colon GFORMULA semicolon;
+		single: GNameALL colon GFORMULA semicolon;
+		multi: GnameFORMULAS GNameALL colon GFORMULA semicolon;
 	}
 	GNameALL:
 	{

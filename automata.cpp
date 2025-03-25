@@ -1026,7 +1026,7 @@ struct RegExpG
 	static const int RulesToSymbol[15];
 	static const int RulesLength[15];
 	static const char* const RulesName[15];
-	static const int Implicit[7];
+	static const int Implicit[15];
 };
 const size_t RegExpG::StateCount = 23;
 const size_t RegExpG::NonTerminalCount = 7;
@@ -1141,7 +1141,7 @@ int RegularExp::set(const char* input)
 	error = standardBuild(eme);
 	return error;
 }
-const int RegExpG::Implicit[7] = { \
+const int RegExpG::Implicit[15] = { \
 0,\
 0,\
 0,\
@@ -1149,6 +1149,14 @@ const int RegExpG::Implicit[7] = { \
 0,\
 0,\
 0,\
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0 \
 };
 
 void RegularExp::copy(RegularExp& source)
@@ -1498,7 +1506,7 @@ void InputPanel::clear(void)
 	for (i = 0; i < GrammarG.count(); i++) delete GrammarG[i];
 	GrammarG.clear();
 	//printf("here!\n");
-	for (i = 0; i < rules.count(); i++) delete rules[i];
+	//for (i = 0; i < rules.count(); i++) delete rules[i];
 	rules.clear();
 
 	//printf("here!\n");
@@ -1580,6 +1588,7 @@ void InputPanel::Group::SetName(const char* input)
 InputPanel::Rules::Rules()
 {
 	name = NULL;
+	implicit = false;
 }
 InputPanel::Rules::~Rules()
 {
@@ -1790,41 +1799,34 @@ void InputPanel::printGName(FILE* output, FILE* infor, const char* nameG)const
 	size_t site, length;
 	Rules* now;
 	Group* GG;
+	const char* outstring_;
 	bool implicit;
 	site = 0;
 	fprintf(output, "\tenum rules\n\t{\n");
 	for (i = 0; i < GrammarG.count(); i++)
 	{
 		GG = GrammarG[i];
-		implicit = GG->implicit;
-		if (implicit)
+		for (j = 0; j < GG->rules.count(); j++)
 		{
-			for (j = 0; j < GG->rules.count(); j++)
+			now = GG->rules[j];
+			implicit = now->implicit;
+			if (implicit)
 			{
-				now = GG->rules[j];
-
 				if (site == 0)
-					fprintf(output, "\t\t//%s_%s_ = %d", GG->name, now->name, (int)site);
+					outstring_ = "\t\t//%s_%s_ = %d";
 				else
-					fprintf(output, ",\n\t\t//%s_%s_ = %d", GG->name, now->name, (int)site);
-				site += 1;
+					outstring_ = ",\n\t\t//%s_%s_ = %d";
 			}
-		}
-		else
-		{
-			for (j = 0; j < GG->rules.count(); j++)
+			else
 			{
-				now = GG->rules[j];
-
 				if (site == 0)
-					fprintf(output, "\t\t_%s_%s_ = %d", GG->name, now->name, (int)site);
+					outstring_ = "\t\t%s_%s_ = %d";
 				else
-					fprintf(output, ",\n\t\t_%s_%s_ = %d", GG->name, now->name, (int)site);
-				site += 1;
+					outstring_ = ",\n\t\t%s_%s_ = %d";
 			}
+			fprintf(output, outstring_, GG->name, now->name, (int)site);
+			site += 1;
 		}
-		
-		
 	}
 	fprintf(output, "\n\t};\n");
 
@@ -1852,13 +1854,13 @@ void InputPanel::printImplicit(FILE* output, FILE* infor, const char* nameG)cons
 {
 	size_t i;
 	fprintf(output, "//==============================\n");//
-	fprintf(output, "const int %s::Implicit[%zu] = { \\ \n", nameG, GrammarG.count());
-	for (i = 1; i < GrammarG.count(); i++)
+	fprintf(output, "const int %s::Implicit[%zu] = { \\ \n", nameG, rules.count());
+	for (i = 1; i < rules.count(); i++)
 	{
-		if(GrammarG[i - 1]->implicit) fprintf(output, "1, \\\n");
+		if(rules[i - 1]->implicit) fprintf(output, "1, \\\n");
 		else fprintf(output, "0, \\\n");
 	}
-	if (GrammarG[GrammarG.count() - 1]->implicit) fprintf(output, "1};\n");
+	if (rules[rules.count() - 1]->implicit) fprintf(output, "1};\n");
 	else fprintf(output, "0};\n");
 }
 int InputPanel::printL(FILE* fp, const char* nameL)const
@@ -2148,7 +2150,7 @@ struct Panel
 	static const int RulesToSymbol[60];
 	static const int RulesLength[60];
 	static const char* const RulesName[60];
-	static const int Implicit[24];
+	static const int Implicit[60];
 };
 
 
@@ -2617,6 +2619,7 @@ int InputPanel::buildG(const Morpheme& eme, GLTree* Tree)
 	error = NonTerminalSort();
 	//printf("here!\n");
 	if (error != 0) return error;
+	ImplicitAdd();
 	GrammarEnclosed = true;
 	return error;
 }
@@ -2641,14 +2644,14 @@ int InputPanel::buildRules(const Morpheme& eme, GLTree* Tree)
 		{
 			switch (site_) {
 				//No[17], case GrammerDEF: prefix: 40, degeneracy: 2
-			case Panel::_GrammerDEF_single_: //case 40:17: GrammerDEF, No[0] production rules: GrammerDEF->identifier colon GFORMULA semicolon
+			case Panel::_GrammerDEF_single_: //case 40:17: GrammerDEF, No[0] production rules: GrammerDEF->GNameALL colon GFORMULA semicolon
 				error = GrammarGroup(groupNow, eme, GT->child(0));
 				if (error != 0) return error;
 				inputName = GrammarG[groupNow]->name;
-				error = RulesAppend(groupNow, inputName, eme, GT->child(2));
+				error = RulesAppend(groupNow, GT->child(0), eme, GT->child(2));
 				if (error != 0) return error;
 				break;
-			case Panel::_GrammerDEF_multi_: //case 41:17: GrammerDEF, No[1] production rules: GrammerDEF->identifier BEGIN GnameFORMULAS END
+			case Panel::_GrammerDEF_multi_: //case 41:17: GrammerDEF, No[1] production rules: GrammerDEF->GNameALL BEGIN GnameFORMULAS END
 				error = GrammarGroup(groupNow, eme, GT->child(0));
 				if (error != 0) return error;
 				break;
@@ -2659,14 +2662,14 @@ int InputPanel::buildRules(const Morpheme& eme, GLTree* Tree)
 			switch (site_)
 			{
 				//No[18], case GnameFORMULAS: prefix: 42, degeneracy: 2
-			case Panel::_GnameFORMULAS_single_: //case 42: 18: GnameFORMULAS, No[0] production rules: GnameFORMULAS->identifier colon GFORMULA semicolon
+			case Panel::_GnameFORMULAS_single_: //case 42: 18: GnameFORMULAS, No[0] production rules: GnameFORMULAS->GNameALL colon GFORMULA semicolon
 				inputName = eme.GetWord(GT->child(0)->root().site);
-				error = RulesAppend(groupNow, inputName, eme, GT->child(2));
+				error = RulesAppend(groupNow, GT->child(0), eme, GT->child(2));
 				if (error != 0) return error;
 				break;
-			case Panel::_GnameFORMULAS_multi_: //case 43: 18: GnameFORMULAS, No[1] production rules: GnameFORMULAS->GnameFORMULAS identifier colon GFORMULA semicolon
+			case Panel::_GnameFORMULAS_multi_: //case 43: 18: GnameFORMULAS, No[1] production rules: GnameFORMULAS->GnameFORMULAS GNameALL colon GFORMULA semicolon
 				inputName = eme.GetWord(GT->child(1)->root().site);
-				error = RulesAppend(groupNow, inputName, eme, GT->child(3));
+				error = RulesAppend(groupNow, GT->child(1), eme, GT->child(3));
 				if (error != 0) return error;
 				break;
 			}
@@ -2743,10 +2746,11 @@ int InputPanel::GrammarGroup(size_t&GroupSite, const Morpheme& eme, GLTree* Tree
 	GroupSite = GrammarG.count() - 1;
 	return error;
 }
-int InputPanel::RulesAppend(size_t GroupSite, const char* inputName, const Morpheme& eme, GLTree* Tree)
+int InputPanel::RulesAppend(size_t GroupSite, GLTree* Name, const Morpheme& eme, GLTree* Tree)
 {
-	//const char* inputName;
-	
+	const char* inputName;
+	BufferChar BC;
+	bool Implicit;
 	size_t i, site_, middle, length;
 	Group* now;
 	Rules* RR;
@@ -2754,7 +2758,18 @@ int InputPanel::RulesAppend(size_t GroupSite, const char* inputName, const Morph
 	GLTree* GT;
 	long int unitNum, temp;
 	now = GrammarG[GroupSite];
-	//inputName = eme.GetWord(Name->root().site);
+	Implicit = Name->root().site != Panel::_GNameALL_explicit_;
+	if (Implicit)
+	{
+		inputName = eme.GetWord(Name->child(1)->root().site);
+		BC = "<";
+		BC += inputName;
+		BC += ">";
+		inputName = BC.ptr();
+		//inputName = eme.GetWord(Name->root().site);
+	}
+	else
+		inputName = eme.GetWord(Name->child(0)->root().site);
 	for (i = 0; i < now->rules.count(); i++)
 	{
 		if (compare(now->rules[i]->name, inputName))
@@ -2769,6 +2784,7 @@ int InputPanel::RulesAppend(size_t GroupSite, const char* inputName, const Morph
 	
 	RR = new Rules;
 	RR->SetName(inputName);
+	RR->implicit = Implicit;
 	now->rules.append(RR);
 	iterator.initial(Tree);
 	while (iterator.still())
@@ -3018,7 +3034,24 @@ int InputPanel::NonTerminalSort(void)
 	}
 	return error;
 }
-
+void InputPanel::ImplicitAdd(void)
+{
+	size_t i, j; 
+	Group* GG;
+	Rules* Arule;
+	rules.clear();
+	for (i = 0; i < GrammarG.count(); i++)
+	{
+		GG = GrammarG[i];
+		for (j = 0; j < GG->rules.count(); j++)
+		{
+			Arule = GG->rules[j];
+			Arule->implicit = GG->implicit ? true : Arule->implicit;
+			rules.append(Arule);
+		}
+	}
+	
+}
 void InputPanel::buildLpost(void)
 {
 	size_t i, j;
@@ -5965,7 +5998,7 @@ void Gsheet::CppStructPrint02(const char* name, FILE* fp, const grammerS* gramme
 	fprintf(fp, "\tstatic const int RulesToSymbol[%zu];\n", RulesCount);
 	fprintf(fp, "\tstatic const int RulesLength[%zu];\n", RulesCount);
 	fprintf(fp, "\tstatic const char* const RulesName[%zu];\n", RulesCount);
-	fprintf(fp, "\tstatic const int Implicit[%zu];\n", NonTerminalCount);
+	fprintf(fp, "\tstatic const int Implicit[%zu];\n", RulesCount);
 
 	fprintf(fp, "};\n");
 
@@ -6917,7 +6950,7 @@ const int Panel::GOTO[107][24] = { \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 382, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 382, 386, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 314, 318, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 374, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
@@ -6936,7 +6969,7 @@ const int Panel::GOTO[107][24] = { \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 402, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 402, 1, 1, 406, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 394, 318, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 374, 1, 1}, \
@@ -7026,7 +7059,7 @@ const int Panel::ACTION[107][30] = { \
 {1, 298, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 302, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 183, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 386, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 290, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 294, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 322, 1, 1, 1, 326, 330, 334, 338, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 342, 1, 346, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 322, 1, 1, 1, 326, 330, 334, 338, 1, 1, 1, 378, 1, 1, 1, 1, 1, 1, 342, 1, 346, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 187, 1, 1, 1, 187, 187, 187, 187, 1, 1, 1, 187, 1, 1, 1, 1, 1, 1, 187, 1, 187, 1, 1, 1, 1, 366, 370, 1, 1}, \
@@ -7045,16 +7078,16 @@ const int Panel::ACTION[107][30] = { \
 {1, 195, 1, 1, 1, 195, 195, 195, 195, 1, 1, 1, 195, 1, 1, 1, 1, 1, 1, 195, 1, 195, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 191, 1, 1, 1, 191, 191, 191, 191, 1, 1, 1, 191, 1, 1, 1, 1, 1, 1, 191, 1, 191, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 163, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 163, 1, 1, 1, 1, 163, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 406, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 290, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 294, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 390, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 322, 1, 1, 1, 326, 330, 334, 338, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 342, 1, 346, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 322, 1, 1, 1, 326, 330, 334, 338, 1, 1, 1, 398, 1, 1, 1, 1, 1, 1, 342, 1, 346, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 171, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 171, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 167, 1, 1, 1, 1, 167, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 171, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 171, 1, 1, 1, 1, 171, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 410, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 167, 1, 1, 1, 1, 167, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 322, 1, 1, 1, 326, 330, 334, 338, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 342, 1, 346, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 322, 1, 1, 1, 326, 330, 334, 338, 1, 1, 1, 418, 1, 1, 1, 1, 1, 1, 342, 1, 346, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 175, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 175, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 175, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 175, 1, 1, 1, 1, 175, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 159, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 159, 1, 1, 1, 1, 159, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
 //==============================
@@ -7225,8 +7258,8 @@ const char* const Panel::RulesName[60] = { \
 "GRAMMAR->GRAMMAR GrammerDEF ",\
 "GrammerDEF->GNameALL colon GFORMULA semicolon ",\
 "GrammerDEF->GNameALL BEGIN GnameFORMULAS END ",\
-"GnameFORMULAS->identifier colon GFORMULA semicolon ",\
-"GnameFORMULAS->GnameFORMULAS identifier colon GFORMULA semicolon ",\
+"GnameFORMULAS->GNameALL colon GFORMULA semicolon ",\
+"GnameFORMULAS->GnameFORMULAS GNameALL colon GFORMULA semicolon ",\
 "GNameALL->identifier ",\
 "GNameALL->angleL identifier angleR ",\
 "GFORMULA->GFORMULAUnit ",\
@@ -7244,7 +7277,43 @@ const char* const Panel::RulesName[60] = { \
 "END->braceR ",\
 "BEGIN->colon braceL " };
 //==============================
-const int Panel::Implicit[24] = { \
+const int Panel::Implicit[60] = { \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
 0, \
 0, \
 0, \
@@ -7269,6 +7338,10 @@ const int Panel::Implicit[24] = { \
 0, \
 0, \
 0 };
+
+
+
+
 
 
 
