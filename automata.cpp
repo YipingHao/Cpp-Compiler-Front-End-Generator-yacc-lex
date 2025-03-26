@@ -2965,7 +2965,7 @@ long int InputPanel::UnitRegGroupAdd(const char* symbol)
 	BC += symbol;
 	BC += "]";
 	Ctemp = BC.ptr();
-	UnitNum = SymbolAdd(Ctemp);
+	//UnitNum = SymbolAdd(Ctemp);
 	for (i = 0; i < NontTerminal.count(); i++)
 		if ((compare(Ctemp, NontTerminal[i]))) break;
 	UnitNum = (long int)i;

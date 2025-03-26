@@ -74,23 +74,27 @@ lexical:{
 		anntationS: '/''/'(['\0'-'\11']|['\13'-'\177'])*'\n';
 		anntationM: '/''*'(['\0'-'\177'])*'*'+'/';
 	}
-	operation:
-	{
-		sub: '-';
-		add: '+';     
+	operatmd:
+	{     
 		multi: '*';       
 		div: '/';   
+	}
+	operatas:
+	{
+		sub: '-';
+		add: '+';
 	}
 	value: value: '=';		
 };
 
 grammar: FUNCTION:
 {
-	FUNCTION: FUNCTWORD left MANIFPARAS right braceL MANIFBODY braceR;
-	MANIFPARAS:
+	FUNCTION: <FUNCTWORD> left PARA right braceL MANIFBODY braceR;
+	PARA: <MANIFPARAS>;
+	<MANIFPARAS>:
 	{
 		single: MANIFPARA;
-		multi: MANIFPARAS comma MANIFPARA;
+		multi: <MANIFPARAS> comma MANIFPARA;
 	}
 	MANIFPARA:
 	{
@@ -98,83 +102,51 @@ grammar: FUNCTION:
 		para: para id;
 		paras: para id squareL integer squareR;
 	}
-    (FUNCTWORD): 
+    <FUNCTWORD>: 
     {
         function: function;
         funct: funct;
     }
-	MANIFBODY:
-	{
-		direct: EXPRESSIONS RETURN;
-		indirect: DELARATIONS EXPRESSIONS RETURN;
-	}
-	DELARATIONS:
-	{
-		single: DELARATION;
-		multi: DELARATIONS DELARATION;
-	}
+	MANIFBODY: DELARATIONS EXPRESSIONS RETURN;
+	DELARATIONS: DELARATION*;
 	DELARATION:
 	{
 		single: def id semicolon;
 		multi: def id squareL integer squareR semicolon;
 	}
-	RETURN: (return) EXP_RIGHT (semicolon);
-	EXPRESSIONS:
-	{
-		single: EXPRESSION;
-		multi: EXPRESSIONS EXPRESSION; 
-	}
+	RETURN: return EXP_RIGHT semicolon;
+	EXPRESSIONS: EXPRESSION*;
 	EXPRESSION: ID value EXP_RIGHT semicolon;
 	EXP_RIGHT:
 	{
-		single: EXP_MUL;
-		add: EXP_RIGHT add EXP_MUL;
-		sub: EXP_RIGHT sub EXP_MUL;
+		<implicit>: EXP_MUL;
+		add: EXP_RIGHT [operatas] EXP_MUL;
 	}
 	EXP_MUL:
 	{
-		single: EXP_MINUS;
-		multi: EXP_MUL multi EXP_MINUS;
-		div: EXP_MUL div EXP_MINUS;
+		<implicit>: EXP_MINUS;
+		multi: EXP_MUL [operatmd] EXP_MINUS;
 	}
 	EXP_MINUS:
 	{
-		single: UNIT;
-		plus: add UNIT;
-		minus: sub UNIT;
+		<implicit>: UNIT;
+		plus: [operatas] UNIT;
 	}
 	UNIT:
 	{
 		id: ID;
 		call: CALL;
-		const: CONST;
+		const: [number];
 		complex: left EXP_RIGHT right;
-	}
-	CONST:
-	{
-		integer: integer;
-		real: realC;
 	}
 	ID:
 	{
-		array:  id squareL integer squareR;
+		array: id squareL integer squareR;
 		single: id;
 	}
 	CALL:
 	{
-		call_1: FUNCT_NAME left EXP_RIGHT right; 
-		call_2: FUNCT_NAME left EXP_RIGHT comma EXP_RIGHT right; 
+		call_1: [function1] left EXP_RIGHT right; 
+		call_2: [function2] left EXP_RIGHT comma EXP_RIGHT right; 
 	}
-	FUNCT_NAME:
-	{
-		id: id;
-		sin: sin;
-		cos: cos;
-		exp: exp;
-		ln: ln;
-		log: log;
-		sqrt: sqrt;
-		pow: pow;
-	}
-	
 }
