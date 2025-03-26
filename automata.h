@@ -444,8 +444,10 @@ namespace hyperlex
 		template<typename T> int build(const Morpheme& input);
 
 		tree<TreeInfor>* GT;
+		//error_record00 =  ture error infor from ACTION, otherwise from the sheet GOTO
 		//error_record01 = lexical unit number;
 		//error_record02 = (size_t)top content of stack;
+		bool error_record00;
 		size_t error_record01;
 		size_t error_record02;
 	protected:
@@ -977,6 +979,7 @@ namespace hyperlex
 				//TempTree.pop(GT);
 				break;
 			case T::error:
+				error_record00 = true;
 				error_record01 = head;
 				error_record02 = (size_t)top;
 				error = temp;
@@ -1028,6 +1031,7 @@ namespace hyperlex
 				}
 				else
 				{
+					error_record00 = false;
 					error_record01 = head;
 					error_record02 = (size_t)top;
 					error = GoFull;
@@ -1279,6 +1283,8 @@ namespace hyperlex
 
 		ErrorType ET;
 		ErrorInfor EI;
+
+		void build_singleErrorAdd(void);
 
 		bool gotoAdd(size_t i, size_t j, type Action, int State);
 		bool actionAdd(size_t i, size_t j, type Action, int State);

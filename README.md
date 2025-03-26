@@ -727,6 +727,7 @@ public:
 
 	tree<TreeInfor>* GT;
 
+        bool error_record00;
         size_t error_record01;
         size_t error_record02;
 protected:
@@ -848,7 +849,7 @@ void sample(GrammarTree & input)
 
 #### 4. 文法分析报错
 
-成功的文法分析返回0。否则返回`static const int GOTO[StateCount][NonTerminalCount];`或者`static const int ACTION[StateCount][TerminalCount];`中对应的报错单元。当文法分析报错时`error_record01`记录文法分析中报错时遇到的下一个词法单元的位置，`error_record02`记录文法分析中报错时当前栈顶的状态。
+成功的文法分析返回0。否则返回`static const int GOTO[StateCount][NonTerminalCount];`或者`static const int ACTION[StateCount][TerminalCount];`中对应的报错单元。当文法分析报错时`error_record01`记录文法分析中报错时遇到的下一个词法单元的位置，`error_record02`记录文法分析中报错时当前栈顶的状态。`error_record00`如果真，则是`ACTION`报的错，反之是`GOTO`报的错。
 将报错信息变的人类可理解是个LR文法分析中的麻烦问题。本软件在这个领域做的很少，功能不强。
 
 ## 软件架构简介与版本

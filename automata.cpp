@@ -541,6 +541,7 @@ void Morpheme::SetLine(void)
 
 GrammarTree::GrammarTree()
 {
+	error_record00 = true;
 	error_record01 = 0;
 	error_record02 = 0;
 	GT = NULL;
@@ -5520,6 +5521,13 @@ Gsheet::Gsheet()
 
 	RulesLength = NULL;
 	RulesToSmbol = NULL;
+
+	EI.ActionNew = error;
+	EI.ActionOld = error;
+	EI.i = (size_t)0;
+	EI.j = (size_t)0;
+	EI.StateNew = 0;
+	EI.StateOld = 0;
 }
 Gsheet::~Gsheet()
 {
@@ -5703,6 +5711,37 @@ void Gsheet::build(void)
 	{
 		if(ACTION[i].action == error)
 			ACTION[i].state += 1;
+	}
+	build_singleErrorAdd();
+}
+void Gsheet::build_singleErrorAdd(void)
+{
+	size_t i, j, count, record;
+	for (i = 0; i < StateCount; i++)
+	{
+		count = 0; 
+		record = 0;
+		for (j = 0; j < (TerminalCount + 1); j++)
+		{
+			if (ACTION[i * (TerminalCount + 1) + j].action == error)
+			{
+				count += 1;
+			}
+			else record = j;
+		}
+		if (record == TerminalCount) record = 0;
+		else record = record + 1;
+		if(count == TerminalCount)
+		{ 
+			for (j = 0; j < (TerminalCount + 1); j++)
+			{
+				if (ACTION[i * (TerminalCount + 1) + j].action == error)
+				{
+					ACTION[i * (TerminalCount + 1) + j].state = (int)record;
+				}
+			}
+
+		}
 	}
 }
 bool Gsheet::gotoAdd(size_t i, size_t j, Gsheet::type Action, int State)
