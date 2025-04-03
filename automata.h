@@ -35,11 +35,11 @@ namespace hyperlex
 	public:
 		vector();
 		~vector();
-		void clear(void);
+		void clear(void) {Count = 0;}
 		void copy(const vector<T>& source);
 		void append(const vector<T>& source);
 		size_t capacity(void) const;
-		size_t count(void) const;
+		inline size_t count(void) const {return Count;}
 		void recapacity(size_t NewSize);
 		void recount(size_t NewCount);
 		void append(const T& element);
@@ -53,8 +53,8 @@ namespace hyperlex
 		T* ptr(void);
 		const T* ptr(size_t offset)const;
 		T* ptr(size_t offset);
-		const T& operator[](size_t target) const;
-		T& operator[](size_t target);
+		inline T const& operator[](size_t target) const{return content[target];}
+		inline T& operator[](size_t target) {return content[target];}
 		void value(const T& element);
 		const T& top(void) const;
 		T& top(void);
@@ -90,10 +90,10 @@ namespace hyperlex
 		void build(vector<tree<T>*>& input);
 		void build(vector<tree<T>*>& input, size_t offset);
 		void PostOrderTraversal(vector<tree<T>*>& output);
-		T& root(void);
-		const T& root(void) const;
+		inline T& root(void) { return content; }
+		inline T const & root(void) const {return content;}
 		size_t ChildCount(void) const;
-		tree<T>* child(size_t No) const;
+		inline tree<T>* child(size_t No) const {return childs[No];}
 		struct Iterator
 		{
 			tree<T>* target;
@@ -358,67 +358,9 @@ namespace hyperlex
 // input analysis and lexical analysis.
 namespace hyperlex
 {
-	class Morpheme
-	{
-		/**
-		* Structure storing lexical analysis results
-		* @struct result
-		* @member accept   the lexical unit is identified as
-		* @member category Lexical category identifier
-		* @member length   Length of matched lexical unit
-		* @member begin    Starting position in input stream
-		*/
-	public:
-		struct result
-		{
-			int accept;
-			int category;
-			size_t length;
-			size_t begin;
-			bool valid;
-			size_t line;
-		};
-		Morpheme();
-		~Morpheme();
-		char* Copy(size_t site) const;
-		void append(const BufferChar& input, int accept, int category);
-		void AppendEnd(int TerminalCount);
-		void UnitMove(size_t from, size_t to);
-		void CountReset(size_t count);
-		void Demo(FILE* fp) const;
-		size_t GetCount(void) const;
-		const char* GetWord(size_t site) const;
-		const result& operator[](const size_t target) const;
-
-		char GetChar(size_t site) const;
-		double GetReal(size_t site) const;
-		long int GetInt(size_t site) const;
-		char* GetString(size_t site) const;
-		bool& valid(size_t site);
-
-		template<typename T> int Build(const char* reg);
-		template<typename T> int Build(FILE* fp);
-
-		//size_t index;
-		void clear(void);
-		void copy(const Morpheme& source);
-
-		size_t initial(void) const;
-		size_t next(size_t index) const;
-		bool still(size_t index) const;
-		int accept(size_t index) const;
-	protected:
-		size_t count;
-		//list<size_t> begin;
-		//list<size_t> length;
-		vector<result> lex;
-		vector<char> storage;
-
-		void SetLine(void);
-		size_t CountEnter(const char* unit);
-
-		template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
-	};
+	class Morpheme;
+	class GrammarTree;
+	
 	class GrammarTree
 	{
 	public:
@@ -451,6 +393,73 @@ namespace hyperlex
 		size_t error_record01;
 		size_t error_record02;
 	protected:
+	};
+	class Morpheme
+	{
+		/**
+		* Structure storing lexical analysis results
+		* @struct result
+		* @member accept   the lexical unit is identified as
+		* @member category Lexical category identifier
+		* @member length   Length of matched lexical unit
+		* @member begin    Starting position in input stream
+		*/
+	public:
+		struct result
+		{
+			int accept;
+			int category;
+			size_t length;
+			size_t begin;
+			bool valid;
+			size_t line;
+		};
+		Morpheme();
+		~Morpheme();
+		char* Copy(size_t site) const;
+		void append(const BufferChar& input, int accept, int category);
+		void AppendEnd(int TerminalCount);
+		void UnitMove(size_t from, size_t to);
+		void CountReset(size_t count);
+		void Demo(FILE* fp) const;
+		size_t GetCount(void) const;
+		const char* GetWord(size_t site) const;
+		inline result const& operator[](const size_t target) const
+		{
+			return lex[target];
+		}
+		inline result const& operator[](const tree<GrammarTree::TreeInfor>* target) const
+		{
+			return lex[target->root().site];
+		}
+		char GetChar(size_t site) const;
+		double GetReal(size_t site) const;
+		long int GetInt(size_t site) const;
+		char* GetString(size_t site) const;
+		bool& valid(size_t site);
+
+		template<typename T> int Build(const char* reg);
+		template<typename T> int Build(FILE* fp);
+
+		//size_t index;
+		void clear(void);
+		void copy(const Morpheme& source);
+
+		size_t initial(void) const;
+		size_t next(size_t index) const;
+		bool still(size_t index) const;
+		int accept(size_t index) const;
+	protected:
+		size_t count;
+		//list<size_t> begin;
+		//list<size_t> length;
+		vector<result> lex;
+		vector<char> storage;
+
+		void SetLine(void);
+		size_t CountEnter(const char* unit);
+
+		template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
 	};
 	class RegularExp
 	{
@@ -1358,10 +1367,6 @@ namespace hyperlex
 		append(element);
 		return Count - 1;
 	}
-	template <class T> void vector<T>::clear(void)
-	{
-		Count = 0;
-	}
 	template <class T> void vector<T>::recount(size_t NewCount)
 	{
 		if (NewCount > Capacity)
@@ -1416,10 +1421,6 @@ namespace hyperlex
 		Count += 1;
 		return should;
 	}
-	template <class T> size_t vector<T>::count(void) const
-	{
-		return Count;
-	}
 	template <class T> size_t vector<T>::capacity(void) const
 	{
 		return Capacity;
@@ -1456,14 +1457,6 @@ namespace hyperlex
 	template <class T> T* vector<T>::ptr(size_t offset)
 	{
 		return content + offset;
-	}
-	template <class T> const T& vector<T>::operator[](size_t target) const
-	{
-		return content[target];
-	}
-	template <class T> T& vector<T>::operator[](size_t target)
-	{
-		return content[target];
 	}
 	template <class T> void vector<T>::value(const T& element)
 	{
@@ -1642,23 +1635,12 @@ namespace hyperlex
 			childs[i]->No = i;
 		}
 	}
-	template <class T> T& tree<T>::root(void)
-	{
-		return content;
-	}
-	template <class T> const T& tree<T>::root(void) const
-	{
-		return content;
-	}
 
 	template <class T> size_t tree<T>::ChildCount(void) const
 	{
 		return childs.count();
 	}
-	template <class T> tree<T>* tree<T>::child(size_t No) const
-	{
-		return childs[No];
-	}
+
 	template <class T> int& tree<T>::PostIterator::state(void)
 	{
 		return stack.top().state;

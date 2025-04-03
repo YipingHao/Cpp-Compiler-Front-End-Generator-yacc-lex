@@ -434,10 +434,6 @@ void Morpheme::Demo(FILE* fp)const
 		else fprintf(fp, "<%4d(invalid): %4d , %s>\n", lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
 	}
 }
-const Morpheme::result& Morpheme::operator[](const size_t target)const
-{
-	return lex[target];
-}
 char Morpheme::GetChar(size_t site) const
 {
 	size_t head;
