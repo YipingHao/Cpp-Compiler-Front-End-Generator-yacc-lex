@@ -108,7 +108,11 @@ namespace hyperlex
 			int& state(void);
 			tree<T>*& target(void);
 			void next(void);
-			bool still(void);
+			bool still(void) const;
+			inline void CutNow(void) const
+			{
+				stack.top().state = 1;
+			}
 		protected:
 			vector<Iterator> stack;
 			
@@ -1682,7 +1686,7 @@ namespace hyperlex
 		}
 		
 	}
-	template <class T> bool tree<T>::PostIterator::still(void)
+	template <class T> bool tree<T>::PostIterator::still(void) const
 	{
 		return stack.count() != 0;
 	}
