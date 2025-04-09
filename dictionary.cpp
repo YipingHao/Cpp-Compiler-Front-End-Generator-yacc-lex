@@ -9,7 +9,7 @@ static const char* Copy(const char* input);
 
 dictionary::dictionary()
 {
-    errorCode = buildUndone;
+    errorCode = NoError;
     errorInfor1 = 0;
     errorInfor2 = 0;
 }
@@ -27,7 +27,7 @@ void dictionary::clear(void)
     Content.clear();
     LexicalSource.clear();
 
-    errorCode = buildUndone;
+    errorCode = NoError;
     errorInfor1 = 0;
     errorInfor2 = 0;
 }
@@ -315,11 +315,13 @@ size_t dictionary::append(const char* key, dictionary::element value, dictionary
     for (j = 0; j < target->Content.count(); j++)
         if (compare(storage[i - 1], target->Content[j].key)) return site;
     site = target->Content.count();
+    kv.key = (char*)Copy(storage[i - 1]);
     kv.setType(T);
     kv.append(value);
     target->Content.append(kv);
     kv.Count = 0;
     kv.Content = NULL;
+    kv.key = NULL;
     return site;
 }
 size_t dictionary::append(const char* key, const char* value)
@@ -328,7 +330,7 @@ size_t dictionary::append(const char* key, const char* value)
     Ktype T;
     T = string_;
     VV.ss = (char*)Copy(value);
-    return (key, value, T);
+    return append(key, VV, T);
 }
 size_t dictionary::append(const char* key, double value)
 {
@@ -336,7 +338,7 @@ size_t dictionary::append(const char* key, double value)
     Ktype T;
     T = float_;
     VV.ff = value;
-    return (key, value, T);
+    return append(key, VV, T);
 }
 size_t dictionary::append(const char* key, long int value)
 {
@@ -344,7 +346,7 @@ size_t dictionary::append(const char* key, long int value)
     Ktype T;
     T = int_;
     VV.ii = value;
-    return (key, value, T);
+    return append(key, VV, T);
 }
 size_t dictionary::append(const char* key, bool value)
 {
@@ -352,7 +354,7 @@ size_t dictionary::append(const char* key, bool value)
     Ktype T;
     T = bool_;
     VV.bb = value;
-    return (key, value, T);
+    return append(key, VV, T);
 }
 
 
@@ -411,6 +413,7 @@ void dictionary::ErrorDemo(FILE* fp) const
         }
         break;
     case hyperlex::dictionary::buildUndone:
+        fprintf(fp, "buildUndone!\n");
         break;
     default:
         break;
@@ -636,6 +639,7 @@ int dictionary::build(FILE* fp)
     //Morpheme eme;
     int error;
     clear();
+    errorCode = buildUndone;
     error = LexicalSource.Build<DictReg>(fp);
     if (error != 0)
     {
@@ -655,6 +659,7 @@ int dictionary::build(const char* input)
     //Morpheme eme;
     int error;
     clear();
+    errorCode = buildUndone;
     //initial();
     error = LexicalSource.Build<DictReg>(input);
     if (error != 0)
