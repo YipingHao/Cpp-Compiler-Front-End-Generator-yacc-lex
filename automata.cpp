@@ -551,6 +551,7 @@ void GrammarTree::Demo(FILE* fp, const Morpheme& input, const char* const* Rules
 	size_t site, i, LabelNow;
 	//vector<tree<TreeInfor>* >stack;
 	tree<TreeInfor>* now;
+	size_t childCount__;
 	//GT->PostOrderTraversal(stack);
 	//stack.append(GT);
 	hyperlex::tree<GrammarTree::TreeInfor>* Tree;
@@ -581,11 +582,12 @@ void GrammarTree::Demo(FILE* fp, const Morpheme& input, const char* const* Rules
 			fprintf(fp, "Tree[%zu]: ", now->root().label);
 			if (now->root().rules)
 			{
+				childCount__ = now->ChildCount();
 				fprintf(fp, "rules[%zu]: %s\n\t", site, RulesName[site]);
-				fprintf(fp, "childs[%zu]: ", now->ChildCount());
-				for (i = 1; i < now->ChildCount(); i++)
+				fprintf(fp, "childs[%zu]: ", childCount__);
+				for (i = 1; i < childCount__; i++)
 					fprintf(fp, "%zu, ", now->child(i - 1)->root().label);
-				fprintf(fp, "%zu\n", now->child(now->ChildCount() - 1)->root().label);
+				if(childCount__ != 0)fprintf(fp, "%zu\n", now->child(childCount__ - 1)->root().label);
 			}
 			else
 			{

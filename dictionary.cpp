@@ -280,6 +280,7 @@ double dictionary::search(double Default_, const char* key)
     else return Default_;
 }
 
+
 size_t dictionary::append(const char* key, dictionary::element value, dictionary::Ktype T)
 {
     size_t i, j;
@@ -313,7 +314,15 @@ size_t dictionary::append(const char* key, dictionary::element value, dictionary
         if(j == target->Content.count()) return site;
     }
     for (j = 0; j < target->Content.count(); j++)
-        if (compare(storage[i - 1], target->Content[j].key)) return site;
+        if (compare(storage[i - 1], target->Content[j].key))
+        {
+            if (target->Content[j].T == T)
+            {
+                target->Content[j].append(value);
+                return site;
+            }
+            else return SizeMax;
+        }
     site = target->Content.count();
     kv.key = (char*)Copy(storage[i - 1]);
     kv.setType(T);
@@ -348,6 +357,14 @@ size_t dictionary::append(const char* key, long int value)
     VV.ii = value;
     return append(key, VV, T);
 }
+size_t dictionary::append(const char* key, int value)
+{
+    return append(key, (long int)value);
+}
+size_t dictionary::append(const char* key, size_t value)
+{
+    return append(key, (long int)value);
+}
 size_t dictionary::append(const char* key, bool value)
 {
     element VV;
@@ -356,7 +373,14 @@ size_t dictionary::append(const char* key, bool value)
     VV.bb = value;
     return append(key, VV, T);
 }
-
+size_t dictionary::append(const char* key, dictionary* value)
+{
+    element VV;
+    Ktype T;
+    T = dictionary_;
+    VV.dd = value;
+    return append(key, VV, T);
+}
 
 
 void dictionary::print(FILE* fp) const
