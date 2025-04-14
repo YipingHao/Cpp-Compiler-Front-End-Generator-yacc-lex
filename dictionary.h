@@ -87,7 +87,7 @@ namespace hyperlex
         size_t append(const char* key, int value);
         size_t append(const char* key, size_t value);
         size_t append(const char* key, bool value);
-        size_t append(const char* key, dictionary* dict);
+        size_t append(const char* key, dictionary* value);
     private:
         typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor> GLTree;
         typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor>::PostIterator GTIter;
