@@ -202,7 +202,8 @@ namespace hyperlex
 		char* ptr(void);
 		char* CopyVector(void) const;
 		size_t CopyVector(vector<char>& storage, size_t& length) const;
-		
+		void copy(const BufferChar& source);
+
 		void Append(const char* c);
 
 		void operator=(const char* input);

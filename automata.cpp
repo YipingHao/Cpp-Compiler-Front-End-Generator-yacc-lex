@@ -270,7 +270,16 @@ size_t BufferChar::CopyVector(vector<char>& storage, size_t& length) const
 		storage.append(content[i + Head]);
 	return Newchar;
 }
-
+void BufferChar::copy(const BufferChar& source)
+{
+	size_t i;
+	size_t length;
+	length = source.Rear - source.Head;
+	expand(length);
+	for (i = 0; i < length; i++)
+		content[Rear + i] = source.content[i + source.Head];
+	Rear += length;
+}
 
 
 
