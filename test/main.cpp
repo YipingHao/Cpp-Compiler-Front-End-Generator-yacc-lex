@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 	output_path = argv[1];
 	info = 0;
 	//info = test_entrance(output_path);
-    info = entrance(argc, argv[]);
+    info = entrance(argc, argv);
 	return info;
 }
 class CFile
