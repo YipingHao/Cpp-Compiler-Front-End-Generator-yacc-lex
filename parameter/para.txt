@@ -8,7 +8,7 @@
 	//server = "GPU";
 	//item = 13;//grammerT
 	//item = 19;
-	item = 20;
+	
 	//InputFileName = "./data/error.txt";
 	//InputFileName = "./data/grammerT2.txt";
 	InputFileName = "./data/sample.txt";
@@ -17,4 +17,7 @@
 	OutputFileName = "./output/G.txt";
 	PrintToFile = "F";//F if print to screen;
 	OutputLabel = "Panel";
+
+	
+	item = "test old";
 }

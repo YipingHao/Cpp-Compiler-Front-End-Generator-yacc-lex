@@ -5,6 +5,7 @@ using namespace std;
 #include<stdlib.h>
 int test_entrance(const char* output_path);
 int static entrance(int argc, char* argv[]);
+static bool compare(const char* str1, const char* str2);
 int main(int argc, char* argv[])
 {
 	int info;
@@ -39,6 +40,7 @@ int static entrance(int argc, char* argv[])
     int error;
     hyperlex::BufferChar input;
     hyperlex::BufferChar temp;
+    int info;
 
     file = "./parameter/para.txt";
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
@@ -55,11 +57,32 @@ int static entrance(int argc, char* argv[])
     std::cout << "error: " << error << std::endl;
     para.print(stdout);
 
+    const char* item;
+    item = para.search("test old", "item");
+    std::cout << "para: " << para << std::endl;
+    if (compare("test old", "test old"))
+    {
+        info = test_entrance(argv[1]);
+    }
+    else
+    {
+        info = test_entrance(argv[1]);
+    }
+    return info;
 }
 
 
 
 
+
+
+
+static bool compare(const char* str1, const char* str2)
+{
+    size_t i;
+    for (i = 0; (str1[i] != '\0') && (str1[i] == str2[i]); i++);
+    return str1[i] == str2[i];
+}
 
 #include<errno.h>
 #include <string.h>
@@ -154,3 +177,18 @@ void static ExitWarning(int error, FILE* fp)
     exit(error);
     return;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
