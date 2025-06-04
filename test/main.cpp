@@ -59,7 +59,7 @@ int static entrance(int argc, char* argv[])
 
     const char* item;
     item = para.search("test old", "item");
-    std::cout << "para: " << para << std::endl;
+    std::cout << "item: " << item << std::endl;
     if (compare("test old", "test old"))
     {
         info = test_entrance(argv[1]);
