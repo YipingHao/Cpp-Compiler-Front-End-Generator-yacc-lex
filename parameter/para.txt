@@ -18,24 +18,3 @@
 	PrintToFile = "F";//F if print to screen;
 	OutputLabel = "Panel";
 }
-/*
-test 20: new regular expression
-*/
-// item 13 option
-{
-	lr0demo = "F";
-	lr0Gdemo = "F";
-	lr0Cdemo = "F";
-	lr0Cppdemo = "F";
-	
-	lr1demo = "F";
-	lr1Gdemo = "F";
-	lr1Cdemo = "F";
-	lr1Cppdemo = "F";
-}
-// item 17 option
-{
-	regs = "F";
-	Cdemo = "F";
-	Cppdemo = "T";	
-}
