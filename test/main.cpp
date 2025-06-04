@@ -60,13 +60,18 @@ int static entrance(int argc, char* argv[])
     const char* item;
     item = para.search("test old", "item");
     std::cout << "item: " << item << std::endl;
-    if (compare("test old", "test old"))
+    if (compare(item, "test old"))
+    {
+        info = test_entrance(argv[1]);
+    }
+    else if (compare(item, "simple LR"))
     {
         info = test_entrance(argv[1]);
     }
     else
     {
         info = test_entrance(argv[1]);
+    }
     }
     return info;
 }

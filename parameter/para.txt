@@ -19,5 +19,6 @@
 	OutputLabel = "Panel";
 
 	
-	item = "test old";
+	//item = "test old";
+	item = "simple LR";
 }
