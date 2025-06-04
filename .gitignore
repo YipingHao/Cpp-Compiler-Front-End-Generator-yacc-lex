@@ -32,5 +32,7 @@
 *.app
 
 obj/*.o
+obj/*.asm
+shit.sh
 key
 key.pub
