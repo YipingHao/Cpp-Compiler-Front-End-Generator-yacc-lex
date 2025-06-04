@@ -64,6 +64,12 @@ int static entrance(int argc, char* argv[])
 #include<errno.h>
 #include <string.h>
 void static ExitWarning(int error, FILE* fp);
+CFile::CFile()
+{
+}
+CFile::~CFile()
+{
+}
 FILE* CFile::Open(const char* name, const char* mode)
 {
     FILE* fp;
