@@ -63,7 +63,7 @@ int static entrance(int argc, char* argv[])
 
 #include<errno.h>
 #include <string.h>
-
+void static ExitWarning(int error, FILE* fp);
 FILE* CFile::Open(const char* name, const char* mode)
 {
     FILE* fp;
@@ -133,3 +133,18 @@ std::string CFile::ChangeSuffix(const std::string& file, const char* new_one)
     return name;
 }
 
+void static ExitWarning(int error, FILE* fp)
+{
+    if (error == 0) return;
+    fprintf(fp, "\n\n\n");
+    fprintf(fp, "=============================================================================================================================\n");
+    fprintf(fp, "-----------------------------------------------------------ALARM!!!----------------------------------------------------------\n");
+    fprintf(fp, "---------------------------------------------The hyperlex system meets a mistake!--------------------------------------------\n");
+    fprintf(fp, "----------------------------------It can't compute the reslut, and must be terminated at once.-------------------------------\n");
+    fprintf(fp, "====================================================The error code is:%4d===================================================\n", error);
+    fprintf(fp, "=============================================================================================================================\n");
+    fprintf(fp, "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+    fprintf(fp, "\n\n\n");
+    exit(error);
+    return;
+}
