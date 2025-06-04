@@ -9,7 +9,7 @@ TEST = $(BASE)test/
 
 COFILE = $(ODIR)automata.o  $(ODIR)dictionary.o 
 HOFILE = $(CODE)automata.h  $(CODE)dictionary.h
-TestOFile = $(TEST)main.o
+TestOFile = $(TEST)main.o $(TEST)test.o 
 
 OPTION = -O0 
 #OPTION = -O3
@@ -33,7 +33,8 @@ test.exe: $(COFILE) $(TestOFile)
 $(TEST)main.o: $(HOFILE) $(TEST)main.cpp
 	$(CC) -o $(TEST)main.o -c $(OPTION) $(TEST)main.cpp
 
-
+$(TEST)test.o: $(HOFILE) $(TEST)test.cpp
+	$(CC) -o $(TEST)test.o -c $(OPTION) $(TEST)test.cpp
 
 
 .PHONY: clean
