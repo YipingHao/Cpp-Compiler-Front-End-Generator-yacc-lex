@@ -72,7 +72,6 @@ int static entrance(int argc, char* argv[])
     {
         info = test_entrance(argv[1]);
     }
-    }
     return info;
 }
 
