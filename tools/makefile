@@ -2,7 +2,7 @@ BASE = ../
 
 
 ODIR = $(BASE)obj/
-CODE = $(BASE)code/
+CODE = $(BASE)src/
 TOOLS = $(BASE)tools/
 TEST = $(BASE)test/
 
@@ -14,8 +14,8 @@ TestOFile = $(TEST)main.o
 OPTION = -O0 
 #OPTION = -O3
 EXTRA =-Wall -Wextra -fno-strict-aliasing -fwrapv -fno-aggressive-loop-optimizations -Wconversion -ftrapv
-CC = icc
-#CC = g++
+#CC = icc
+CC = g++
 
 libautomata.a:  $(COFILE)
 	ar -rcv $(BASE)libautomata.a  $(COFILE)
