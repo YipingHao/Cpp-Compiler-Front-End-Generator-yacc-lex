@@ -61,7 +61,8 @@ int static entrance(int argc, char* argv[])
 
 
 
-
+#include<errno.h>
+#include <string.h>
 
 FILE* CFile::Open(const char* name, const char* mode)
 {
