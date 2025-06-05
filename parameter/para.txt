@@ -18,7 +18,8 @@
 	PrintToFile = false;//F if print to screen;
 	OutputLabel = "Panel";
 
-	
+	OutputFileName2 = "./output/L.txt";
+	OutputFileName3 = "./output/G2.txt";
 	//item = "test old";
 	item = "simple LR";
 	//item = "test";

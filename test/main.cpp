@@ -115,7 +115,9 @@ int simpleLR(hyperlex::dictionary& para)
     FILE* fpL, * fpG, * fpG2;
     if (para.search(false, "PrintToFile"))
     {
-        
+        fpL = CF.OpenWritePlus(para.search("./output/L.txt", "OutputFileName"));
+        fpG = CF.OpenWritePlus(para.search("./output/G.txt", "OutputFileName2"));
+        fpG2 = CF.OpenWritePlus(para.search("./output/G2.txt", "OutputFileName3"));
     }
     else
     {
