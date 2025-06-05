@@ -31,6 +31,7 @@ public:
 private:
 
 };
+int static simpleLR(hyperlex::dictionary& para);
 int static entrance(int argc, char* argv[])
 {
     hyperlex::dictionary para;
@@ -77,7 +78,44 @@ int static entrance(int argc, char* argv[])
 
 
 
+int simpleLR(hyperlex::dictionary& para)
+{
+    hyperlex::InputPanel IP;
+    std::string file;
+    FILE* fp;
+    hyperlex::BufferChar input;
+    hyperlex::BufferChar temp;
+    CFile CF;
+    std::string OutputLabel2, OutputLabel;
+    OutputLabel = para.search("lexer", "OutputLabel");
+    OutputLabel2 = para.search("parser", "OutputLabel2");
+    int error = 0;
 
+    file = para.search("./data/grammerT.txt", "InputFileName");
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fp = CF.OpenRead(file.c_str());
+    std::cout << "InputFileName: " << file << std::endl;
+    input << fp;
+    temp.append(input);
+    std::cout << "/*" << std::endl;
+    std::cout << temp.ptr() << std::endl;
+    std::cout << "*/" << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fclose(fp);
+    error = IP.build(input.ptr());
+    std::cout << "error: " << error << std::endl;
+    IP.demo(stdout);
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+
+
+    error = IP.printL(stdout, OutputLabel.c_str());
+    std::cout << "error: " << error << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    error = IP.printG(stdout, stdout, OutputLabel2.c_str());
+    std::cout << "error: " << error << std::endl;
+
+    return error;
+}
 
 
 
