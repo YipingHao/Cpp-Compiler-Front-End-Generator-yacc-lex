@@ -15,8 +15,10 @@
 	//InputFileName = "./data/Panel2.txt";
 	//InputFileName = "./data/input.txt";
 	OutputFileName = "./output/G.txt";
-	PrintToFile = "F";//F if print to screen;
+	PrintToFile = false;//F if print to screen;
 	OutputLabel = "Panel";
+
+	
 }
 /*
 test 20: new regular expression

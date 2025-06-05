@@ -32,6 +32,7 @@ private:
 
 };
 int static simpleLR(hyperlex::dictionary& para);
+int static testNew(hyperlex::dictionary& para);
 int static entrance(int argc, char* argv[])
 {
     hyperlex::dictionary para;
@@ -67,7 +68,11 @@ int static entrance(int argc, char* argv[])
     }
     else if (compare(item, "simple LR"))
     {
-        info = test_entrance(argv[1]);
+        info = simpleLR(para);
+    }
+    else if (compare(item, "test"))
+    {
+        info = testNew(para);
     }
     else
     {
@@ -107,16 +112,35 @@ int simpleLR(hyperlex::dictionary& para)
     IP.demo(stdout);
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
-
+    FILE* fpL, * fpG, * fpG2;
+    if (para.search(PrintToFile, "OutputLabel"))
+    {
+        
+    }
+    else
+    {
+        fpL = stdout;
+        fpG = stdout;
+        fpG2 = stdout;
+    }
     error = IP.printL(stdout, OutputLabel.c_str());
     std::cout << "error: " << error << std::endl;
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     error = IP.printG(stdout, stdout, OutputLabel2.c_str());
     std::cout << "error: " << error << std::endl;
-
+    if (para.search(PrintToFile, "OutputLabel"))
+    {
+        fclose(fpL);
+        fclose(fpG);
+        fclose(fpG2);
+    }
     return error;
 }
+int static testNew(hyperlex::dictionary& para)
+{
 
+    return 0;
+}
 
 
 static bool compare(const char* str1, const char* str2)
