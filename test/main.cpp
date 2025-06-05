@@ -96,6 +96,7 @@ int simpleLR(hyperlex::dictionary& para)
     OutputLabel2 = para.search("parser", "OutputLabel2");
     int error = 0;
 
+   
     file = para.search("./data/grammerT.txt", "InputFileName");
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     fp = CF.OpenRead(file.c_str());
@@ -140,7 +141,10 @@ int simpleLR(hyperlex::dictionary& para)
 }
 int static testNew(hyperlex::dictionary& para)
 {
-
+    '\"' == '\42';
+    '\\' == '\134';
+    '/' == "\57\\";
+    
     return 0;
 }
 
