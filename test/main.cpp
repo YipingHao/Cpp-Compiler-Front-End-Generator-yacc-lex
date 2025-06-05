@@ -113,7 +113,7 @@ int simpleLR(hyperlex::dictionary& para)
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
     FILE* fpL, * fpG, * fpG2;
-    if (para.search(PrintToFile, "OutputLabel"))
+    if (para.search(false, "PrintToFile"))
     {
         
     }
