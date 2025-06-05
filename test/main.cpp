@@ -128,7 +128,7 @@ int simpleLR(hyperlex::dictionary& para)
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     error = IP.printG(stdout, stdout, OutputLabel2.c_str());
     std::cout << "error: " << error << std::endl;
-    if (para.search(PrintToFile, "OutputLabel"))
+    if (para.search(false, "PrintToFile"))
     {
         fclose(fpL);
         fclose(fpG);
