@@ -71,11 +71,15 @@ lexical:{
 
 grammar: TEXT: {
 	TEXT: {
-		OnlyL: identifier BEGIN LDEFS END;
-		LG: identifier BEGIN LDEFS END identifier colon identifier BEGIN GDEFS END;};
+		OnlyL: BASICNAME braceL LDEFS END;
+		LG: BASICNAME braceL LDEFS END BASICNAME BASICNAME braceL GDEFS END;};
 	LDEFS:{
 		single: LDEF;
 		multi: LDEFS LDEF;
+	}
+	GDEFS:{
+		single: GDEF;
+		multi: GDEFS GDEF;
 	}
 	GDEF:{
 		singleG: GSINGLEDEF;
@@ -154,7 +158,6 @@ grammar: TEXT: {
 		full: braceR semicolon;
 		half: braceR;
 	}
-	BEGIN: colon braceL; 
 
 };
 
