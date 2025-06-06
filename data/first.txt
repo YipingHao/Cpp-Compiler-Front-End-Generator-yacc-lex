@@ -79,8 +79,8 @@ grammar: TEXT: {
 	}	
 	DEF:{
 		single1: SINGLEDEF;
-		single2: BASICNAME colon SINGLEDEF;
-		multi: BASICNAME BEGIN FORMULAS END;
+		single2: BASICNAME SINGLEDEF;
+		multi: BASICNAME  braceL FORMULAS END;
 		include: include angleL string angleR semicolon;
 	}
 	FORMULAS:{
@@ -89,17 +89,18 @@ grammar: TEXT: {
 	}
 	SINGLEDEF:
 	{
-		full: BASICNAME colon BASICFORMULA semicolon;
-		default: BASICNAME semicolon;
+		full: BASICNAME BASICFORMULA semicolon;
+		default: identifier semicolon;
+		default: identifier left integer right semicolon;
 	}
 	BASICNAME:
 	{
-		explicit: identifier;
-		implicit: angleL identifier angleR;
-		priority: identifier left integer right;
+		explicit: identifier colon;
+		implicit: angleL identifier angleR colon;
+		priority: identifier left integer right colon;
 	}
 	BASICFORMULA:{
-		single: BASICUNIT;
+		single: void;
 		ororor: BASICFORMULA  BASICUNIT;};
 	BASICUNIT:{
 		char1: CommonChar;
