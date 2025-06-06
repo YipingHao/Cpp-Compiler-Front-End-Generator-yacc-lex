@@ -6367,13 +6367,16 @@ void Gsheet::CppStructPrint02(const char* name, FILE* fp, const grammerS* gramme
 	grammer->Demo(fp, RulesCount - 1);
 	fprintf(fp, "\"};\n");
 }
+
+
 static char* CopyMalloc(const char* s)
 {
 	char* v;
 	size_t size;
-	size = strlen(s);
+	size = strlength(s);
 	v = (char*)malloc(sizeof(char) * (size + 4));
-	strcpy(v, s);
+	for (size_t i = 0; i < size; i++) v[i] = s[i];
+	v[size] = '\0';
 	return v;
 }
 static bool compare(const char* str1, const char* str2)
@@ -6437,7 +6440,6 @@ static int PostfixSwitch_small(char c)
 		return -1;
 	}
 }
-
 
 
 
