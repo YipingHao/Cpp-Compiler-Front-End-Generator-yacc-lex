@@ -76,10 +76,15 @@ grammar: TEXT: {
 	LDEFS:{
 		single: LDEF;
 		multi: LDEFS LDEF;
-	}	
+	}
+	GDEF:{
+		singleG: GSINGLEDEF;
+		multiG: BASICNAME braceL GFORMULAS END;
+		include: include angleL string angleR semicolon;
+		};
 	LDEF:{
-		single: BASICNAME LSINGLEDEF;
-		multi: BASICNAME braceL LFORMULAS END;
+		singleL: BASICNAME LSINGLEDEF;
+		multiL: BASICNAME braceL LFORMULAS END;
 		include: include angleL string angleR semicolon;
 	}
 	LFORMULAS:{
@@ -99,22 +104,14 @@ grammar: TEXT: {
 	LBASICFORMULA:{
 		single: LBASICUNIT;
 		ororor: LBASICFORMULA  LBASICUNIT;};
-	BASICUNIT:{
+	LBASICUNIT:{
 		char1: CommonChar;
 		char2: idChar;
 		RegSymbol: [RegSymbol];
 		CommonBra: <CommonBra>;
 		};
 
-	GDEFS:{
-		single: GDEF;
-		multi: GDEFS GDEF;
-	}	
-	GDEF:{
-		single: GSINGLEDEF;
-		multi: BASICNAME braceL GFORMULAS END;
-		include: include angleL string angleR semicolon;
-	}
+	
 	GFORMULAS:{
 		single: GSINGLEDEF;
 		multi: GFORMULAS GSINGLEDEF;
@@ -123,12 +120,7 @@ grammar: TEXT: {
 	{
 		full: BASICNAME GBASICFORMULA semicolon;
 	}
-	BASICNAME:
-	{
-		explicit: identifier colon;
-		implicit: angleL identifier angleR colon;
-		priority: identifier left integer right colon;
-	}
+	
 	GBASICFORMULA:{
 		single: void;
 		ororor: GBASICFORMULA  GBASICUNIT;};
@@ -140,6 +132,12 @@ grammar: TEXT: {
 		
 		};
 
+	BASICNAME:
+	{
+		explicit: identifier colon;
+		implicit: angleL identifier angleR colon;
+		priority: identifier left integer right colon;
+	}
 	<CommonBra>:
 	{
 		left:left;
