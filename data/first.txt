@@ -90,8 +90,8 @@ grammar: TEXT: {
 	SINGLEDEF:
 	{
 		full: BASICNAME BASICFORMULA semicolon;
-		default: identifier semicolon;
-		default: identifier left integer right semicolon;
+		default1: identifier semicolon;
+		default2: identifier left integer right semicolon;
 	}
 	BASICNAME:
 	{
