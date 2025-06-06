@@ -418,11 +418,13 @@ namespace hyperlex
 			size_t begin;
 			bool valid;
 			size_t line;
+			size_t file;
 		};
 		Morpheme();
 		~Morpheme();
 		char* Copy(size_t site) const;
-		void append(const BufferChar& input, int accept, int category);
+		void append(const BufferChar& input, int accept, int category, size_t LineNo);
+		void append(const char* fileName);
 		void AppendEnd(int TerminalCount);
 		void UnitMove(size_t from, size_t to);
 		void CountReset(size_t count);
@@ -443,9 +445,12 @@ namespace hyperlex
 		char* GetString(size_t site) const;
 		bool& valid(size_t site);
 
+		void insert(size_t from, size_t deleted, const Morpheme& src);
+		void sort(void);
+		bool withTernimal(void)const;
 		template<typename T> int Build(const char* reg);
 		template<typename T> int Build(FILE* fp);
-
+		template<typename T> int Build(const Morpheme& src);
 		//size_t index;
 		void clear(void);
 		void copy(const Morpheme& source);
@@ -454,10 +459,24 @@ namespace hyperlex
 		size_t next(size_t index) const;
 		bool still(size_t index) const;
 		int accept(size_t index) const;
+		struct indexT
+		{
+			size_t UnitOffest;
+			size_t CharOffset;
+			inline indexT()
+			{
+				UnitOffest = 0;
+				CharOffset = 0;
+			}
+		};
+		bool dequeue(char &out, indexT& index) const;
+		void backspace(indexT& index, size_t count) const;
+		bool operator==(const Morpheme& source) const;
 	protected:
 		size_t count;
 		//list<size_t> begin;
 		//list<size_t> length;
+		vector<const char*> SrcFile;
 		vector<result> lex;
 		vector<char> storage;
 
@@ -465,6 +484,7 @@ namespace hyperlex
 		size_t CountEnter(const char* unit);
 
 		template<typename T> bool RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate);
+		template<typename T> bool RunBuild(int& accept, BufferChar& result, const Morpheme& src, BufferChar& intermediate, indexT & index);
 	};
 	class RegularExp
 	{
@@ -520,6 +540,7 @@ namespace hyperlex
 		typedef const vector<const char*> cvccp;
 		InputPanel();
 		~InputPanel();
+		int pretreatment(const char* input, BufferChar& output);
 		int build(FILE* fp);
 		int build(const char* input);
 		void demo(FILE* fp) const;
@@ -829,12 +850,12 @@ namespace hyperlex
 		input << fp;
 		while (RunBuild<T>(accept, result, input, intermediate))
 		{
-			if (accept != 0) append(result, accept, T::GroupGet(accept));
+			if (accept != 0) append(result, accept, T::GroupGet(accept), 0);
 			else
 			{
 				input.dequeue(now);
 				result.append(now);
-				append(result, -1, -1);
+				append(result, -1, -1, 0);
 				error = -1;
 			}
 		}
@@ -853,17 +874,47 @@ namespace hyperlex
 		input = reg;
 		while (RunBuild<T>(accept, result, input, intermediate))
 		{
-			if (accept != 0) append(result, accept, T::GroupGet(accept));
+			if (accept != 0) append(result, accept, T::GroupGet(accept), 0);
 			else
 			{
 				input.dequeue(now);
 				result.append(now);
-				append(result, -1, -1);
+				append(result, -1, -1, 0);
 				error = -1;
 			}
 		}
 		AppendEnd(0);
 		SetLine();
+		return error;
+	}
+	template<typename T> int Morpheme::Build(const Morpheme& src)
+	{
+		//BufferChar input;
+		BufferChar result;
+		BufferChar intermediate;
+		int accept = 0;
+		int error = 0;
+		char now;
+		indexT index;
+		
+		
+		SrcFile.copy(src.SrcFile);
+		size_t record = index.UnitOffest;
+		while (RunBuild<T>(accept, result, src, intermediate, index))
+		{
+			if (accept != 0) append(result, accept, T::GroupGet(accept), 0);
+			else
+			{
+				input.dequeue(now);
+				result.append(now);
+				append(result, -1, -1, 0);
+				error = -1;
+			}
+			lex[count - 1].line = src.lex[record].line;
+			lex[count - 1].file = src.lex[record].file;
+			record = index.UnitOffest;
+		}
+		AppendEnd(0);
 		return error;
 	}
 	template<typename T> bool Morpheme::RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate)
@@ -948,6 +999,96 @@ namespace hyperlex
 			input.backspace(intermediate);
 		return action != 0;
 	}
+	template<typename T> bool Morpheme::RunBuild(int& accept, BufferChar& result, const Morpheme& src, BufferChar& intermediate, indexT& index)
+	{
+		/*
+	example:
+	1 aa
+	2 aaBB
+	3 Bcc
+	input: aaBcc
+	*/
+		char now;
+		//char cc;
+		int state, acc;
+		int action;
+		indexT RecoverRecord;
+		intermediate.clear();
+		state = 0;
+		acc = 0;
+		action = 0;
+		accept = 0;
+		result.clear();
+		RecoverRecord = index;
+		while (src.dequeue(now, index))
+		{
+			/*state switch*/
+			/*change here to get a different automata*/
+			state = T::next(state, now);
+			acc = T::action(state);
+			/*change here to get a different automata*/
+			accept = acc != 0 ? acc : accept;
+			switch (action)
+			{
+			case 0://initial
+				if (state != 0 && acc == 0)
+				{
+					intermediate.append(now);
+					action = 1;
+				}
+				else if (state != 0 && acc != 0)
+				{
+					result.append(now);
+					action = 2;
+				}
+				else
+				{
+					index = RecoverRecord;
+					//input.backspace(now);
+					return true;
+				}
+				break;
+			case 1://run and waiting for accept
+				if (state == 0)
+				{
+					index = RecoverRecord;
+					//input.backspace(now);
+					//input.backspace(intermediate);
+					return true;
+				}
+				else if (acc != 0)
+				{
+					result.append(intermediate);
+					result.append(now);
+					intermediate.clear();
+					action = 2;
+				}
+				else intermediate.append(now);//continue 
+				break;
+			case 2://accept
+				if (state == 0)//accept
+				{
+					src.backspace(index, 1);
+					//input.backspace(now);
+					//accept = last;
+					return true;
+				}
+				else if (acc == 0)
+				{
+					intermediate.append(now);
+					action = 1;
+				}
+				else result.append(now);
+				break;
+			}
+		}
+		if (action == 1)
+			src.backspace(index, intermediate.count());
+			//input.backspace(intermediate);
+		return action != 0;
+	}
+	
+	
 	template<typename T> int GrammarTree::build(const Morpheme& input)
 	{
 		vector<int> stack;

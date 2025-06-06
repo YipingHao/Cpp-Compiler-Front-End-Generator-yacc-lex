@@ -375,7 +375,7 @@ Morpheme::Morpheme()
 }
 Morpheme::~Morpheme()
 {
-
+	clear();
 }
 char* Morpheme::Copy(size_t site) const
 {
@@ -398,7 +398,7 @@ const char* Morpheme::GetWord(size_t site) const
 {
 	return storage.ptr(lex[site].begin);
 }
-void Morpheme::append(const BufferChar& input, int accept, int category)
+void Morpheme::append(const BufferChar& input, int accept, int category, size_t LineNo)
 {
 	size_t offset__, length__;
 	result temp;
@@ -412,9 +412,13 @@ void Morpheme::append(const BufferChar& input, int accept, int category)
 	temp.length = length__;
 	temp.begin = offset__;
 	temp.valid = true;
-	temp.line = 0;
+	temp.line = LineNo;
 	lex.append(temp);
 	return;
+}
+void Morpheme::append(const char* fileName)
+{
+	SrcFile.append(Copy(fileName));
 }
 void Morpheme::AppendEnd(int TerminalCount)
 {
@@ -485,17 +489,145 @@ void Morpheme::CountReset(size_t NewCount)
 	count = NewCount;
 }
 
+bool Morpheme::withTernimal(void)const
+{
+	return lex[lex.count() - 1].accept == 0 && lex[lex.count() - 1].category == 0;
+}
+void Morpheme::insert(size_t from, size_t deleted, const Morpheme& src)
+{
+	size_t NewCount;
+	/*
+	A:[0,from)
+	B:[from, from + deleted) = [from, rear)
+	C:[from + deleted, count) = [rear, count)
+
+	a:[0,from)
+	b:[from, from + NewCount)
+	c:[from + NewCount, NewCount + count - deleted)
+	*/
+	if (src.withTernimal()) NewCount = src.count - 1;
+	else NewCount = src.count;
+	if (from > count) from = count; 
+	if (from + deleted >= count) deleted = count - from;
+	lex.recount(NewCount + count - deleted);
+	size_t rear_ = from + deleted;
+	size_t RearCount = count - rear_;
+	size_t OldStorage = storage.count();
+	for (size_t i = 0; i < RearCount; i++)
+	{
+		lex[i + NewCount + from] = lex[i + rear_];
+	}
+	storage.append(src.storage);
+	for (size_t i = 0; i < NewCount; i++)
+	{
+		lex[i + from] = src.lex[i];
+		lex[i + from].begin += OldStorage;
+	}
+}
+void Morpheme::sort(void)
+{
+	vector<char> temp;
+	temp.copy(storage); 
+	size_t offset = 0;
+	for (size_t i = 0; i < lex.count(); i++)
+	{
+		size_t from = lex[i].begin;
+		size_t length = lex[i].length;
+		for (size_t j = 0; j < length; j++)
+		{
+			storage[offset + j] = temp[from + j];
+		}
+		//storage[offset + length] = temp[from + length];
+		storage[offset + length] = '\0';
+		lex[i].begin = offset;
+		offset += length + 1;
+	}
+	storage.recount(offset);
+}
+bool Morpheme::dequeue(char& out, indexT& index) const
+{
+	size_t &now = index.UnitOffest;
+	size_t& offset = index.CharOffset;
+	while (true)
+	{
+		if (now >= count) return false;
+		if (offset < lex[now].length) break;
+		now += 1;
+
+		if (lex[now].valid)
+			offset = 0;
+		else
+			offset = lex[now].length;
+	} 
+	out = storage[lex[now].begin + offset];
+	offset += 1;
+	return true;
+}
+void Morpheme::backspace(indexT& index, size_t count) const
+{
+	size_t& now = index.UnitOffest;
+	size_t& offset = index.CharOffset;
+	for (size_t i = 0; i < count; i++)
+	{
+		while (offset == 0)
+		{
+			if (now == 0) break;
+			now -= 1;
+			if (lex[now].valid)
+				offset = lex[now].length;
+			else
+				offset = 0;
+		}
+		offset -= 1;
+	}
+}
+bool Morpheme::operator==(const Morpheme& source) const
+{
+	if (count != source.count) return false;
+	if (SrcFile.count() != source.SrcFile.count()) return false;
+	for (size_t i = 0; i < SrcFile.count(); i++)
+	{
+		if (!compare(SrcFile[i], source.SrcFile[i])) return false;
+	}
+	if (lex.count() != source.lex.count()) return false;
+	for (size_t i = 0; i < lex.count(); i++)
+	{
+		if (lex[i].accept != source.lex[i].accept) return false;
+		if (lex[i].category != source.lex[i].category) return false;
+		if (lex[i].valid != source.lex[i].valid) return false;
+		if (lex[i].length != source.lex[i].length) return false;
+		if (lex[i].file != source.lex[i].file) return false;
+		if (lex[i].line != source.lex[i].line) return false;
+		if(!compare(GetWord(i), source.GetWord(i)))return false;
+
+	}
+	return true;
+}
+
+
 void Morpheme::clear(void)
 {
 	count = 0;
 	lex.clear();
 	storage.clear();
+	for (size_t i = 0; i < SrcFile.count(); i++)
+	{
+		char* temp = (char*)SrcFile[i];
+		free(temp);
+	}
+	SrcFile.clear();
 }
 void Morpheme::copy(const Morpheme& source)
 {
+	clear();
 	count = source.count;
 	lex.copy(source.lex);
 	storage.copy(source.storage);
+	SrcFile.recount(source.SrcFile.count());
+	for (size_t i = 0; i < source.SrcFile.count(); i++)
+	{
+		SrcFile[i] = Copy(source.SrcFile[i]);
+	}
 }
 
 bool& Morpheme::valid(size_t site)
@@ -2291,31 +2423,21 @@ struct Preparser
 	static const int Implicit[38];
 };
 
+int InputPanel::pretreatment(const char* input, BufferChar & output)
+{
 
-
+}
 
 int InputPanel::build(FILE* fp)
 {
 	//Morpheme eme;
 	int error;
-	clear();
-	initial();
-	error = LexicalSource.Build<Reg>(fp);
-	if (error != 0)
-	{
-		errorCode = ErrorinputLEXICAL;
-		return error;
-	}
-	NeglectNullToken(LexicalSource);
-	//eme.Demo(stdout);
-	error = buildGanalysis(LexicalSource);
-	if (error != 0) return error;
-	errorCode = NoError;
-	return 0;
+	BufferChar input;
+	input << fp;
+	return build(input.ptr());
 }
 int InputPanel::build(const char* input)
 {
-	//Morpheme LexicalSource;
 	int error;
 	clear();
 	initial();
@@ -7516,6 +7638,7 @@ const int Panel::Implicit[60] = { \
 0 };
 
 
+
 int PreTreat::next(int state, const char c)
 {
 	switch (state)
@@ -7866,6 +7989,8 @@ int PreTreat::GroupGet(int accept)
 }
 
 
+
+
 const size_t Preparser::StateCount = 41;
 const size_t Preparser::NonTerminalCount = 12;
 const size_t Preparser::TerminalCount = 27;
@@ -8115,6 +8240,7 @@ const int Preparser::Implicit[38] = { \
 1, \
 1, \
 1 };
+
 
 
 
