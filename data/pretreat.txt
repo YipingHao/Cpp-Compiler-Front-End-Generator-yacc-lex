@@ -1,0 +1,91 @@
+lexical:{
+	void:
+	{
+		idC: [a-z]|[A-Z]|_|[0-9];
+		num: [0-9];
+		hexa: [0-9]|[a-f]|[A-F];
+		octa: [0-7];
+		char_instring:['\40'-'\41'] | ['\43'-'\133'] | ['\135'-'\177'];
+		AC:(['\0'-'\51']|['\53'-'\56']|['\60'-'\177']);
+		anyC:  ['\0'-'\177'];
+		ESC: '\\'(     (<octa><octa>?<octa>?) | (x|X)<hexa><hexa>?
+				|     (v|t|r|n|f|b|a|'\\'|'?'|'\''|'\"'|['\0'])   
+				);
+	}
+	identifier: identifier(+1): ([a-z]|[A-Z]|_)<idC>+;
+	const:
+	{
+		integer: '+'<num>+;
+		CommonChar: '\''((<ESC>)|
+		([' '-'!']|['#'-'&']|['('-'/']|['0'-'[']|[']'-'~'])
+			)'\'';
+		idChar: <idC>; 
+	};
+	string: 
+    {
+        string:'\"' ( <char_instring> | <ESC> ) *'\"';
+    }
+	include(+5):
+	{
+		include: '#' i n c l u d e;				
+	};
+	format:
+	{
+		spaces: ' '+;
+		enters: ('\n'| '\r''\n')+;
+		tab: '\t';
+	}
+	division:
+	{
+		semicolon:';';
+		colon:':';
+		dot: '.';
+	}
+	braket:
+	{
+		braceL:'{';
+		braceR:'}';
+		left:'(';
+		right: ')';
+		squareL: '[';
+		squareR: ']';		
+		angleL: '<';
+		angleR: '>';
+	}
+    anntation:
+	{
+		anntationS: '/''/'(['\0'-'\11']|['\13'-'\177'])*'\n';
+		anntationM: '/''*'('/'|<AC>|'*'+<AC>)*'*'+'/';
+	}
+	RegSymbol:
+	{
+		range: '-';
+		star: '*';        //zero or more
+		plus: '+';        //one or more
+		question: '?';    //zero or one, not wildcard
+		or: '|';
+	}		
+};
+
+//after lexical analysis 'anntation' and 'format' unit will be discarded 
+
+grammar: TEXT: {
+	TEXT: {
+		meow: DEFS*;
+		};
+	DEFS:{
+		include: include angleL string angleR;
+		anntation: [anntation];
+		anything: ANY+;
+	}
+	ANY:{
+		identifier: [identifier];
+		const:[const];
+		RegSymbol: [RegSymbol];
+		braket: [braket];
+		division: [division];
+		format: [format];
+	};
+	
+};
+
