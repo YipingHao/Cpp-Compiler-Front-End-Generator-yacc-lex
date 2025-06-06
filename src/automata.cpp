@@ -2790,8 +2790,8 @@ int InputPanel::RulesAppend(size_t GroupSite, GLTree* Name, const Morpheme& eme,
 		{
 			errorCode = repeatGName;
 			
-			errorInfor1 = i; 
-			errorInfor2 = now->rules.count() - 1;
+			errorInfor1 = GroupSite;
+			errorInfor2 = i;
 			return 4441;
 		}
 	}
