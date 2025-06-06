@@ -141,9 +141,9 @@ int simpleLR(hyperlex::dictionary& para)
 }
 int static testNew(hyperlex::dictionary& para)
 {
-    '\"' == '\42';
-    '\\' == '\134';
-    '/' == "\57\\";
+    //'\"' == '\42';
+   // '\\' == '\134';
+    //'/' == "\57\\";
     
     return 0;
 }
