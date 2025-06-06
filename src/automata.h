@@ -905,7 +905,8 @@ namespace hyperlex
 			if (accept != 0) append(result, accept, T::GroupGet(accept), 0);
 			else
 			{
-				input.dequeue(now);
+				src.backspace(index, 1);
+				//input.dequeue(now);
 				result.append(now);
 				append(result, -1, -1, 0);
 				error = -1;

@@ -9,7 +9,7 @@ using namespace hyperlex;
 //typedef long long int sint;
 #include<iostream>
 #include <bitset>
-
+static char* CopyMalloc(const char* s);
 static bool compare(const char* str1, const char* str2);
 static size_t strlength(const char* str);
 static void strfree(const char** strs, size_t length);
@@ -6366,6 +6366,15 @@ void Gsheet::CppStructPrint02(const char* name, FILE* fp, const grammerS* gramme
 	}
 	grammer->Demo(fp, RulesCount - 1);
 	fprintf(fp, "\"};\n");
+}
+static char* CopyMalloc(const char* s)
+{
+	char* v;
+	size_t size;
+	size = strlen(s);
+	v = (char*)malloc(sizeof(char) * (size + 4));
+	strcpy(v, s);
+	return v;
 }
 static bool compare(const char* str1, const char* str2)
 {
