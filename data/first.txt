@@ -110,12 +110,12 @@ grammar: TEXT: {
 		};
 	<CommonBra>:
 	{
-		left:'(';
-		right: ')';
-		squareL: '[';
-		squareR: ']';		
-		angleL: '<';
-		angleR: '>';
+		left:left;
+		right: right;
+		squareL: squareL;
+		squareR: squareR;		
+		angleL: angleL;
+		angleR: angleR;
 	}
 
 
