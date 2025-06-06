@@ -398,7 +398,7 @@ const char* Morpheme::GetWord(size_t site) const
 {
 	return storage.ptr(lex[site].begin);
 }
-void Morpheme::append(const BufferChar& input, int accept, int category, size_t LineNo)
+void Morpheme::append(const BufferChar& input, int accept, int category)
 {
 	size_t offset__, length__;
 	result temp;
@@ -412,7 +412,8 @@ void Morpheme::append(const BufferChar& input, int accept, int category, size_t 
 	temp.length = length__;
 	temp.begin = offset__;
 	temp.valid = true;
-	temp.line = LineNo;
+	temp.line = 0;
+	temp.file = 0;
 	lex.append(temp);
 	return;
 }

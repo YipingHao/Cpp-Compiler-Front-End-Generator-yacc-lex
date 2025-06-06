@@ -423,7 +423,7 @@ namespace hyperlex
 		Morpheme();
 		~Morpheme();
 		char* Copy(size_t site) const;
-		void append(const BufferChar& input, int accept, int category, size_t LineNo);
+		void append(const BufferChar& input, int accept, int category);
 		void append(const char* fileName);
 		void AppendEnd(int TerminalCount);
 		void UnitMove(size_t from, size_t to);
@@ -850,12 +850,12 @@ namespace hyperlex
 		input << fp;
 		while (RunBuild<T>(accept, result, input, intermediate))
 		{
-			if (accept != 0) append(result, accept, T::GroupGet(accept), 0);
+			if (accept != 0) append(result, accept, T::GroupGet(accept));
 			else
 			{
 				input.dequeue(now);
 				result.append(now);
-				append(result, -1, -1, 0);
+				append(result, -1, -1);
 				error = -1;
 			}
 		}
@@ -874,12 +874,12 @@ namespace hyperlex
 		input = reg;
 		while (RunBuild<T>(accept, result, input, intermediate))
 		{
-			if (accept != 0) append(result, accept, T::GroupGet(accept), 0);
+			if (accept != 0) append(result, accept, T::GroupGet(accept));
 			else
 			{
 				input.dequeue(now);
 				result.append(now);
-				append(result, -1, -1, 0);
+				append(result, -1, -1);
 				error = -1;
 			}
 		}
@@ -902,13 +902,13 @@ namespace hyperlex
 		size_t record = index.UnitOffest;
 		while (RunBuild<T>(accept, result, src, intermediate, index))
 		{
-			if (accept != 0) append(result, accept, T::GroupGet(accept), 0);
+			if (accept != 0) append(result, accept, T::GroupGet(accept));
 			else
 			{
 				src.backspace(index, 1);
 				//input.dequeue(now);
 				result.append(now);
-				append(result, -1, -1, 0);
+				append(result, -1, -1);
 				error = -1;
 			}
 			lex[count - 1].line = src.lex[record].line;
