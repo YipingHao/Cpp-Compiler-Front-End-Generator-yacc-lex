@@ -71,27 +71,57 @@ lexical:{
 
 grammar: TEXT: {
 	TEXT: {
-		OnlyL: identifier BEGIN DEFS END;
-		LG: identifier BEGIN DEFS END identifier colon identifier BEGIN DEFS END;};
-	DEFS:{
-		single: DEF;
-		multi: DEFS DEF;
+		OnlyL: identifier BEGIN LDEFS END;
+		LG: identifier BEGIN LDEFS END identifier colon identifier BEGIN GDEFS END;};
+	LDEFS:{
+		single: LDEF;
+		multi: LDEFS LDEF;
 	}	
-	DEF:{
-		single1: SINGLEDEF;
-		single2: BASICNAME SINGLEDEF;
-		multi: BASICNAME  braceL FORMULAS END;
+	LDEF:{
+		single: BASICNAME LSINGLEDEF;
+		multi: BASICNAME braceL LFORMULAS END;
 		include: include angleL string angleR semicolon;
 	}
-	FORMULAS:{
-		single: SINGLEDEF;
-		multi: FORMULAS SINGLEDEF;
+	LFORMULAS:{
+		single: LSINGLEDEF;
+		multi: LFORMULAS LSINGLEDEF;
 	}
-	SINGLEDEF:
+	LSINGLEDEF:
 	{
-		full: BASICNAME BASICFORMULA semicolon;
-		default1: identifier semicolon;
-		default2: identifier left integer right semicolon;
+		full: BASICNAME LBASICFORMULA semicolon;
+		default1: BASICNAME semicolon;
+	}
+	//LBASICNAME:
+	//{
+	//	explicit: identifier colon;
+	//	priority: identifier left integer right colon;
+	//}
+	LBASICFORMULA:{
+		single: LBASICUNIT;
+		ororor: LBASICFORMULA  LBASICUNIT;};
+	BASICUNIT:{
+		char1: CommonChar;
+		char2: idChar;
+		RegSymbol: [RegSymbol];
+		CommonBra: <CommonBra>;
+		};
+
+	GDEFS:{
+		single: GDEF;
+		multi: GDEFS GDEF;
+	}	
+	GDEF:{
+		single: GSINGLEDEF;
+		multi: BASICNAME braceL GFORMULAS END;
+		include: include angleL string angleR semicolon;
+	}
+	GFORMULAS:{
+		single: GSINGLEDEF;
+		multi: GFORMULAS GSINGLEDEF;
+	}
+	GSINGLEDEF:
+	{
+		full: BASICNAME GBASICFORMULA semicolon;
 	}
 	BASICNAME:
 	{
@@ -99,16 +129,17 @@ grammar: TEXT: {
 		implicit: angleL identifier angleR colon;
 		priority: identifier left integer right colon;
 	}
-	BASICFORMULA:{
+	GBASICFORMULA:{
 		single: void;
-		ororor: BASICFORMULA  BASICUNIT;};
-	BASICUNIT:{
-		char1: CommonChar;
+		ororor: GBASICFORMULA  GBASICUNIT;};
+	GBASICUNIT:{
 		char2: idChar;
-		RegSymbol: [RegSymbol];
 		CommonBra: <CommonBra>;
+		RegSymbol: [RegSymbol];
 		aid: identifier;
+		
 		};
+
 	<CommonBra>:
 	{
 		left:left;
@@ -118,6 +149,7 @@ grammar: TEXT: {
 		angleL: angleL;
 		angleR: angleR;
 	}
+
 
 
 	END:{
