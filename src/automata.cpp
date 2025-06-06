@@ -418,7 +418,7 @@ void Morpheme::append(const BufferChar& input, int accept, int category, size_t 
 }
 void Morpheme::append(const char* fileName)
 {
-	SrcFile.append(Copy(fileName));
+	SrcFile.append(CopyMalloc(fileName));
 }
 void Morpheme::AppendEnd(int TerminalCount)
 {
@@ -626,7 +626,7 @@ void Morpheme::copy(const Morpheme& source)
 	SrcFile.recount(source.SrcFile.count());
 	for (size_t i = 0; i < source.SrcFile.count(); i++)
 	{
-		SrcFile[i] = Copy(source.SrcFile[i]);
+		SrcFile[i] = CopyMalloc(source.SrcFile[i]);
 	}
 }
 
