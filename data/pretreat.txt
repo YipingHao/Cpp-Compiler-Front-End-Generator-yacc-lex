@@ -76,7 +76,7 @@ grammar: TEXT: {
 	DEFS:{
 		include: include angleL string angleR;
 		anntation: [anntation];
-		anything: ANY+;
+		anything: ANY;
 	}
 	ANY:{
 		identifier: [identifier];
