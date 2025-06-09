@@ -112,6 +112,11 @@ int static Test000(const hyperlex::dictionary& para)
 	std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 	fclose(fp);
 
+	hyperlex::Morpheme here;
+	here.Build<PreTreat>(input.ptr());
+	
+	here.Demo(stdout);
+
     return error;
 }
 
