@@ -72,13 +72,13 @@ namespace hyperlex
         void move(dictionary* source);
         void clear(void);
 
-        element search(Ktype& T, const char* key);
-        element*search(size_t&count, Ktype& T, const char* key);
+        element search(Ktype& T, const char* key) const;
+        element*search(size_t&count, Ktype& T, const char* key) const;
 
-        const char* search(const char* Default_, const char* key);
-        bool search(bool Default_, const char* key);
-        long int search(long int Default_, const char* key);
-        double search(double Default_, const char* key);
+        const char* search(const char* Default_, const char* key) const;
+        bool search(bool Default_, const char* key) const;
+        long int search(long int Default_, const char* key) const;
+        double search(double Default_, const char* key) const;
 
         size_t append(const char* key, element value, Ktype T);
         size_t append(const char* key, const char* value);

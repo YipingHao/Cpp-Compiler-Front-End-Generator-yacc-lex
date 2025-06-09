@@ -156,7 +156,7 @@ struct complex
     static int GroupGet(int state);
 };
 
-dictionary::element dictionary::search(dictionary::Ktype& T, const char* key)
+dictionary::element dictionary::search(dictionary::Ktype& T, const char* key) const
 {
     size_t i, j;
     element E;
@@ -200,7 +200,7 @@ dictionary::element dictionary::search(dictionary::Ktype& T, const char* key)
     }
     return E;
 }
-dictionary::element* dictionary::search(size_t& count, dictionary::Ktype& T, const char* key)
+dictionary::element* dictionary::search(size_t& count, dictionary::Ktype& T, const char* key) const
 {
     size_t i, j;
     element*E;
@@ -247,7 +247,7 @@ dictionary::element* dictionary::search(size_t& count, dictionary::Ktype& T, con
     }
     return E;
 }
-const char* dictionary::search(const char* Default_, const char* key)
+const char* dictionary::search(const char* Default_, const char* key) const
 {
     element E;
     Ktype T;
@@ -255,15 +255,15 @@ const char* dictionary::search(const char* Default_, const char* key)
     if (T == string_) return E.ss;
     else return Default_;
 }
-bool dictionary::search(bool Default_, const char* key)
+bool dictionary::search(bool Default_, const char* key) const
 {
     element E;
     Ktype T;
     E = search(T, key);
     if (T == bool_) return E.bb;
     else return Default_;
-}
-long int dictionary::search(long int Default_, const char* key)
+} 
+long int dictionary::search(long int Default_, const char* key) const
 {
     element E;
     Ktype T;
@@ -271,7 +271,7 @@ long int dictionary::search(long int Default_, const char* key)
     if (T == int_) return E.ii;
     else return Default_;
 }
-double dictionary::search(double Default_, const char* key)
+double dictionary::search(double Default_, const char* key) const
 {
     element E;
     Ktype T;
