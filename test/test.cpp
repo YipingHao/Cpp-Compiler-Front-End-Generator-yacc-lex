@@ -6,7 +6,7 @@ using namespace std;
 
 int testNew(hyperlex::dictionary& para)
 {
-    int item = para.search(1, "TestItem::item");
+    int item = para.search(1L, "TestItem::item");
     int error = 0;
     std::cout << "item: " << item << std::endl;
 
