@@ -162,7 +162,7 @@ dictionary::element dictionary::search(dictionary::Ktype& T, const char* key) co
     element E;
     hyperlex::Morpheme eme;
     vector<const char*> storage;
-    dictionary* target;
+    const dictionary* target;
 
     eme.Build<complex>(key);
     target = this;
@@ -208,7 +208,7 @@ dictionary::element* dictionary::search(size_t& count, dictionary::Ktype& T, con
     vector<const char*> storage;
     dictionary* target;
 
-    target = this;
+    const target = this;
     count = 0;
     E = NULL;
     T = null_;
