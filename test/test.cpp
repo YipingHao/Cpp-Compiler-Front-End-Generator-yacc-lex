@@ -117,6 +117,11 @@ int static Test000(const hyperlex::dictionary& para)
 	
 	here.Demo(stdout);
 
+	hyperlex::Morpheme derived;
+
+	derived.Build<PreTreat>(here);
+
+	derived.Demo(stdout);
     return error;
 }
 
