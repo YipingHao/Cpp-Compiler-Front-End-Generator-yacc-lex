@@ -206,9 +206,9 @@ dictionary::element* dictionary::search(size_t& count, dictionary::Ktype& T, con
     element*E;
     hyperlex::Morpheme eme;
     vector<const char*> storage;
-    dictionary* target;
+    const dictionary* target;
 
-    const target = this;
+    target = this;
     count = 0;
     E = NULL;
     T = null_;
