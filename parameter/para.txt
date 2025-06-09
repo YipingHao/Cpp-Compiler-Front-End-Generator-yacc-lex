@@ -6,8 +6,7 @@
 //=======================================================================================================
 {
 	//server = "GPU";
-	//item = 13;//grammerT
-	//item = 19;
+
 	
 	//InputFileName = "./data/error.txt";
 	//InputFileName = "./data/grammerT2.txt";
@@ -23,4 +22,8 @@
 	//item = "test old";
 	item = "simple LR";
 	//item = "test";
+	TestItem = 
+	{
+		item = 0;
+	};
 }

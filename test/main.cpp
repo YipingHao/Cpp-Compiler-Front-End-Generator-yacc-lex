@@ -6,6 +6,7 @@ using namespace std;
 int test_entrance(const char* output_path);
 int static entrance(int argc, char* argv[]);
 static bool compare(const char* str1, const char* str2);
+
 int main(int argc, char* argv[])
 {
 	int info;
@@ -32,7 +33,7 @@ private:
 
 };
 int static simpleLR(hyperlex::dictionary& para);
-int static testNew(hyperlex::dictionary& para);
+int testNew(hyperlex::dictionary& para);
 int static entrance(int argc, char* argv[])
 {
     hyperlex::dictionary para;
@@ -139,14 +140,7 @@ int simpleLR(hyperlex::dictionary& para)
     }
     return error;
 }
-int static testNew(hyperlex::dictionary& para)
-{
-    //'\"' == '\42';
-   // '\\' == '\134';
-    //'/' == "\57\\";
-    
-    return 0;
-}
+
 
 
 static bool compare(const char* str1, const char* str2)

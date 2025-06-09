@@ -492,6 +492,7 @@ void Morpheme::CountReset(size_t NewCount)
 
 bool Morpheme::withTernimal(void)const
 {
+	if (lex.count() == 0) return false;
 	return lex[lex.count() - 1].accept == 0 && lex[lex.count() - 1].category == 0;
 }
 void Morpheme::insert(size_t from, size_t deleted, const Morpheme& src)
@@ -525,6 +526,22 @@ void Morpheme::insert(size_t from, size_t deleted, const Morpheme& src)
 		lex[i + from].begin += OldStorage;
 	}
 }
+void Morpheme::shrink(void)
+{
+	size_t offset = 0;
+	for (size_t i = 0; i < lex.count(); i++)
+	{
+		if (lex[i].valid)
+		{
+			if (i != offset)
+			{
+				lex[offset] = lex[i];
+			}
+			offset += 1;
+		}
+	}
+	sort();
+}
 void Morpheme::sort(void)
 {
 	vector<char> temp;
@@ -544,6 +561,21 @@ void Morpheme::sort(void)
 		offset += length + 1;
 	}
 	storage.recount(offset);
+}
+void Morpheme::print(BufferChar& input) const
+{
+	size_t countLex;
+	if (withTernimal()) countLex = lex.count() - 1;
+	else countLex = lex.count();
+	for (size_t i = 0; i < countLex; i++)
+	{
+		size_t from = lex[i].begin;
+		size_t length = lex[i].length;
+		for (size_t j = 0; j < length; j++)
+		{
+			input.append(storage[from + j]);
+		}
+	}
 }
 bool Morpheme::dequeue(char& out, indexT& index) const
 {

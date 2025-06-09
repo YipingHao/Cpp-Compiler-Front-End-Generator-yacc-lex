@@ -446,6 +446,7 @@ namespace hyperlex
 		bool& valid(size_t site);
 
 		void insert(size_t from, size_t deleted, const Morpheme& src);
+		void shrink(void);
 		void sort(void);
 		bool withTernimal(void)const;
 		template<typename T> int Build(const char* reg);
@@ -469,6 +470,8 @@ namespace hyperlex
 				CharOffset = 0;
 			}
 		};
+		
+		void print(BufferChar & output) const;
 		bool dequeue(char &out, indexT& index) const;
 		void backspace(indexT& index, size_t count) const;
 		bool operator==(const Morpheme& source) const;
@@ -906,7 +909,6 @@ namespace hyperlex
 			else
 			{
 				src.backspace(index, 1);
-				//input.dequeue(now);
 				result.append(now);
 				append(result, -1, -1);
 				error = -1;
