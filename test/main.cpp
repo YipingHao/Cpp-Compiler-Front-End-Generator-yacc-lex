@@ -1,6 +1,5 @@
 ﻿#include<cstring>
 #include<time.h>
-using namespace std;
 #include "AutoHeader.h"
 #include<stdlib.h>
 int test_entrance(const char* output_path);
