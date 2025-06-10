@@ -454,6 +454,7 @@ namespace hyperlex
 		template<typename T> int Build(const Morpheme& src);
 		//size_t index;
 		void clear(void);
+		void ruin(void);
 		void copy(const Morpheme& source);
 
 		size_t initial(void) const;
@@ -864,6 +865,8 @@ namespace hyperlex
 		int error = 0;
 		char now;
 		input << fp;
+		ruin();
+
 		while (RunBuild<T>(accept, result, input, intermediate))
 		{
 			if (accept != 0) append(result, accept, T::GroupGet(accept));
@@ -887,6 +890,7 @@ namespace hyperlex
 		int accept;
 		int error = 0;
 		char now;
+		ruin();
 		input = reg;
 		while (RunBuild<T>(accept, result, input, intermediate))
 		{
@@ -912,7 +916,7 @@ namespace hyperlex
 		int error = 0;
 		char now;
 		indexT index;
-		
+		ruin();
 		
 		SrcFile.copy(src.SrcFile);
 		size_t record = index.UnitOffest;

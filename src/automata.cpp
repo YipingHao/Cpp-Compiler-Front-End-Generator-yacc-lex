@@ -370,12 +370,12 @@ char BufferChar::QueueHead(void)
 Morpheme::Morpheme()
 {
 	count = 0;
-
+	AppendEnd(0);
 	//index = 0;
 }
 Morpheme::~Morpheme()
 {
-	clear();
+	ruin();
 }
 char* Morpheme::Copy(size_t site) const
 {
@@ -637,8 +637,7 @@ bool Morpheme::operator==(const Morpheme& source) const
 	return true;
 }
 
-
-void Morpheme::clear(void)
+void Morpheme::ruin(void)
 {
 	count = 0;
 	lex.clear();
@@ -649,6 +648,11 @@ void Morpheme::clear(void)
 		free(temp);
 	}
 	SrcFile.clear();
+}
+void Morpheme::clear(void)
+{
+	ruin();
+	AppendEnd(0);
 }
 void Morpheme::copy(const Morpheme& source)
 {
