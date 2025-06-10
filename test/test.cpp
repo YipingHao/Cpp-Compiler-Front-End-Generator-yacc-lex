@@ -127,6 +127,11 @@ int static Test000(const hyperlex::dictionary& para)
 
 	here.insert(0, 286, derived);
 	std::cout << "derived == here : " << (derived == here) << std::endl;
+
+	hyperlex::Morpheme newOne;
+	newOne.insert(4, 286, derived);
+
+	std::cout << "newOne == derived : " << (newOne == derived) << std::endl;
     return error;
 }
 
