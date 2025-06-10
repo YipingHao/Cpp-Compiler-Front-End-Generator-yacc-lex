@@ -297,7 +297,7 @@ int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
 	bool include;
 	do
 	{
-		GrammarTree GT; 
+		hyperlex::GrammarTree GT;
 	} while (true);
 
 	return error;
@@ -308,11 +308,6 @@ int static Test001(const hyperlex::dictionary& para)
 	int error = 0;
 	for (size_t i = 2; i < 64; i++)
 	{
-		case 1:
-		{
-			error = Test001(para);
-			break;
-		}
 		printf("\t\tcase ");
 		printf("%zu:\n\t\t{\n\t\t\terror = Test");
 		if (i < 10) printf("00%zu", i);
