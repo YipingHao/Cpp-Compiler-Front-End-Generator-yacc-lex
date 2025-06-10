@@ -71,12 +71,17 @@ lexical:{
 
 grammar: TEXT: {
 	TEXT: {
-		meow: DEFS*;
+		meow: DEF*; 
 		};
-	DEFS:{
-		include: include angleL string angleR;
+	DEF:{
 		anntation: [anntation];
 		anything: ANY;
+		include: INCLUDE;
+	}
+	INCLUDE:
+	{	
+		include: include spaces string;
+		include2: include string;
 	}
 	ANY:{
 		identifier: [identifier];
@@ -86,6 +91,5 @@ grammar: TEXT: {
 		division: [division];
 		format: [format];
 	};
-	
 };
 

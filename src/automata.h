@@ -557,7 +557,7 @@ namespace hyperlex
 		typedef const vector<const char*> cvccp;
 		InputPanel();
 		~InputPanel();
-		int pretreatment(const char* input, BufferChar& output);
+		int pretreatment(const char* input, Morpheme& output);
 		int build(FILE* fp);
 		int build(const char* input);
 		void demo(FILE* fp) const;

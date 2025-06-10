@@ -2473,9 +2473,51 @@ struct Preparser
 	static const int Implicit[38];
 };
 
-int InputPanel::pretreatment(const char* input, BufferChar & output)
-{
 
+int InputPanel::pretreatment(const char* input, Morpheme& output)
+{
+	int error = output.Build<PreTreat>(input);
+	if (error != 0)
+	{
+		errorCode = ErrorinputLEXICAL;
+		return error;
+	}
+	vector<const char*> path;
+	size_t offset = 0;
+	while (offset <= output.GetCount())
+	{
+		size_t begin = offset;
+		size_t limit = output.GetCount();
+		int state = 0;
+		for (size_t i = offset; i < limit; i++)
+		{
+			switch (state)
+			{
+			case 0:
+			{
+				if (output[i].accept == (int)PreTreat::_include_)
+				{
+					state = 1;
+					begin = i;
+				}
+				break;
+			}
+			case 1:
+			{
+				if (output[i].accept == (int)PreTreat::_string_)
+				{
+					state = 1;
+					begin = i;
+				}
+				break;
+			}
+			default:
+				break;
+			}
+		}
+	}
+
+	return error;
 }
 
 int InputPanel::build(FILE* fp)
