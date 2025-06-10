@@ -452,7 +452,6 @@ void Morpheme::Demo(FILE* fp)const
 		fprintf(fp, "<%4d %s : %4d, ", lex[i].category, temp, lex[i].accept);
 		write_escaped_string(storage.ptr(lex[i].begin), fp);
 		fprintf(fp, ">\n");
-		
 	}
 }
 char Morpheme::GetChar(size_t site) const

@@ -124,6 +124,9 @@ int static Test000(const hyperlex::dictionary& para)
 	derived.Demo(stdout);
 
 	std::cout << "derived == here : " << (derived == here) << std::endl;
+
+	here.insert(0, 285, derived);
+	std::cout << "derived == here : " << (derived == here) << std::endl;
     return error;
 }
 
