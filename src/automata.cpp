@@ -640,7 +640,7 @@ bool Morpheme::operator==(const Morpheme& source) const
 		if (lex[i].file != source.lex[i].file) return false;
 		if (lex[i].line != source.lex[i].line) return false;
 		if(!compare(GetWord(i), source.GetWord(i))) return false;
-		std::cout << "i: " << i << std::endl;
+		//std::cout << "i: " << i << std::endl;
 	}
 	//std::cout << "i: " << i << std::endl;
 	return true;
