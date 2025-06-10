@@ -5,6 +5,7 @@ using namespace hyperlex;
 #define CharSize ((size_t)(1 << (sizeof(char) * 8 - 1)))
 
 static bool compare(const char* str1, const char* str2);
+static void write_escaped_string(const char* str, FILE* file);
 static const char* Copy(const char* input);
 
 dictionary::dictionary()
@@ -476,7 +477,7 @@ void dictionary::print(FILE* fp, size_t indent) const
                 fprintf(fp, "%g", kv.Content[0].ff);
                 break;
             case string_:
-                fprintf(fp, "\"%s\"", kv.Content[0].ss ? kv.Content[0].ss : "");
+                write_escaped_string(kv.Content[0].ss ? kv.Content[0].ss : "", fp);
                 break;
             case bool_:
                 fprintf(fp, "%s", kv.Content[0].bb ? "true" : "false");
@@ -1608,4 +1609,32 @@ static const char* Copy(const char* input)
     for (i = 0; i < length; i++) nnnn[i] = input[i];
     return nnnn;
 }
+static void write_escaped_string(const char* str, FILE* file)
+{
+    if (!str || !file) return;
 
+    fputc('\"', file);  // 字符常量起始引号
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        switch (str[i]) {
+            // 处理必须转义的特殊字符
+        case '\"': fputs("\\\"", file); break;   // 双引号[6,8](@ref)
+        case '\\': fputs("\\\\", file); break;   // 反斜杠[6,7](@ref)
+        case '\n': fputs("\\n", file); break;    // 换行符[1,6](@ref)
+        case '\t': fputs("\\t", file); break;    // 制表符[1,8](@ref)
+        case '\r': fputs("\\r", file); break;    // 回车符[6,8](@ref)
+        case '\b': fputs("\\b", file); break;    // 退格符[7,8](@ref)
+        case '\f': fputs("\\f", file); break;    // 换页符[8](@ref)
+        case '\a': fputs("\\a", file); break;    // 响铃符[8](@ref)
+            // 其他不可打印字符用十六进制转义
+        default:
+            if (str[i] < 32 || str[i] > 126) {  // 非ASCII可打印字符
+                fprintf(file, "\\x%02X", (unsigned char)str[i]);  // 十六进制转义[6](@ref)
+            }
+            else {
+                fputc(str[i], file);  // 直接写入可打印字符
+            }
+        }
+    }
+    fputc('\"', file);  // 字符常量结束引号
+}
