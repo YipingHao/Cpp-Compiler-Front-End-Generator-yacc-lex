@@ -447,7 +447,7 @@ void Morpheme::Demo(FILE* fp)const
 		else temp = "(invalid)";
 
 		fprintf(fp, "No[%6zu]: file: %4zu, line: %6zu\n", i, lex[i].file, lex[i].line);
-		fprintf(fp, "<%4d %s : %4d , %s>\n", temp, lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
+		fprintf(fp, "<%4d %s : %4d , %s>\n", lex[i].category, temp, lex[i].accept, storage.ptr(lex[i].begin));
 
 			
 		
