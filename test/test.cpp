@@ -123,7 +123,7 @@ int static Test000(const hyperlex::dictionary& para)
 
 	derived.Demo(stdout);
 
-	std::cout << "derived == here" << derived == here << std::endl;
+	std::cout << "derived == here" << (derived == here) << std::endl;
     return error;
 }
 
