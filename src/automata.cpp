@@ -632,9 +632,10 @@ bool Morpheme::operator==(const Morpheme& source) const
 		if (lex[i].length != source.lex[i].length) return false;
 		if (lex[i].file != source.lex[i].file) return false;
 		if (lex[i].line != source.lex[i].line) return false;
-		if(!compare(GetWord(i), source.GetWord(i)))return false;
+		if(!compare(GetWord(i), source.GetWord(i))) return false;
 
 	}
+	std::cout << "i: " << i << std::endl;
 	return true;
 }
 
