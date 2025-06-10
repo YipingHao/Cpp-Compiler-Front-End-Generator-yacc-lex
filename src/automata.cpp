@@ -507,16 +507,18 @@ void Morpheme::insert(size_t from, size_t deleted, const Morpheme& src)
 	/*
 	A:[0,from)
 	B:[from, from + deleted) = [from, rear)
-	C:[from + deleted, count) = [rear, count)
+	C:[from + deleted, count - 1) = [rear, count - 1)
+	D:[count - 1, count - 1] END-EOF
 
 	a:[0,from)
 	b:[from, from + NewCount)
-	c:[from + NewCount, NewCount + count - deleted)
+	c:[from + NewCount, NewCount + count - deleted - 1)
+	d:[NewCount + count - deleted - 1, NewCount + count - deleted - 1]
 	*/
 	if (src.withTernimal()) NewCount = src.count - 1;
 	else NewCount = src.count;
-	if (from > count) from = count; 
-	if (from + deleted >= count) deleted = count - from;
+	if (from + 1 >= count) from = count - 1; 
+	if (from + deleted + 1 >= count) deleted = count - from - 1;
 	lex.recount(NewCount + count - deleted);
 	size_t rear_ = from + deleted;
 	size_t RearCount = count - rear_;
