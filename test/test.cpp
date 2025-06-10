@@ -2,6 +2,10 @@
 #include<time.h>
 #include "AutoHeader.h"
 #include<stdlib.h>
+
+typedef hyperlex::tree<GrammarTree::TreeInfor> GTNode;
+typedef hyperlex::tree<GrammarTree::TreeInfor>::PostIterator GTiterator;
+
 int static Test000(const hyperlex::dictionary& para);
 int static Test001(const hyperlex::dictionary& para);
 int static Test002(const hyperlex::dictionary& para);
@@ -608,8 +612,49 @@ int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
 	bool include;
 	do
 	{
-		hyperlex::GrammarTree GT;
-	} while (true);
+        include = false;
+        size_t begin = 0;
+        size_t count = 0;
+        const char* name = NULL;
+		hyperlex::GrammarTree Tree;
+        error = Tree.build<Preparser>(output);
+        GTiterator iterator;
+        iterator.initial(Tree.GT);
+        while (iterator.still())
+        {
+            GTNode* GT = iterator.target();
+            if (iterator.state() == 0)
+            {
+                size_t infor = GT->root().site;
+                if (GT->root().rules)
+                {
+                    if (infor == (int)Preparser::INCLUDE_include_ )
+                    {
+                        size_t site = GT->child(1)->root().site;
+                        include = true;
+                        begin = GT->child(0)->root().site;
+                        count = 2;
+                        name = output.GetString(site);
+                        break;
+                    }
+                    else if(infor == (int)INCLUDE_include2_)
+                    {
+                        size_t site = GT->child(2)->root().site;
+                        include = true;
+                        begin = GT->child(0)->root().site;
+                        count = 3;
+                        name = output.GetString(site);
+                        break;
+                    }
+                }
+            }
+            iterator.next();
+        }
+        if (include)
+        {
+
+        }
+	} while (include);
 
 	return error;
 }
@@ -617,17 +662,7 @@ int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
 int static Test001(const hyperlex::dictionary& para)
 {
 	int error = 0;
-	for (size_t i = 2; i < 64; i++)
-	{
-		printf("\t\tcase ");
-		printf("%zu:\n\t\t{\n\t\t\terror = Test", i);
-		if (i < 10) printf("00%zu", i);
-		else if (i < 100) printf("0%zu", i);
-		else printf("%zu", i);
-		printf("(para);\n");
-		printf("\t\t\tbreak;\n");
-		printf("\t\t}\n");
-	}
+	
 	return error;
 }
 struct test003
@@ -976,6 +1011,18 @@ int static Test063(const hyperlex::dictionary& para)
         {
             printf(";");
         }
+    }
+
+    for (size_t i = 2; i < 64; i++)
+    {
+        printf("\t\tcase ");
+        printf("%zu:\n\t\t{\n\t\t\terror = Test", i);
+        if (i < 10) printf("00%zu", i);
+        else if (i < 100) printf("0%zu", i);
+        else printf("%zu", i);
+        printf("(para);\n");
+        printf("\t\t\tbreak;\n");
+        printf("\t\t}\n");
     }
     return error;
 }
