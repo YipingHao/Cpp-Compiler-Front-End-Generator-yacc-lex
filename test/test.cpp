@@ -122,6 +122,8 @@ int static Test000(const hyperlex::dictionary& para)
 	derived.Build<PreTreat>(here);
 
 	derived.Demo(stdout);
+
+	std::cout << "derived == here" << derived == here << std::endl;
     return error;
 }
 
