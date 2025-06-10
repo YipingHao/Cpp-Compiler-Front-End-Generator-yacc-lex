@@ -625,6 +625,7 @@ bool Morpheme::operator==(const Morpheme& source) const
 	if (lex.count() != source.lex.count()) return false;
 	for (size_t i = 0; i < lex.count(); i++)
 	{
+		std::cout << "i: " << i << std::endl;
 		if (lex[i].accept != source.lex[i].accept) return false;
 		if (lex[i].category != source.lex[i].category) return false;
 		if (lex[i].valid != source.lex[i].valid) return false;
