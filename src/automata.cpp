@@ -11,6 +11,7 @@ using namespace hyperlex;
 #include <bitset>
 static char* CopyMalloc(const char* s);
 static bool compare(const char* str1, const char* str2);
+static void write_escaped_string(const char* str, FILE* file);
 static size_t strlength(const char* str);
 static void strfree(const char** strs, size_t length);
 static void inverse(list<size_t>& out, const list<size_t>& in);
@@ -448,9 +449,9 @@ void Morpheme::Demo(FILE* fp)const
 		else temp = "(invalid)";
 
 		fprintf(fp, "No[%6zu]: file: %4zu, line: %6zu, unit: ", i, lex[i].file, lex[i].line);
-		fprintf(fp, "<%4d %s : %4d , %s>\n", lex[i].category, temp, lex[i].accept, storage.ptr(lex[i].begin));
-
-			
+		fprintf(fp, "<%4d %s : %4d, ", lex[i].category, temp, lex[i].accept);
+		write_escaped_string(storage.ptr(lex[i].begin), fp);
+		fprintf(fp, ">\n");
 		
 	}
 }
@@ -6431,6 +6432,35 @@ static bool compare(const char* str1, const char* str2)
 	size_t i;
 	for (i = 0; (str1[i] != '\0') && (str1[i] == str2[i]); i++);
 	return str1[i] == str2[i];
+}
+static void write_escaped_string(const char* str, FILE* file)
+{
+	if (!str || !file) return;
+
+	fputc('\"', file);  // 字符常量起始引号
+
+	for (int i = 0; str[i] != '\0'; i++) {
+		switch (str[i]) {
+			// 处理必须转义的特殊字符
+		case '\"': fputs("\\\"", file); break;   // 双引号[6,8](@ref)
+		case '\\': fputs("\\\\", file); break;   // 反斜杠[6,7](@ref)
+		case '\n': fputs("\\n", file); break;    // 换行符[1,6](@ref)
+		case '\t': fputs("\\t", file); break;    // 制表符[1,8](@ref)
+		case '\r': fputs("\\r", file); break;    // 回车符[6,8](@ref)
+		case '\b': fputs("\\b", file); break;    // 退格符[7,8](@ref)
+		case '\f': fputs("\\f", file); break;    // 换页符[8](@ref)
+		case '\a': fputs("\\a", file); break;    // 响铃符[8](@ref)
+			// 其他不可打印字符用十六进制转义
+		default:
+			if (str[i] < 32 || str[i] > 126) {  // 非ASCII可打印字符
+				fprintf(file, "\\x%02X", (unsigned char)str[i]);  // 十六进制转义[6](@ref)
+			}
+			else {
+				fputc(str[i], file);  // 直接写入可打印字符
+			}
+		}
+	}
+	fputc('\"', file);  // 字符常量结束引号
 }
 static size_t strlength(const char* str)
 {
