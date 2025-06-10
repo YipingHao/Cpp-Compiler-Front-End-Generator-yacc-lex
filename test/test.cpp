@@ -3,8 +3,8 @@
 #include "AutoHeader.h"
 #include<stdlib.h>
 
-typedef hyperlex::tree<GrammarTree::TreeInfor> GTNode;
-typedef hyperlex::tree<GrammarTree::TreeInfor>::PostIterator GTiterator;
+typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor> GTNode;
+typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor>::PostIterator GTiterator;
 
 int static Test000(const hyperlex::dictionary& para);
 int static Test001(const hyperlex::dictionary& para);
