@@ -515,8 +515,7 @@ void Morpheme::insert(size_t from, size_t deleted, const Morpheme& src)
 	c:[from + NewCount, NewCount + count - deleted - 1)
 	d:[NewCount + count - deleted - 1, NewCount + count - deleted - 1]
 	*/
-	if (src.withTernimal()) NewCount = src.count - 1;
-	else NewCount = src.count;
+	NewCount = src.count - 1;
 	if (from + 1 >= count) from = count - 1; 
 	if (from + deleted + 1 >= count) deleted = count - from - 1;
 	lex.recount(NewCount + count - deleted);
@@ -6447,6 +6446,7 @@ static void write_escaped_string(const char* str, FILE* file)
 		case '\\': fputs("\\\\", file); break;   // 反斜杠[6,7](@ref)
 		case '\n': fputs("\\n", file); break;    // 换行符[1,6](@ref)
 		case '\t': fputs("\\t", file); break;    // 制表符[1,8](@ref)
+		case '\v': fputs("\\v", file); break;    // 制表符[1,8](@ref)
 		case '\r': fputs("\\r", file); break;    // 回车符[6,8](@ref)
 		case '\b': fputs("\\b", file); break;    // 退格符[7,8](@ref)
 		case '\f': fputs("\\f", file); break;    // 换页符[8](@ref)
