@@ -905,6 +905,7 @@ namespace hyperlex
 		size_t record = index.UnitOffest;
 		while (RunBuild<T>(accept, result, src, intermediate, index))
 		{
+			std::cout << "count" << count << std::endl;
 			if (accept != 0) append(result, accept, T::GroupGet(accept));
 			else
 			{
