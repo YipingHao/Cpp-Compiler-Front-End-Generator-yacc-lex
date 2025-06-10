@@ -306,7 +306,22 @@ int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
 int static Test001(const hyperlex::dictionary& para)
 {
 	int error = 0;
-	
+	for (size_t i = 2; i < 64; i++)
+	{
+		case 1:
+		{
+			error = Test001(para);
+			break;
+		}
+		printf("\t\tcase ");
+		printf("%zu:\n\t\t{\n\t\t\terror = Test");
+		if (i < 10) printf("00%zu", i);
+		else if (i < 100) printf("0%zu", i);
+		else printf("%zu", i);
+		printf("(para);\n");
+		printf("\t\t\tbreak;\n");
+		printf("\t\t}\n");
+	}
 	return error;
 }
 struct test003
@@ -641,6 +656,7 @@ int static Test063(const hyperlex::dictionary& para)
         printf("int static Test");
         if (i < 10) printf("00%zu", i);
         else if (i < 100) printf("0%zu", i);
+		else printf("%zu", i);
         printf("(const hyperlex::dictionary& para)");
         if (error == 0)
         {
