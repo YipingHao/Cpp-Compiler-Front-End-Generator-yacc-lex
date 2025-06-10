@@ -637,7 +637,7 @@ int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
                         name = output.GetString(site);
                         break;
                     }
-                    else if(infor == (int)INCLUDE_include2_)
+                    else if(infor == (int)Preparser::INCLUDE_include2_)
                     {
                         size_t site = GT->child(2)->root().site;
                         include = true;
