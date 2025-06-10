@@ -1,4 +1,4 @@
-#ifndef __automata_adfhaiofh_fh823hasguj45482934__
+﻿#ifndef __automata_adfhaiofh_fh823hasguj45482934__
 #define __automata_adfhaiofh_fh823hasguj45482934__
 #include<stdio.h>
 #include<iostream>
@@ -477,6 +477,19 @@ namespace hyperlex
 		bool operator==(const Morpheme& source) const;
 	protected:
 		size_t count;
+		/*为了文法分析的便利性，
+		最后一个符号必须是文件终止符号。在任意的词法单元编码规则下，
+		文件终止符号和文件终止符号的种类对应的整数0。
+		有点类似于C语言的字符串编码方式*/
+
+		/*
+		For the convenience of grammatical analysis, 
+		the last symbol must be a ​​file terminator​​. 
+		Under any lexical unit encoding rules, 
+		the integer corresponding to the ​​file terminator​​ and its category is 
+		​​0​​, similar to the string encoding method in the C language.
+		*/
+
 		//list<size_t> begin;
 		//list<size_t> length;
 		vector<const char*> SrcFile;

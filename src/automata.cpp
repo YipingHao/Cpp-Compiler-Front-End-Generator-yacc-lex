@@ -582,7 +582,8 @@ bool Morpheme::dequeue(char& out, indexT& index) const
 	size_t& offset = index.CharOffset;
 	while (true)
 	{
-		if (now >= count) return false;
+		if (now + 1 >= count) return false;
+
 		if (offset < lex[now].length) break;
 		now += 1;
 
