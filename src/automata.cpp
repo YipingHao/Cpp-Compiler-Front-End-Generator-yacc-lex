@@ -2489,7 +2489,7 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 	bool include;
 	do
 	{
-
+		GrammarTree GT;
 	} while (true);
 
 	return error;

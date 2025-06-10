@@ -205,27 +205,457 @@ int static Test000(const hyperlex::dictionary& para)
     return error;
 }
 
+struct Preparser
+{
+	enum type
+	{
+		accept = 0,
+		error = 1,
+		push = 2,
+		reduce = 3
+	};
+	enum rules
+	{
+		all_all_ = 0,
+		TEXT_meow_ = 1,
+		//<DEF*>_first_ = 2,
+		//<DEF*>_multi_ = 3,
+		DEF_anntation_ = 4,
+		DEF_anything_ = 5,
+		DEF_include_ = 6,
+		//[anntation]_anntationS_ = 7,
+		//[anntation]_anntationM_ = 8,
+		INCLUDE_include_ = 9,
+		INCLUDE_include2_ = 10,
+		ANY_identifier_ = 11,
+		ANY_const_ = 12,
+		ANY_RegSymbol_ = 13,
+		ANY_braket_ = 14,
+		ANY_division_ = 15,
+		ANY_format_ = 16,
+		//[identifier]_identifier_ = 17,
+		//[const]_integer_ = 18,
+		//[const]_CommonChar_ = 19,
+		//[const]_idChar_ = 20,
+		//[RegSymbol]_range_ = 21,
+		//[RegSymbol]_star_ = 22,
+		//[RegSymbol]_plus_ = 23,
+		//[RegSymbol]_question_ = 24,
+		//[RegSymbol]_or_ = 25,
+		//[braket]_braceL_ = 26,
+		//[braket]_braceR_ = 27,
+		//[braket]_left_ = 28,
+		//[braket]_right_ = 29,
+		//[braket]_squareL_ = 30,
+		//[braket]_squareR_ = 31,
+		//[braket]_angleL_ = 32,
+		//[braket]_angleR_ = 33,
+		//[division]_semicolon_ = 34,
+		//[division]_colon_ = 35,
+		//[division]_dot_ = 36,
+		//[format]_spaces_ = 37,
+		//[format]_enters_ = 38,
+		//[format]_tab_ = 39
+	};
+	enum nonterminal
+	{
+		_all_ = 0,
+		_TEXT_ = 1,
+		//_<DEF*>_ = 2,
+		_DEF_ = 3,
+		//_[anntation]_ = 4,
+		_INCLUDE_ = 5,
+		_ANY_ = 6,
+		//_[identifier]_ = 7,
+		//_[const]_ = 8,
+		//_[RegSymbol]_ = 9,
+		//_[braket]_ = 10,
+		//_[division]_ = 11,
+		//_[format]_ = 12
+	};
+	static const size_t StateCount;
+	static const size_t NonTerminalCount;
+	static const size_t TerminalCount;
+	static const size_t RulesCount;
+	static const int GOTO[42][13];
+	static const int ACTION[42][28];
+	static const int RulesToSymbol[40];
+	static const int RulesLength[40];
+	static const char* const RulesName[40];
+	static const int Implicit[40];
+};
+
+int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
+{
+	int error = output.Build<PreTreat>(input);
+	if (error != 0)
+	{
+		return error;
+	}
+
+	hyperlex::vector<const char*> path;
+	bool include;
+	do
+	{
+		GrammarTree GT; 
+	} while (true);
+
+	return error;
+}
 
 int static Test001(const hyperlex::dictionary& para)
 {
 	int error = 0;
-	for (size_t i = 0; i < 64; i++)
-	{
-		printf("int static Test");
-		if (i< 10) printf("00%zu", i);
-		else if (i < 100) printf("0%zu", i);
-		printf("(const hyperlex::dictionary& para);\n");
-		if (error == 0)
-		{
-			printf("{\n");
-			printf("\tint error = 0;\n");
-			printf("\treturn error;\n");
-			printf("}\n");
-		}
-	}
+	
 	return error;
 }
-
+struct test003
+{
+	static int infor = 0;
+	test003()
+	{
+		std::cout << "test003()" << std::endl;
+		std::cout << "infor: " << infor << std::endl;
+		infor += 1;
+	}
+	~test003()
+	{
+		std::cout << "~test003()" << std::endl;
+		std::cout << "infor: " << infor << std::endl;
+	}
+};
+int static Test002(const hyperlex::dictionary& para)
+{
+    int error = 0;
+	for (size_t i = 0; i < 16; i++)
+	{
+		test003 temp;
+	}
+    return error;
+}
+int static Test003(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test004(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test005(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test006(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test007(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test008(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test009(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test010(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test011(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test012(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test013(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test014(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test015(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test016(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test017(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test018(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test019(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test020(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test021(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test022(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test023(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test024(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test025(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test026(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test027(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test028(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test029(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test030(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test031(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test032(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test033(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test034(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test035(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test036(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test037(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test038(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test039(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test040(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test041(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test042(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test043(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test044(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test045(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test046(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test047(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test048(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test049(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test050(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test051(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test052(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test053(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test054(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test055(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test056(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test057(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test058(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test059(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test060(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test061(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test062(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    return error;
+}
+int static Test063(const hyperlex::dictionary& para)
+{
+    int error = 0;
+    for (size_t i = 0; i < 64; i++)
+    {
+        printf("int static Test");
+        if (i < 10) printf("00%zu", i);
+        else if (i < 100) printf("0%zu", i);
+        printf("(const hyperlex::dictionary& para)");
+        if (error == 0)
+        {
+            printf("\n{\n");
+            printf("\tint error = 0;\n");
+            printf("\treturn error;\n");
+            printf("}\n");
+        }
+        else
+        {
+            printf(";");
+        }
+    }
+    return error;
+}
 
 
 
