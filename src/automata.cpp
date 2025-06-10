@@ -442,9 +442,15 @@ void Morpheme::Demo(FILE* fp)const
 	fprintf(fp, "count = %zu\n", count);
 	for (size_t i = 0; i < count; i++)
 	{
-		if(lex[i].valid)
-			fprintf(fp, "No[%6zu]: <%4d (valid) : %4d , %s>\n", i, lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
-		else fprintf(fp, "No[%6zu]: <%4d(invalid): %4d , %s>\n", i, lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
+		const char* temp = NULL;
+		if (lex[i].valid) temp = "( valid )";
+		else temp = "(invalid)";
+
+		fprintf(fp, "No[%6zu]: file: %4zu, line: %6zu\n", i, lex[i].file, lex[i].line);
+		fprintf(fp, "<%4d %s : %4d , %s>\n", temp, lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
+
+			
+		
 	}
 }
 char Morpheme::GetChar(size_t site) const
@@ -713,6 +719,7 @@ void Morpheme::SetLine(void)
 		temp = GetWord(i);
 		LineNo += CountEnter(temp);
 	}
+	lex[count - 1].line = 0;
 }
 
 GrammarTree::GrammarTree()

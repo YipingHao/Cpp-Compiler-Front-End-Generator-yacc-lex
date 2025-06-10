@@ -878,8 +878,8 @@ namespace hyperlex
 				error = -1;
 			}
 		}
-		SetLine();
 		AppendEnd(0);
+		SetLine();
 		return error;
 	}
 	template<typename T> int Morpheme::Build(const char* reg)
@@ -903,8 +903,9 @@ namespace hyperlex
 				error = -1;
 			}
 		}
-		SetLine();
 		AppendEnd(0);
+		SetLine();
+		
 		return error;
 	}
 	template<typename T> int Morpheme::Build(const Morpheme& src)
