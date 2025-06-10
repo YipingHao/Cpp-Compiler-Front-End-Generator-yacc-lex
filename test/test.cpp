@@ -131,7 +131,7 @@ int static Test000(const hyperlex::dictionary& para)
 	hyperlex::Morpheme newOne;
 	newOne.Demo(stdout);
 	newOne.insert(4, 286, derived);
-
+	newOne.Demo(stdout);
 	std::cout << "newOne == derived : " << (newOne == derived) << std::endl;
 
     return error;
