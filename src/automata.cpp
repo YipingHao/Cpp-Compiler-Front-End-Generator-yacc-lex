@@ -439,13 +439,12 @@ void Morpheme::AppendEnd(int TerminalCount)
 }
 void Morpheme::Demo(FILE* fp)const
 {
-	size_t i;
 	fprintf(fp, "count = %zu\n", count);
-	for (i = 0; i < count; i++)
+	for (size_t i = 0; i < count; i++)
 	{
 		if(lex[i].valid)
-			fprintf(fp, "<%4d (valid) : %4d , %s>\n", lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
-		else fprintf(fp, "<%4d(invalid): %4d , %s>\n", lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
+			fprintf(fp, "No[%6zu]: <%4d (valid) : %4d , %s>\n", i, lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
+		else fprintf(fp, "No[%6zu]: <%4d(invalid): %4d , %s>\n", i, lex[i].category, lex[i].accept, storage.ptr(lex[i].begin));
 	}
 }
 char Morpheme::GetChar(size_t site) const
