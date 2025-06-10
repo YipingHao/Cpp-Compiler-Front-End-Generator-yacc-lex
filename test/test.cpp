@@ -83,6 +83,317 @@ int testNew(hyperlex::dictionary& para)
 		error = Test001(para);
 		break;
 	}
+    case 2:
+    {
+        error = Test002(para);
+        break;
+    }
+    case 3:
+    {
+        error = Test003(para);
+        break;
+    }
+    case 4:
+    {
+        error = Test004(para);
+        break;
+    }
+    case 5:
+    {
+        error = Test005(para);
+        break;
+    }
+    case 6:
+    {
+        error = Test006(para);
+        break;
+    }
+    case 7:
+    {
+        error = Test007(para);
+        break;
+    }
+    case 8:
+    {
+        error = Test008(para);
+        break;
+    }
+    case 9:
+    {
+        error = Test009(para);
+        break;
+    }
+    case 10:
+    {
+        error = Test010(para);
+        break;
+    }
+    case 11:
+    {
+        error = Test011(para);
+        break;
+    }
+    case 12:
+    {
+        error = Test012(para);
+        break;
+    }
+    case 13:
+    {
+        error = Test013(para);
+        break;
+    }
+    case 14:
+    {
+        error = Test014(para);
+        break;
+    }
+    case 15:
+    {
+        error = Test015(para);
+        break;
+    }
+    case 16:
+    {
+        error = Test016(para);
+        break;
+    }
+    case 17:
+    {
+        error = Test017(para);
+        break;
+    }
+    case 18:
+    {
+        error = Test018(para);
+        break;
+    }
+    case 19:
+    {
+        error = Test019(para);
+        break;
+    }
+    case 20:
+    {
+        error = Test020(para);
+        break;
+    }
+    case 21:
+    {
+        error = Test021(para);
+        break;
+    }
+    case 22:
+    {
+        error = Test022(para);
+        break;
+    }
+    case 23:
+    {
+        error = Test023(para);
+        break;
+    }
+    case 24:
+    {
+        error = Test024(para);
+        break;
+    }
+    case 25:
+    {
+        error = Test025(para);
+        break;
+    }
+    case 26:
+    {
+        error = Test026(para);
+        break;
+    }
+    case 27:
+    {
+        error = Test027(para);
+        break;
+    }
+    case 28:
+    {
+        error = Test028(para);
+        break;
+    }
+    case 29:
+    {
+        error = Test029(para);
+        break;
+    }
+    case 30:
+    {
+        error = Test030(para);
+        break;
+    }
+    case 31:
+    {
+        error = Test031(para);
+        break;
+    }
+    case 32:
+    {
+        error = Test032(para);
+        break;
+    }
+    case 33:
+    {
+        error = Test033(para);
+        break;
+    }
+    case 34:
+    {
+        error = Test034(para);
+        break;
+    }
+    case 35:
+    {
+        error = Test035(para);
+        break;
+    }
+    case 36:
+    {
+        error = Test036(para);
+        break;
+    }
+    case 37:
+    {
+        error = Test037(para);
+        break;
+    }
+    case 38:
+    {
+        error = Test038(para);
+        break;
+    }
+    case 39:
+    {
+        error = Test039(para);
+        break;
+    }
+    case 40:
+    {
+        error = Test040(para);
+        break;
+    }
+    case 41:
+    {
+        error = Test041(para);
+        break;
+    }
+    case 42:
+    {
+        error = Test042(para);
+        break;
+    }
+    case 43:
+    {
+        error = Test043(para);
+        break;
+    }
+    case 44:
+    {
+        error = Test044(para);
+        break;
+    }
+    case 45:
+    {
+        error = Test045(para);
+        break;
+    }
+    case 46:
+    {
+        error = Test046(para);
+        break;
+    }
+    case 47:
+    {
+        error = Test047(para);
+        break;
+    }
+    case 48:
+    {
+        error = Test048(para);
+        break;
+    }
+    case 49:
+    {
+        error = Test049(para);
+        break;
+    }
+    case 50:
+    {
+        error = Test050(para);
+        break;
+    }
+    case 51:
+    {
+        error = Test051(para);
+        break;
+    }
+    case 52:
+    {
+        error = Test052(para);
+        break;
+    }
+    case 53:
+    {
+        error = Test053(para);
+        break;
+    }
+    case 54:
+    {
+        error = Test054(para);
+        break;
+    }
+    case 55:
+    {
+        error = Test055(para);
+        break;
+    }
+    case 56:
+    {
+        error = Test056(para);
+        break;
+    }
+    case 57:
+    {
+        error = Test057(para);
+        break;
+    }
+    case 58:
+    {
+        error = Test058(para);
+        break;
+    }
+    case 59:
+    {
+        error = Test059(para);
+        break;
+    }
+    case 60:
+    {
+        error = Test060(para);
+        break;
+    }
+    case 61:
+    {
+        error = Test061(para);
+        break;
+    }
+    case 62:
+    {
+        error = Test062(para);
+        break;
+    }
+    case 63:
+    {
+        error = Test063(para);
+        break;
+    }
+
     default:
     {
         error = Test000(para);
