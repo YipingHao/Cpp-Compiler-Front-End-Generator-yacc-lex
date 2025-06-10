@@ -4,6 +4,68 @@
 #include<stdlib.h>
 int static Test000(const hyperlex::dictionary& para);
 int static Test001(const hyperlex::dictionary& para);
+int static Test002(const hyperlex::dictionary& para);
+int static Test003(const hyperlex::dictionary& para);
+int static Test004(const hyperlex::dictionary& para);
+int static Test005(const hyperlex::dictionary& para);
+int static Test006(const hyperlex::dictionary& para);
+int static Test007(const hyperlex::dictionary& para);
+int static Test008(const hyperlex::dictionary& para);
+int static Test009(const hyperlex::dictionary& para);
+int static Test010(const hyperlex::dictionary& para);
+int static Test011(const hyperlex::dictionary& para);
+int static Test012(const hyperlex::dictionary& para);
+int static Test013(const hyperlex::dictionary& para);
+int static Test014(const hyperlex::dictionary& para);
+int static Test015(const hyperlex::dictionary& para);
+int static Test016(const hyperlex::dictionary& para);
+int static Test017(const hyperlex::dictionary& para);
+int static Test018(const hyperlex::dictionary& para);
+int static Test019(const hyperlex::dictionary& para);
+int static Test020(const hyperlex::dictionary& para);
+int static Test021(const hyperlex::dictionary& para);
+int static Test022(const hyperlex::dictionary& para);
+int static Test023(const hyperlex::dictionary& para);
+int static Test024(const hyperlex::dictionary& para);
+int static Test025(const hyperlex::dictionary& para);
+int static Test026(const hyperlex::dictionary& para);
+int static Test027(const hyperlex::dictionary& para);
+int static Test028(const hyperlex::dictionary& para);
+int static Test029(const hyperlex::dictionary& para);
+int static Test030(const hyperlex::dictionary& para);
+int static Test031(const hyperlex::dictionary& para);
+int static Test032(const hyperlex::dictionary& para);
+int static Test033(const hyperlex::dictionary& para);
+int static Test034(const hyperlex::dictionary& para);
+int static Test035(const hyperlex::dictionary& para);
+int static Test036(const hyperlex::dictionary& para);
+int static Test037(const hyperlex::dictionary& para);
+int static Test038(const hyperlex::dictionary& para);
+int static Test039(const hyperlex::dictionary& para);
+int static Test040(const hyperlex::dictionary& para);
+int static Test041(const hyperlex::dictionary& para);
+int static Test042(const hyperlex::dictionary& para);
+int static Test043(const hyperlex::dictionary& para);
+int static Test044(const hyperlex::dictionary& para);
+int static Test045(const hyperlex::dictionary& para);
+int static Test046(const hyperlex::dictionary& para);
+int static Test047(const hyperlex::dictionary& para);
+int static Test048(const hyperlex::dictionary& para);
+int static Test049(const hyperlex::dictionary& para);
+int static Test050(const hyperlex::dictionary& para);
+int static Test051(const hyperlex::dictionary& para);
+int static Test052(const hyperlex::dictionary& para);
+int static Test053(const hyperlex::dictionary& para);
+int static Test054(const hyperlex::dictionary& para);
+int static Test055(const hyperlex::dictionary& para);
+int static Test056(const hyperlex::dictionary& para);
+int static Test057(const hyperlex::dictionary& para);
+int static Test058(const hyperlex::dictionary& para);
+int static Test059(const hyperlex::dictionary& para);
+int static Test060(const hyperlex::dictionary& para);
+int static Test061(const hyperlex::dictionary& para);
+int static Test062(const hyperlex::dictionary& para);
+int static Test063(const hyperlex::dictionary& para);
 int testNew(hyperlex::dictionary& para)
 {
     int item = para.search(1L, "TestItem::item");
@@ -153,6 +215,13 @@ int static Test001(const hyperlex::dictionary& para)
 		if (i< 10) printf("00%zu", i);
 		else if (i < 100) printf("0%zu", i);
 		printf("(const hyperlex::dictionary& para);\n");
+		if (error == 0)
+		{
+			printf("{\n");
+			printf("\tint error = 0;\n");
+			printf("\treturn error;\n");
+			printf("}\n");
+		}
 	}
 	return error;
 }
