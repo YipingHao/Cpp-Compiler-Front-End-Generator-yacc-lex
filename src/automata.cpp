@@ -434,6 +434,7 @@ void Morpheme::AppendEnd(int TerminalCount)
 	temp.category = TerminalCount;
 	temp.length = 1;
 	temp.line = 0;
+	temp.file = 0;
 	temp.begin = storage.count() - 2;
 	lex.append(temp);
 }
@@ -446,7 +447,7 @@ void Morpheme::Demo(FILE* fp)const
 		if (lex[i].valid) temp = "( valid )";
 		else temp = "(invalid)";
 
-		fprintf(fp, "No[%6zu]: file: %4zu, line: %6zu\n", i, lex[i].file, lex[i].line);
+		fprintf(fp, "No[%6zu]: file: %4zu, line: %6zu, unit: ", i, lex[i].file, lex[i].line);
 		fprintf(fp, "<%4d %s : %4d , %s>\n", lex[i].category, temp, lex[i].accept, storage.ptr(lex[i].begin));
 
 			
