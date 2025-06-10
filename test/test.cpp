@@ -309,7 +309,7 @@ int static Test001(const hyperlex::dictionary& para)
 	for (size_t i = 2; i < 64; i++)
 	{
 		printf("\t\tcase ");
-		printf("%zu:\n\t\t{\n\t\t\terror = Test");
+		printf("%zu:\n\t\t{\n\t\t\terror = Test", i);
 		if (i < 10) printf("00%zu", i);
 		else if (i < 100) printf("0%zu", i);
 		else printf("%zu", i);
