@@ -321,7 +321,7 @@ int static Test001(const hyperlex::dictionary& para)
 }
 struct test003
 {
-	static int infor = 0;
+	static int infor;
 	test003()
 	{
 		std::cout << "test003()" << std::endl;
@@ -334,6 +334,7 @@ struct test003
 		std::cout << "infor: " << infor << std::endl;
 	}
 };
+int test003::infor = 0;
 int static Test002(const hyperlex::dictionary& para)
 {
     int error = 0;
