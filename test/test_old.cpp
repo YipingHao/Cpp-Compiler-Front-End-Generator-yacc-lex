@@ -7898,3 +7898,1062 @@ void RegTree::grow_t(const RegTree* regL, const RegTree* regR, NodeType T, bool 
     tree[site].content.type = T;
 }
 */
+
+
+
+/*
+struct Reg
+{
+    enum regular
+    {
+        _identifier_ = 1,
+        _integer_ = 2,
+        _CommonChar_ = 3,
+        _idChar_ = 4,
+        _lexical_ = 5,
+        _grammar_ = 6,
+        _void_ = 7,
+        _all_ = 8,
+        _spaces_ = 9,
+        _enters_ = 10,
+        _tab_ = 11,
+        _semicolon_ = 12,
+        _colon_ = 13,
+        _dot_ = 14,
+        _braceL_ = 15,
+        _braceR_ = 16,
+        _left_ = 17,
+        _right_ = 18,
+        _squareL_ = 19,
+        _squareR_ = 20,
+        _angleL_ = 21,
+        _angleR_ = 22,
+        _anntationS_ = 23,
+        _anntationM_ = 24,
+        _range_ = 25,
+        _star_ = 26,
+        _plus_ = 27,
+        _question_ = 28,
+        _or_ = 29
+    };
+    enum group
+    {
+        _identifier___ = 1,
+        _const___ = 2,
+        _reserved___ = 3,
+        _format___ = 4,
+        _division___ = 5,
+        _braket___ = 6,
+        _annotation___ = 7,
+        _RegSymbol___ = 8
+    };
+    static int next(int state, const char c);
+    static int action(int state);
+    static int GroupGet(int state);
+};
+struct Panel
+{
+    enum type
+    {
+        accept = 0,
+        error = 1,
+        push = 2,
+        reduce = 3
+    };
+    enum nonterminal
+    {
+        _all_ = 0,
+        _TEXT_ = 1,
+        _LEXICAL_ = 2,
+        _RegGROUP_ = 3,
+        _REGDEFS_ = 4,
+        _RegDEF_ = 5,
+        _RegGROUPNAME_ = 6,
+        _RegNAME_ = 7,
+        _RegNAMEHead_ = 8,
+        _REGBODY_ = 9,
+        _REGEXPRESSor_ = 10,
+        _REGEXPRESS_ = 11,
+        _RegCOMPLEX_ = 12,
+        _RegNODE_ = 13,
+        _RegLEAF_ = 14,
+        _RegCHAR_ = 15,
+        _GRAMMAR_ = 16,
+        _GrammerDEF_ = 17,
+        _GnameFORMULAS_ = 18,
+        _GFORMULA_ = 19,
+        _GFORMULAUnit_ = 20,
+        _END_ = 21,
+        _BEGIN_ = 22
+    };
+    enum rules
+    {
+        _all_all_ = 0,
+        _TEXT_OnlyL_ = 1,
+        _TEXT_LG_ = 2,
+        _LEXICAL_single_ = 3,
+        _LEXICAL_multi_ = 4,
+        _RegGROUP_single_ = 5,
+        _RegGROUP_multi_ = 6,
+        _REGDEFS_single_ = 7,
+        _REGDEFS_multi_ = 8,
+        _RegDEF_default_ = 9,
+        _RegDEF_full_ = 10,
+        _RegGROUPNAME_blocks_ = 11,
+        _RegGROUPNAME_bare_ = 12,
+        _RegGROUPNAME_priority_ = 13,
+        _RegNAME_bare_ = 14,
+        _RegNAME_priority_ = 15,
+        _RegNAMEHead_avoid_ = 16,
+        _RegNAMEHead_alexical_ = 17,
+        _RegNAMEHead_agrammar_ = 18,
+        _RegNAMEHead_aall_ = 19,
+        _RegNAMEHead_aid_ = 20,
+        _REGBODY_REGBODY_ = 21,
+        _REGEXPRESSor_single_ = 22,
+        _REGEXPRESSor_ororor_ = 23,
+        _REGEXPRESS_single_ = 24,
+        _REGEXPRESS_multi_ = 25,
+        _RegCOMPLEX_single_ = 26,
+        _RegCOMPLEX_multi1_ = 27,
+        _RegCOMPLEX_multi2_ = 28,
+        _RegCOMPLEX_multi3_ = 29,
+        _RegNODE_single_ = 30,
+        _RegNODE_braket_ = 31,
+        _RegNODE_replace_ = 32,
+        _RegLEAF_single_ = 33,
+        _RegLEAF_single2_ = 34,
+        _RegLEAF_range_ = 35,
+        _RegCHAR_commom_ = 36,
+        _RegCHAR_id_ = 37,
+        _GRAMMAR_single_ = 38,
+        _GRAMMAR_multi_ = 39,
+        _GrammerDEF_single_ = 40,
+        _GrammerDEF_multi_ = 41,
+        _GnameFORMULAS_single_ = 42,
+        _GnameFORMULAS_multi_ = 43,
+        _GFORMULA_unit_ = 44,
+        _GFORMULA_more_ = 45,
+        _GFORMULAUnit_avoid_ = 46,
+        _GFORMULAUnit_alexical_ = 47,
+        _GFORMULAUnit_agrammar_ = 48,
+        _GFORMULAUnit_aid_ = 49,
+        _GFORMULAUnit_aall_ = 50,
+        _END_full_ = 51,
+        _END_half_ = 52,
+        _BEGIN_BEGIN_ = 53
+    };
+
+
+    static const size_t StateCount;
+    static const size_t NonTerminalCount;
+    static const size_t TerminalCount;
+    static const size_t RulesCount;
+    static const int GOTO[95][23];
+    static const int ACTION[95][30];
+    static const int RulesToSymbol[54];
+    static const int RulesLength[54];
+    static const char* const RulesName[54];
+    static const int Implicit[23];
+};
+*/
+/*
+
+const size_t Panel::StateCount = 95;
+const size_t Panel::NonTerminalCount = 23;
+const size_t Panel::TerminalCount = 29;
+const size_t Panel::RulesCount = 54;
+const int Panel::GOTO[95][23] = { \
+{1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 14}, \
+{1, 1, 26, 30, 1, 1, 34, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 254, 1, 1, 34, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 258, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 58}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 230, 234, 1, 70, 74, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 66, 1, 70, 74, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 118, 122, 126, 130, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 210, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 194, 126, 130, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 174, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 186, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 206, 130, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 210, 134, 138, 142, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 238, 1, 70, 74, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 242, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 274}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 278, 282, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 374, 1, 1, 1, 378, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 290}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 334, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 298, 302, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 326, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 354, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 346, 302, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 326, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 366, 302, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 326, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
+//==============================
+const int Panel::ACTION[95][30] = { \
+{1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 18, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 38, 1, 1, 1, 1, 1, 42, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 215, 1, 1, 1, 215, 215, 215, 215, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 38, 1, 1, 1, 1, 1, 42, 1, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 15, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 62, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 47, 1, 1, 1, 46, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 50, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 54, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 55, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 78, 1, 1, 1, 82, 86, 90, 94, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 78, 1, 1, 1, 82, 86, 90, 94, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 23, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 110, 114, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 59, 59, 1, 1, 1, 98, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 83, 83, 1, 1, 1, 83, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 71, 71, 1, 1, 1, 71, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 75, 75, 1, 1, 1, 75, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 67, 67, 1, 1, 1, 67, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 79, 79, 1, 1, 1, 79, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 102, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 106, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 63, 63, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 39, 1, 1, 1, 39, 39, 39, 39, 1, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 226, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 87, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 202}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 91, 1, 1, 1, 1, 154, 91, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 91}, \
+{1, 1, 1, 99, 99, 1, 1, 1, 1, 1, 1, 1, 99, 1, 1, 1, 1, 99, 99, 99, 1, 99, 1, 1, 1, 1, 214, 218, 222, 99}, \
+{1, 1, 1, 107, 107, 1, 1, 1, 1, 1, 1, 1, 107, 1, 1, 1, 1, 107, 107, 107, 1, 107, 1, 1, 1, 1, 107, 107, 107, 107}, \
+{1, 1, 1, 123, 123, 1, 1, 1, 1, 1, 1, 1, 123, 1, 1, 1, 1, 123, 123, 123, 1, 123, 1, 1, 1, 1, 123, 123, 123, 123}, \
+{1, 1, 1, 135, 135, 1, 1, 1, 1, 1, 1, 1, 135, 1, 1, 1, 1, 135, 135, 135, 1, 135, 1, 1, 1, 1, 135, 135, 135, 135}, \
+{1, 1, 1, 147, 147, 1, 1, 1, 1, 1, 1, 1, 147, 1, 1, 1, 1, 147, 147, 147, 147, 147, 1, 1, 1, 147, 147, 147, 147, 147}, \
+{1, 1, 1, 151, 151, 1, 1, 1, 1, 1, 1, 1, 151, 1, 1, 1, 1, 151, 151, 151, 151, 151, 1, 1, 1, 151, 151, 151, 151, 151}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 166, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 170, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 131, 131, 1, 1, 1, 1, 1, 1, 1, 131, 1, 1, 1, 1, 131, 131, 131, 1, 131, 1, 1, 1, 1, 131, 131, 131, 131}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 178, 1, 1, 1, 1, 182, 1, 1, 1, 1}, \
+{1, 1, 1, 139, 139, 1, 1, 1, 1, 1, 1, 1, 139, 1, 1, 1, 1, 139, 139, 139, 1, 139, 1, 1, 1, 1, 139, 139, 139, 139}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 190, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 143, 143, 1, 1, 1, 1, 1, 1, 1, 143, 1, 1, 1, 1, 143, 143, 143, 1, 143, 1, 1, 1, 1, 143, 143, 143, 143}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 198, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 202}, \
+{1, 1, 1, 127, 127, 1, 1, 1, 1, 1, 1, 1, 127, 1, 1, 1, 1, 127, 127, 127, 1, 127, 1, 1, 1, 1, 127, 127, 127, 127}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 154, 1, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 146, 150, 1, 1, 1, 1, 1, 1, 1, 95, 1, 1, 1, 1, 154, 95, 158, 1, 162, 1, 1, 1, 1, 1, 1, 1, 95}, \
+{1, 1, 1, 103, 103, 1, 1, 1, 1, 1, 1, 1, 103, 1, 1, 1, 1, 103, 103, 103, 1, 103, 1, 1, 1, 1, 214, 218, 222, 103}, \
+{1, 1, 1, 115, 115, 1, 1, 1, 1, 1, 1, 1, 115, 1, 1, 1, 1, 115, 115, 115, 1, 115, 1, 1, 1, 1, 115, 115, 115, 115}, \
+{1, 1, 1, 111, 111, 1, 1, 1, 1, 1, 1, 1, 111, 1, 1, 1, 1, 111, 111, 111, 1, 111, 1, 1, 1, 1, 111, 111, 111, 111}, \
+{1, 1, 1, 119, 119, 1, 1, 1, 1, 1, 1, 1, 119, 1, 1, 1, 1, 119, 119, 119, 1, 119, 1, 1, 1, 1, 119, 119, 119, 119}, \
+{1, 43, 1, 1, 1, 43, 43, 43, 43, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 78, 1, 1, 1, 82, 86, 90, 94, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 31, 1, 1, 1, 31, 31, 31, 31, 1, 1, 1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 35, 1, 1, 1, 35, 35, 35, 35, 1, 1, 1, 1, 1, 1, 1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 27, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{211, 211, 1, 1, 1, 1, 211, 211, 1, 1, 1, 1, 250, 1, 1, 1, 211, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{207, 207, 1, 1, 1, 1, 207, 207, 1, 1, 1, 1, 1, 1, 1, 1, 207, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 19, 1, 1, 1, 1, 1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{7, 1, 1, 1, 1, 1, 262, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 266, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 270, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 18, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 286, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 286, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 155, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 155, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 294, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 338, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 1, 1, 1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 330, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 179, 1, 1, 1, 179, 179, 179, 179, 1, 1, 1, 179, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 199, 1, 1, 1, 199, 199, 199, 199, 1, 1, 1, 199, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 191, 1, 1, 1, 191, 191, 191, 191, 1, 1, 1, 191, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 195, 1, 1, 1, 195, 195, 195, 195, 1, 1, 1, 195, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 187, 1, 1, 1, 187, 187, 187, 187, 1, 1, 1, 187, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 203, 1, 1, 1, 203, 203, 203, 203, 1, 1, 1, 203, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 183, 1, 1, 1, 183, 183, 183, 183, 1, 1, 1, 183, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 163, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 163, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 358, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 246, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 342, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 350, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 171, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 171, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 167, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 362, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 306, 1, 1, 1, 310, 314, 318, 322, 1, 1, 1, 370, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 175, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 175, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 159, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 159, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1} };
+//==============================
+const int Panel::RulesToSymbol[54] = { \
+0,\
+1,\
+1,\
+2,\
+2,\
+3,\
+3,\
+4,\
+4,\
+5,\
+5,\
+6,\
+6,\
+6,\
+7,\
+7,\
+8,\
+8,\
+8,\
+8,\
+8,\
+9,\
+10,\
+10,\
+11,\
+11,\
+12,\
+12,\
+12,\
+12,\
+13,\
+13,\
+13,\
+14,\
+14,\
+14,\
+15,\
+15,\
+16,\
+16,\
+17,\
+17,\
+18,\
+18,\
+19,\
+19,\
+20,\
+20,\
+20,\
+20,\
+20,\
+21,\
+21,\
+22 };
+//==============================
+const int Panel::RulesLength[54] = { \
+1,\
+4,\
+10,\
+1,\
+2,\
+3,\
+4,\
+1,\
+2,\
+2,\
+4,\
+1,\
+1,\
+4,\
+1,\
+4,\
+1,\
+1,\
+1,\
+1,\
+1,\
+1,\
+1,\
+3,\
+1,\
+2,\
+1,\
+2,\
+2,\
+2,\
+1,\
+3,\
+3,\
+1,\
+3,\
+5,\
+1,\
+1,\
+1,\
+2,\
+4,\
+4,\
+4,\
+5,\
+1,\
+2,\
+1,\
+1,\
+1,\
+1,\
+1,\
+2,\
+1,\
+2 };
+//==============================
+const char* const Panel::RulesName[54] = { \
+"Ep->TEXT ",\
+"TEXT->lexical BEGIN LEXICAL END ",\
+"TEXT->lexical BEGIN LEXICAL END grammar colon identifier BEGIN GRAMMAR END ",\
+"LEXICAL->RegGROUP ",\
+"LEXICAL->LEXICAL RegGROUP ",\
+"RegGROUP->RegGROUPNAME colon RegDEF ",\
+"RegGROUP->RegGROUPNAME BEGIN REGDEFS END ",\
+"REGDEFS->RegDEF ",\
+"REGDEFS->REGDEFS RegDEF ",\
+"RegDEF->RegNAME semicolon ",\
+"RegDEF->RegNAME colon REGBODY semicolon ",\
+"RegGROUPNAME->identifier ",\
+"RegGROUPNAME->void ",\
+"RegGROUPNAME->identifier left integer right ",\
+"RegNAME->RegNAMEHead ",\
+"RegNAME->RegNAMEHead left integer right ",\
+"RegNAMEHead->void ",\
+"RegNAMEHead->lexical ",\
+"RegNAMEHead->grammar ",\
+"RegNAMEHead->all ",\
+"RegNAMEHead->identifier ",\
+"REGBODY->REGEXPRESSor ",\
+"REGEXPRESSor->REGEXPRESS ",\
+"REGEXPRESSor->REGEXPRESSor or REGEXPRESS ",\
+"REGEXPRESS->RegCOMPLEX ",\
+"REGEXPRESS->REGEXPRESS RegCOMPLEX ",\
+"RegCOMPLEX->RegNODE ",\
+"RegCOMPLEX->RegCOMPLEX plus ",\
+"RegCOMPLEX->RegCOMPLEX star ",\
+"RegCOMPLEX->RegCOMPLEX question ",\
+"RegNODE->RegLEAF ",\
+"RegNODE->left REGEXPRESSor right ",\
+"RegNODE->angleL identifier angleR ",\
+"RegLEAF->RegCHAR ",\
+"RegLEAF->squareL RegCHAR squareR ",\
+"RegLEAF->squareL RegCHAR range RegCHAR squareR ",\
+"RegCHAR->CommonChar ",\
+"RegCHAR->idChar ",\
+"GRAMMAR->GrammerDEF ",\
+"GRAMMAR->GRAMMAR GrammerDEF ",\
+"GrammerDEF->identifier colon GFORMULA semicolon ",\
+"GrammerDEF->identifier BEGIN GnameFORMULAS END ",\
+"GnameFORMULAS->identifier colon GFORMULA semicolon ",\
+"GnameFORMULAS->GnameFORMULAS identifier colon GFORMULA semicolon ",\
+"GFORMULA->GFORMULAUnit ",\
+"GFORMULA->GFORMULA GFORMULAUnit ",\
+"GFORMULAUnit->void ",\
+"GFORMULAUnit->lexical ",\
+"GFORMULAUnit->grammar ",\
+"GFORMULAUnit->identifier ",\
+"GFORMULAUnit->all ",\
+"END->braceR semicolon ",\
+"END->braceR ",\
+"BEGIN->colon braceL " };
+//==============================
+const int Panel::Implicit[23] = { \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0, \
+0 };
+
+
+
+
+int Reg::next(int state, const char c)
+{
+    switch (state)
+    {
+    case 0:
+        if (c == (char)9) return 11;
+        else if (c == (char)10) return 10;
+        else if (c == (char)13) return 30;
+        else if (c == ' ') return 9;
+        else if (c == '\'') return 45;
+        else if (c == '(') return 17;
+        else if (c == ')') return 18;
+        else if (c == '*') return 26;
+        else if (c == '+') return 27;
+        else if (c == '-') return 25;
+        else if (c == '.') return 14;
+        else if (c == '/') return 54;
+        else if ('0' <= c && c <= '9') return 4;
+        else if (c == ':') return 13;
+        else if (c == ';') return 12;
+        else if (c == '<') return 21;
+        else if (c == '>') return 22;
+        else if (c == '\?') return 28;
+        else if ('A' <= c && c <= 'Z') return 43;
+        else if (c == '[') return 19;
+        else if (c == ']') return 20;
+        else if (c == '_') return 43;
+        else if (c == 'a') return 48;
+        else if ('b' <= c && c <= 'f') return 43;
+        else if (c == 'g') return 50;
+        else if ('h' <= c && c <= 'k') return 43;
+        else if (c == 'l') return 47;
+        else if ('m' <= c && c <= 'u') return 43;
+        else if (c == 'v') return 49;
+        else if ('w' <= c && c <= 'z') return 43;
+        else if (c == '{') return 15;
+        else if (c == '|') return 29;
+        else if (c == '}') return 16;
+        else return 0;
+    case 1:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 2:
+        if ('0' <= c && c <= '9') return 2;
+        else return 0;
+    case 3:
+        return 0;
+    case 4:
+        return 0;
+    case 5:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 6:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 7:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 8:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 9:
+        if (c == ' ') return 9;
+        else return 0;
+    case 10:
+        if (c == (char)10) return 10;
+        else if (c == (char)13) return 30;
+        else return 0;
+    case 11:
+        return 0;
+    case 12:
+        return 0;
+    case 13:
+        return 0;
+    case 14:
+        return 0;
+    case 15:
+        return 0;
+    case 16:
+        return 0;
+    case 17:
+        return 0;
+    case 18:
+        return 0;
+    case 19:
+        return 0;
+    case 20:
+        return 0;
+    case 21:
+        return 0;
+    case 22:
+        return 0;
+    case 23:
+        return 0;
+    case 24:
+        return 0;
+    case 25:
+        return 0;
+    case 26:
+        return 0;
+    case 27:
+        if ('0' <= c && c <= '9') return 2;
+        else return 0;
+    case 28:
+        return 0;
+    case 29:
+        return 0;
+    case 30:
+        if (c == (char)10) return 10;
+        else return 0;
+    case 31:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'c') return 1;
+        else if (c == 'd') return 7;
+        else if ('e' <= c && c <= 'z') return 1;
+        else return 0;
+    case 32:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'h') return 1;
+        else if (c == 'i') return 31;
+        else if ('j' <= c && c <= 'z') return 1;
+        else return 0;
+    case 33:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'k') return 1;
+        else if (c == 'l') return 5;
+        else if ('m' <= c && c <= 'z') return 1;
+        else return 0;
+    case 34:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if (c == 'a') return 33;
+        else if ('b' <= c && c <= 'z') return 1;
+        else return 0;
+    case 35:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'b') return 1;
+        else if (c == 'c') return 34;
+        else if ('d' <= c && c <= 'z') return 1;
+        else return 0;
+    case 36:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'h') return 1;
+        else if (c == 'i') return 35;
+        else if ('j' <= c && c <= 'z') return 1;
+        else return 0;
+    case 37:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'q') return 1;
+        else if (c == 'r') return 6;
+        else if ('s' <= c && c <= 'z') return 1;
+        else return 0;
+    case 38:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if (c == 'a') return 37;
+        else if ('b' <= c && c <= 'z') return 1;
+        else return 0;
+    case 39:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'l') return 1;
+        else if (c == 'm') return 38;
+        else if ('n' <= c && c <= 'z') return 1;
+        else return 0;
+    case 40:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'l') return 1;
+        else if (c == 'm') return 39;
+        else if ('n' <= c && c <= 'z') return 1;
+        else return 0;
+    case 41:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if (c == 'a') return 40;
+        else if ('b' <= c && c <= 'z') return 1;
+        else return 0;
+    case 42:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'w') return 1;
+        else if (c == 'x') return 36;
+        else if ('y' <= c && c <= 'z') return 1;
+        else return 0;
+    case 43:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'z') return 1;
+        else return 0;
+    case 44:
+        if ((char)0 <= c && c <= ')') return 44;
+        else if (c == '*') return 53;
+        else if ('+' <= c && c <= (char)127) return 44;
+        else return 0;
+    case 45:
+        if (' ' <= c && c <= '!') return 55;
+        else if ('#' <= c && c <= '&') return 55;
+        else if ('(' <= c && c <= '[') return 55;
+        else if (c == '\\') return 51;
+        else if (']' <= c && c <= '~') return 55;
+        else return 0;
+    case 46:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'k') return 1;
+        else if (c == 'l') return 8;
+        else if ('m' <= c && c <= 'z') return 1;
+        else return 0;
+    case 47:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'd') return 1;
+        else if (c == 'e') return 42;
+        else if ('f' <= c && c <= 'z') return 1;
+        else return 0;
+    case 48:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'k') return 1;
+        else if (c == 'l') return 46;
+        else if ('m' <= c && c <= 'z') return 1;
+        else return 0;
+    case 49:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'n') return 1;
+        else if (c == 'o') return 32;
+        else if ('p' <= c && c <= 'z') return 1;
+        else return 0;
+    case 50:
+        if ('0' <= c && c <= '9') return 1;
+        else if ('A' <= c && c <= 'Z') return 1;
+        else if (c == '_') return 1;
+        else if ('a' <= c && c <= 'q') return 1;
+        else if (c == 'r') return 41;
+        else if ('s' <= c && c <= 'z') return 1;
+        else return 0;
+    case 51:
+        if (c == (char)0) return 55;
+        else if (c == '\"') return 55;
+        else if (c == '\'') return 55;
+        else if ('0' <= c && c <= '7') return 57;
+        else if (c == '\?') return 55;
+        else if (c == 'X') return 56;
+        else if (c == '\\') return 55;
+        else if ('a' <= c && c <= 'b') return 55;
+        else if (c == 'f') return 55;
+        else if (c == 'n') return 55;
+        else if (c == 'r') return 55;
+        else if (c == 't') return 55;
+        else if (c == 'v') return 55;
+        else if (c == 'x') return 56;
+        else return 0;
+    case 52:
+        if ((char)0 <= c && c <= (char)9) return 52;
+        else if (c == (char)10) return 23;
+        else if ((char)11 <= c && c <= (char)127) return 52;
+        else return 0;
+    case 53:
+        if ((char)0 <= c && c <= ')') return 44;
+        else if (c == '*') return 53;
+        else if ('+' <= c && c <= '.') return 44;
+        else if (c == '/') return 24;
+        else if ('0' <= c && c <= (char)127) return 44;
+        else return 0;
+    case 54:
+        if (c == '*') return 44;
+        else if (c == '/') return 52;
+        else return 0;
+    case 55:
+        if (c == '\'') return 3;
+        else return 0;
+    case 56:
+        if ('0' <= c && c <= '9') return 58;
+        else if ('A' <= c && c <= 'F') return 58;
+        else if ('a' <= c && c <= 'f') return 58;
+        else return 0;
+    case 57:
+        if (c == '\'') return 3;
+        else if ('0' <= c && c <= '7') return 59;
+        else return 0;
+    case 58:
+        if (c == '\'') return 3;
+        else if ('0' <= c && c <= '9') return 55;
+        else if ('A' <= c && c <= 'F') return 55;
+        else if ('a' <= c && c <= 'f') return 55;
+        else return 0;
+    case 59:
+        if (c == '\'') return 3;
+        else if ('0' <= c && c <= '7') return 55;
+        else return 0;
+    }
+    return 0;
+}
+int Reg::action(int state)
+{
+    switch (state)
+    {
+    case 1:
+        return 1;//identifier: identifier
+    case 2:
+        return 2;//const: integar
+    case 3:
+        return 3;//const: CommonChar
+    case 4:
+        return 4;//const: idChar
+    case 5:
+        return 5;//reserved: lexical
+    case 6:
+        return 6;//reserved: grammar
+    case 7:
+        return 7;//reserved: void
+    case 8:
+        return 8;//reserved: all
+    case 9:
+        return 9;//format: spaces
+    case 10:
+        return 10;//format: enters
+    case 11:
+        return 11;//format: tab
+    case 12:
+        return 12;//division: semicolon
+    case 13:
+        return 13;//division: colon
+    case 14:
+        return 14;//division: dot
+    case 15:
+        return 15;//braket: braceL
+    case 16:
+        return 16;//braket: braceR
+    case 17:
+        return 17;//braket: left
+    case 18:
+        return 18;//braket: right
+    case 19:
+        return 19;//braket: squareL
+    case 20:
+        return 20;//braket: squareR
+    case 21:
+        return 21;//braket: angleL
+    case 22:
+        return 22;//braket: angleR
+    case 23:
+        return 23;//annotation: anntationS
+    case 24:
+        return 24;//annotation: anntationM
+    case 25:
+        return 25;//RegSymbol: range
+    case 26:
+        return 26;//RegSymbol: star
+    case 27:
+        return 27;//RegSymbol: plus
+    case 28:
+        return 28;//RegSymbol: question
+    case 29:
+        return 29;//RegSymbol: or
+    case 31:
+        return 1;//identifier: identifier
+    case 32:
+        return 1;//identifier: identifier
+    case 33:
+        return 1;//identifier: identifier
+    case 34:
+        return 1;//identifier: identifier
+    case 35:
+        return 1;//identifier: identifier
+    case 36:
+        return 1;//identifier: identifier
+    case 37:
+        return 1;//identifier: identifier
+    case 38:
+        return 1;//identifier: identifier
+    case 39:
+        return 1;//identifier: identifier
+    case 40:
+        return 1;//identifier: identifier
+    case 41:
+        return 1;//identifier: identifier
+    case 42:
+        return 1;//identifier: identifier
+    case 43:
+        return 4;//const: idChar
+    case 46:
+        return 1;//identifier: identifier
+    case 47:
+        return 4;//const: idChar
+    case 48:
+        return 4;//const: idChar
+    case 49:
+        return 4;//const: idChar
+    case 50:
+        return 4;//const: idChar
+    }
+    return 0;
+}
+int Reg::GroupGet(int accept)
+{
+    switch (accept)
+    {
+    case 1:
+        return 1;//identifier: identifier
+    case 2:
+        return 2;//const: integar
+    case 3:
+        return 2;//const: CommonChar
+    case 4:
+        return 2;//const: idChar
+    case 5:
+        return 3;//reserved: lexical
+    case 6:
+        return 3;//reserved: grammar
+    case 7:
+        return 3;//reserved: void
+    case 8:
+        return 3;//reserved: all
+    case 9:
+        return 4;//format: spaces
+    case 10:
+        return 4;//format: enters
+    case 11:
+        return 4;//format: tab
+    case 12:
+        return 5;//division: semicolon
+    case 13:
+        return 5;//division: colon
+    case 14:
+        return 5;//division: dot
+    case 15:
+        return 6;//braket: braceL
+    case 16:
+        return 6;//braket: braceR
+    case 17:
+        return 6;//braket: left
+    case 18:
+        return 6;//braket: right
+    case 19:
+        return 6;//braket: squareL
+    case 20:
+        return 6;//braket: squareR
+    case 21:
+        return 6;//braket: angleL
+    case 22:
+        return 6;//braket: angleR
+    case 23:
+        return 7;//annotation: anntationS
+    case 24:
+        return 7;//annotation: anntationM
+    case 25:
+        return 8;//RegSymbol: range
+    case 26:
+        return 8;//RegSymbol: star
+    case 27:
+        return 8;//RegSymbol: plus
+    case 28:
+        return 8;//RegSymbol: question
+    case 29:
+        return 8;//RegSymbol: or
+    }
+    return 0;
+}
+
+
+*/
+
+

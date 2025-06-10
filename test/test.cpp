@@ -3,6 +3,7 @@
 #include "AutoHeader.h"
 #include<stdlib.h>
 int static Test000(const hyperlex::dictionary& para);
+int static Test001(const hyperlex::dictionary& para);
 int testNew(hyperlex::dictionary& para)
 {
     int item = para.search(1L, "TestItem::item");
@@ -15,6 +16,11 @@ int testNew(hyperlex::dictionary& para)
         error = Test000(para);
         break;
     }
+	case 1:
+	{
+		error = Test001(para);
+		break;
+	}
     default:
     {
         error = Test000(para);
@@ -138,7 +144,18 @@ int static Test000(const hyperlex::dictionary& para)
 }
 
 
-
+int static Test001(const hyperlex::dictionary& para)
+{
+	int error = 0;
+	for (size_t i = 0; i < 64; i++)
+	{
+		printf("int static Test");
+		if (i< 10) printf("00%zu", i);
+		else if (i < 100) printf("0%zu", i);
+		printf("(const hyperlex::dictionary& para);\n");
+	}
+	return error;
+}
 
 
 
