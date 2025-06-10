@@ -522,6 +522,9 @@ void Morpheme::insert(size_t from, size_t deleted, const Morpheme& src)
 	size_t rear_ = from + deleted;
 	size_t RearCount = count - rear_;
 	size_t OldStorage = storage.count();
+	std::cout << "rear_: " << rear_ << std::endl;
+	std::cout << "RearCount: " << RearCount << std::endl;
+	std::cout << "OldStorage: " << OldStorage << std::endl;
 	for (size_t i = 0; i < RearCount; i++)
 	{
 		lex[i + NewCount + from] = lex[i + rear_];
