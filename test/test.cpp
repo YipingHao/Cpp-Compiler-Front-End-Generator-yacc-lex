@@ -633,7 +633,9 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
                         include = true;
                         begin = GT->child(0)->root().site;
                         count = 2;
+                        
                         name = output.GetString(site);
+
                         file = output[site].file;
                         break;
                     }
@@ -643,7 +645,9 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
                         include = true;
                         begin = GT->child(0)->root().site;
                         count = 3;
+                        std::cout << "begin: " << begin << std::endl;
                         name = output.GetString(site);
+                        std::cout << "name: " << name << std::endl;
                         file = output[site].file;
                         break;
                     }
