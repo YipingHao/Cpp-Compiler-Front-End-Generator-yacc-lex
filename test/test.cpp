@@ -705,7 +705,8 @@ int static Test001(const hyperlex::dictionary& para)
     error = pretreatment(file.c_str(), here, derived);
     std::cout << "error: " << error << std::endl;
     derived.Demo(stdout);
-
+    
+    std::cout << "derived == here : " << (derived == here) << std::endl;
 
 	return error;
 }
