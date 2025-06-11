@@ -792,7 +792,7 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
             RR = (DictPraser::rules)GT->root().site;
             switch (RR)
             {
-            case DictPraser::_all_all_:
+            case DictPraser::all_all_:
                 Dtemp = (dictionary*)GT->child(0)->root().infor;
                 //printf("%zu:%zu\n", Content.count(), Dtemp->Content.count());
                 move(Dtemp);
@@ -800,13 +800,13 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
                 delete Dtemp;
                 GT->child(0)->root().infor = NULL;
                 break;
-            case DictPraser::_DICTIONARY_DICTIONARY_:
+            case DictPraser::DICTIONARY_DICTIONARY_:
                 GT->root().infor = GT->child(1)->root().infor;
                 GT->child(1)->root().infor = NULL;
                 Dtemp = (dictionary*)GT->root().infor;
                 //printf("%zu\n", Dtemp->Content.count());
                 break;
-            case DictPraser::_KVS_multi_:
+            case DictPraser::KVS_multi_:
                 Dtemp = (dictionary*)(GT->child(0)->root().infor);
                 KVtemp = (KV*)(GT->child(1)->root().infor);
                 //printf("???\n");
@@ -817,7 +817,7 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
                 GT->root().infor = (void*)Dtemp;
                 //printf("%zu\n", Dtemp->Content.count());
                 break;
-            case DictPraser::_KVS_single_:
+            case DictPraser::KVS_single_:
                 Dtemp = new dictionary;
                 KVtemp = (KV*)(GT->child(0)->root().infor);
 
@@ -827,8 +827,8 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
                 GT->root().infor = (void*)Dtemp;
                 //printf("%zu\n", Dtemp->Content.count());
                 break;
-            case DictPraser::_KV_colon_:
-            case DictPraser::_KV_value_:
+            case DictPraser::KV_colon_:
+            case DictPraser::KV_value_:
                 KVtemp = (KV*)(GT->child(2)->root().infor);
                 //printf("label:%zu, child(2)%zu", GT->child(2)->root().label, (size_t)GT->child(2));
                 //printf("KVtemp:%zu, %zu, ", (size_t)KVtemp, KVtemp->Count);
@@ -839,11 +839,11 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
                 GT->child(2)->root().infor = NULL;
                 //printf("KVtemp%zu, <%s> \n", KVtemp->Count, Ctemp);
                 break;
-            case DictPraser::_VALUE_multi_:
+            case DictPraser::VALUE_multi_:
                 GT->root().infor = GT->child(1)->root().infor;
                 GT->child(1)->root().infor = NULL;
                 break;
-            case DictPraser::_VALUE_single_:
+            case DictPraser::VALUE_single_:
                 KVtemp = new KV();
                 tempI = (tempInfor*)(GT->child(0)->root().infor);
                 KVtemp->setType(tempI->T);
@@ -854,12 +854,12 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
                 GT->root().infor = (void*)KVtemp;
                 //printf("KVtemp(single):%zu, %zu\n", KVtemp->Count, (size_t)GT->root().infor);
                 break;
-            case DictPraser::_VALUE_nul_:
+            case DictPraser::VALUE_nul_:
                 KVtemp = new KV();
                 KVtemp->setType(null_);
                 GT->root().infor = (void*)KVtemp;
                 break;
-            case DictPraser::_UNITS_multi_:
+            case DictPraser::UNITS_multi_:
                 KVtemp = (KV*)(GT->child(0)->root().infor);
                 GT->child(0)->root().infor = NULL;
                 tempI = (tempInfor*)(GT->child(2)->root().infor);
@@ -868,7 +868,7 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
                 free(tempI);
                 GT->root().infor = (void*)KVtemp;
                 break;
-            case DictPraser::_UNITS_single_:
+            case DictPraser::UNITS_single_:
                 KVtemp = new KV();
                 tempI = (tempInfor*)(GT->child(0)->root().infor);
                 KVtemp->setType(tempI->T);
@@ -876,14 +876,14 @@ int dictionary::buildAll(const Morpheme& eme, GrammarTree& Tree)
                 free(tempI);
                 GT->root().infor = (void*)KVtemp;
                 break;
-            case DictPraser::_UNIT_string_:
-            case DictPraser::_UNIT_integer_:
-            case DictPraser::_UNIT_real_:
-            case DictPraser::_UNIT_NULL_:
-            case DictPraser::_UNIT_null_:
-            case DictPraser::_UNIT_true_:
-            case DictPraser::_UNIT_false_:
-            case DictPraser::_UNIT_dictionary_:
+            case DictPraser::UNIT_string_:
+            case DictPraser::UNIT_integer_:
+            case DictPraser::UNIT_real_:
+            case DictPraser::UNIT_NULL_:
+            case DictPraser::UNIT_null_:
+            case DictPraser::UNIT_true_:
+            case DictPraser::UNIT_false_:
+            case DictPraser::UNIT_dictionary_:
                 tempI = (tempInfor*)malloc(sizeof(tempInfor));
                 tempI->E = buildUnit(T, eme, GT);
                 tempI->T = T;
@@ -909,34 +909,34 @@ dictionary::element dictionary::buildUnit(dictionary::Ktype& T, const Morpheme& 
     RR = (DictPraser::rules)GT->root().site;
     switch (RR)
     {
-    case DictPraser::_UNIT_string_:
+    case DictPraser::UNIT_string_:
         T = string_;
         BC = eme.GetWord(GT->child(0)->root().site);
         E.ss = BC.DequeueString();
         break;
-    case DictPraser::_UNIT_integer_:
+    case DictPraser::UNIT_integer_:
         T = int_;
         BC = eme.GetWord(GT->child(0)->root().site);
         E.ii = BC.DequeueInt();
         break;
-    case DictPraser::_UNIT_real_:
+    case DictPraser::UNIT_real_:
         T = float_;
         BC = eme.GetWord(GT->child(0)->root().site);
         E.ff = BC.DequeueReal();
         break;
-    case DictPraser::_UNIT_NULL_:
-    case DictPraser::_UNIT_null_:
+    case DictPraser::UNIT_NULL_:
+    case DictPraser::UNIT_null_:
         T = null_;
         break;
-    case DictPraser::_UNIT_true_:
+    case DictPraser::UNIT_true_:
         T = bool_;
         E.bb = true;
         break;
-    case DictPraser::_UNIT_false_:
+    case DictPraser::UNIT_false_:
         T = bool_;
         E.bb = false;
         break;
-    case DictPraser::_UNIT_dictionary_:
+    case DictPraser::UNIT_dictionary_:
         T = dictionary_;
         E.dd = (dictionary*)(GT->child(0)->root().infor);
         GT->child(0)->root().infor = NULL;
