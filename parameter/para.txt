@@ -10,15 +10,15 @@
 	
 	//InputFileName = "./data/error.txt";
 	//InputFileName = "./data/grammerT2.txt";
-	InputFileName = "./data/sample.txt";
-	//InputFileName = "./data/Panel2.txt";
+	//InputFileName = "./data/sample.txt";
+	InputFileName = "./data/dictionary.txt";
 	//InputFileName = "./data/input.txt";
-	OutputFileName = "./output/G.txt";
-	PrintToFile = false;//F if print to screen;
-	OutputLabel = "Panel";
-	OutputLabel2 = "Panel";
+	OutputFileName = "./output/L.txt";
+	PrintToFile = true;//F if print to screen;
+	OutputLabel = "DictReg";
+	OutputLabel2 = "DictPraser";
 
-	OutputFileName2 = "./output/L.txt";
+	OutputFileName2 = "./output/G.txt";
 	OutputFileName3 = "./output/G2.txt";
 	//item = "test old";
 	item = "simple LR";
