@@ -656,13 +656,13 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
             CFile CF;
             FILE* fp = CF.OpenRead(name);
             output.append(name);
-            
+            output.Demo(stdout);
             int error = eme.Build<PreTreat>(fp);
             fclose(fp);
             if (error != 0) return error * 16 + 1;
             eme.SetFile(output.FileCount() - 1);
             output.insert(begin, count, eme);
-
+            output.Demo(stdout);
             
         }
 	} while (include);
