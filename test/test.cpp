@@ -634,6 +634,7 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
                         begin = GT->child(0)->root().site;
                         count = 2;
                         std::cout << "begin: " << begin << std::endl;
+                        std::cout << "output.GetWord(site): " << output.GetWord(site) << std::endl;
                         name = output.GetString(site);
                         std::cout << "name: " << name << std::endl;
                         file = output[site].file;
