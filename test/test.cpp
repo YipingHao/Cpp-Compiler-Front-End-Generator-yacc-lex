@@ -627,7 +627,7 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
                 std::cout << "infor: " << infor << std::endl;
                 if (GT->root().rules)
                 {
-                    if (infor == (int)Preparser::INCLUDE_include_ )
+                    if (infor == (int)Preparser::INCLUDE_include2_)
                     {
                         size_t site = GT->child(1)->root().site;
                         include = true;
@@ -640,7 +640,7 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
                         file = output[site].file;
                         break;
                     }
-                    else if(infor == (int)Preparser::INCLUDE_include2_)
+                    else if(infor == (int)Preparser::INCLUDE_include_)
                     {
                         size_t site = GT->child(2)->root().site;
                         include = true;
