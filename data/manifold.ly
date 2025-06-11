@@ -81,6 +81,7 @@ lexical:{
 
 grammar: MANIF:
 {
+	
 	MANIF: MANIFWORD squareL integer squareR left MANIFPARAS right MANIFBODY;
 	MANIFBODY:
 	{
