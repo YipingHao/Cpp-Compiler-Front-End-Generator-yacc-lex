@@ -586,8 +586,7 @@ size_t Morpheme::FileCount(void) const
 void Morpheme::print(BufferChar& input) const
 {
 	size_t countLex;
-	if (withTernimal()) countLex = lex.count() - 1;
-	else countLex = lex.count();
+	countLex = lex.count() - 1;
 	for (size_t i = 0; i < countLex; i++)
 	{
 		size_t from = lex[i].begin;
