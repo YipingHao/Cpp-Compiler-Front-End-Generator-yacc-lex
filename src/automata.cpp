@@ -571,7 +571,7 @@ void Morpheme::sort(void)
 	}
 	storage.recount(offset);
 }
-void Morpheme::setFile(size_t value)
+void Morpheme::SetFile(size_t value)
 {
 	for (size_t i = 0; i < count; i++)
 	{

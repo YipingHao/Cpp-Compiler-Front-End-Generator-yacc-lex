@@ -660,7 +660,7 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
             int error = eme.Build<PreTreat>(fp);
             fclose(fp);
             if (error != 0) return error * 16 + 1;
-            eme.setFile(output.FileCount() - 1);
+            eme.SetFile(output.FileCount() - 1);
             output.insert(begin, count, eme);
 
             
