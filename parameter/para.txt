@@ -16,6 +16,7 @@
 	OutputFileName = "./output/G.txt";
 	PrintToFile = false;//F if print to screen;
 	OutputLabel = "Panel";
+	OutputLabel2 = "Panel";
 
 	OutputFileName2 = "./output/L.txt";
 	OutputFileName3 = "./output/G2.txt";
