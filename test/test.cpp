@@ -600,24 +600,22 @@ struct Preparser
 	static const int Implicit[40];
 };
 
-int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
+int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex::Morpheme& output)
 {
 	int error = output.Build<PreTreat>(input);
-	if (error != 0)
-	{
-		return error;
-	}
-
-	hyperlex::vector<const char*> path;
+    output.append(SrcName);
+	if (error != 0) return error * 16;
 	bool include;
 	do
 	{
         include = false;
         size_t begin = 0;
         size_t count = 0;
+        size_t file = 0;
         const char* name = NULL;
 		hyperlex::GrammarTree Tree;
         error = Tree.build<Preparser>(output);
+        if (error != 0) return error * 16 + 2;
         GTiterator iterator;
         iterator.initial(Tree.GT);
         while (iterator.still())
@@ -635,6 +633,7 @@ int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
                         begin = GT->child(0)->root().site;
                         count = 2;
                         name = output.GetString(site);
+                        file = output[site].file;
                         break;
                     }
                     else if(infor == (int)Preparser::INCLUDE_include2_)
@@ -644,6 +643,7 @@ int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
                         begin = GT->child(0)->root().site;
                         count = 3;
                         name = output.GetString(site);
+                        file = output[site].file;
                         break;
                     }
                 }
@@ -652,17 +652,61 @@ int static pretreatment(hyperlex::Morpheme& input, hyperlex::Morpheme& output)
         }
         if (include)
         {
+            hyperlex::Morpheme eme;
+            CFile CF;
+            FILE* fp = CF.OpenRead(name);
+            output.append(name);
+            
+            int error = eme.Build<PreTreat>(fp);
+            fclose(fp);
+            if (error != 0) return error * 16 + 1;
+            eme.setFile(output.FileCount() - 1);
+            output.insert(begin, count, eme);
 
+            
         }
 	} while (include);
-
+    
 	return error;
 }
 
 int static Test001(const hyperlex::dictionary& para)
 {
 	int error = 0;
-	
+    hyperlex::InputPanel IP;
+    std::string file;
+    FILE* fp;
+    hyperlex::BufferChar input;
+    hyperlex::BufferChar temp;
+    CFile CF;
+    std::string OutputLabel2, OutputLabel;
+    OutputLabel = para.search("lexer", "OutputLabel");
+    OutputLabel2 = para.search("parser", "OutputLabel2");
+
+    file = para.search("./data/grammerT.txt", "InputFileName");
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fp = CF.OpenRead(file.c_str());
+    std::cout << "InputFileName: " << file << std::endl;
+    input << fp;
+    temp.append(input);
+    std::cout << "/*" << std::endl;
+    std::cout << temp.ptr() << std::endl;
+    std::cout << "*/" << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fclose(fp);
+
+    hyperlex::Morpheme here;
+    here.Build<PreTreat>(input.ptr());
+
+    here.Demo(stdout);
+
+    hyperlex::Morpheme derived;
+
+    pretreatment(file.c_str(), here, derived);
+
+    derived.Demo(stdout);
+
+
 	return error;
 }
 struct test003

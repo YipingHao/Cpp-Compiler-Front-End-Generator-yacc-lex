@@ -446,6 +446,8 @@ namespace hyperlex
 		bool& valid(size_t site);
 
 		void insert(size_t from, size_t deleted, const Morpheme& src);
+		void SetFile(size_t value);
+		size_t FileCount(void) const;
 		void shrink(void);
 		void sort(void);
 		bool withTernimal(void)const;

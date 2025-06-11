@@ -571,6 +571,18 @@ void Morpheme::sort(void)
 	}
 	storage.recount(offset);
 }
+void Morpheme::setFile(size_t value)
+{
+	for (size_t i = 0; i < count; i++)
+	{
+		lex[i].file = value;
+	}
+	lex[count - 1].file = 0;
+}
+size_t Morpheme::FileCount(void) const
+{
+	return SrcFile.count();
+}
 void Morpheme::print(BufferChar& input) const
 {
 	size_t countLex;
