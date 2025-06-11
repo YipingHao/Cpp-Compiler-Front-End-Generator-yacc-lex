@@ -3,6 +3,10 @@ lexical:{
     {
         num: [0-9];
         letter: [a-z]|[A-Z];
+
+        hexa: [0-9]|[a-f]|[A-F];
+		octa: [0-7];
+
         char_instring:['\40'-'\41'] | ['\43'-'\133'] | ['\135'-'\177'];
         ESC: '\\'(     (<octa><octa>?<octa>?) | (x|X)<hexa><hexa>?
 				|     (v|t|r|n|f|b|a|'\\'|'?'|'\''|'\"'|['\0'])   
