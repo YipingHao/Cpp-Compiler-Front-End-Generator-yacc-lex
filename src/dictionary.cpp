@@ -610,6 +610,28 @@ struct DictPraser
         push = 2,
         reduce = 3
     };
+    enum rules
+    {
+        all_all_ = 0,
+        DICTIONARY_DICTIONARY_ = 1,
+        KVS_single_ = 2,
+        KVS_multi_ = 3,
+        KV_value_ = 4,
+        KV_colon_ = 5,
+        VALUE_nul_ = 6,
+        VALUE_single_ = 7,
+        VALUE_multi_ = 8,
+        UNITS_single_ = 9,
+        UNITS_multi_ = 10,
+        UNIT_dictionary_ = 11,
+        UNIT_false_ = 12,
+        UNIT_true_ = 13,
+        UNIT_null_ = 14,
+        UNIT_NULL_ = 15,
+        UNIT_real_ = 16,
+        UNIT_integer_ = 17,
+        UNIT_string_ = 18
+    };
     enum nonterminal
     {
         _all_ = 0,
@@ -619,28 +641,6 @@ struct DictPraser
         _VALUE_ = 4,
         _UNITS_ = 5,
         _UNIT_ = 6
-    };
-    enum rules
-    {
-        _all_all_ = 0,
-        _DICTIONARY_DICTIONARY_ = 1,
-        _KVS_multi_ = 2,
-        _KVS_single_ = 3,
-        _KV_colon_ = 4,
-        _KV_value_ = 5,
-        _VALUE_multi_ = 6,
-        _VALUE_single_ = 7,
-        _VALUE_nul_ = 8,
-        _UNITS_multi_ = 9,
-        _UNITS_single_ = 10,
-        _UNIT_string_ = 11,
-        _UNIT_integer_ = 12,
-        _UNIT_real_ = 13,
-        _UNIT_NULL_ = 14,
-        _UNIT_null_ = 15,
-        _UNIT_true_ = 16,
-        _UNIT_false_ = 17,
-        _UNIT_dictionary_ = 18
     };
     static const size_t StateCount;
     static const size_t NonTerminalCount;
