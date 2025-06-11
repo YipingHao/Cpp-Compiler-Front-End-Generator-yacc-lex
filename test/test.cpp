@@ -696,14 +696,14 @@ int static Test001(const hyperlex::dictionary& para)
     fclose(fp);
 
     hyperlex::Morpheme here;
-    here.Build<PreTreat>(input.ptr());
-
+    error = here.Build<PreTreat>(input.ptr());
+    std::cout << "error: " << error << std::endl;
     here.Demo(stdout);
 
     hyperlex::Morpheme derived;
 
-    pretreatment(file.c_str(), here, derived);
-
+    error = pretreatment(file.c_str(), here, derived);
+    std::cout << "error: " << error << std::endl;
     derived.Demo(stdout);
 
 
