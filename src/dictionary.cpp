@@ -959,9 +959,9 @@ int DictReg::next(int state, const char c)
         else if (c == '\"') return 39;
         else if (c == '(') return 16;
         else if (c == ')') return 17;
-        else if (c == '+') return 44;
+        else if (c == '+') return 45;
         else if (c == ',') return 12;
-        else if (c == '-') return 44;
+        else if (c == '-') return 45;
         else if (c == '.') return 11;
         else if (c == '/') return 46;
         else if ('0' <= c && c <= '9') return 2;
@@ -1155,12 +1155,15 @@ int DictReg::next(int state, const char c)
         else return 0;
     case 38:
         if ((char)0 <= c && c <= ')') return 38;
-        else if (c == '*') return 43;
+        else if (c == '*') return 44;
         else if ('+' <= c && c <= (char)127) return 38;
         else return 0;
     case 39:
-        if (' ' <= c && c <= '!') return 45;
-        else if ('#' <= c && c <= '~') return 45;
+        if (' ' <= c && c <= '!') return 39;
+        else if (c == '\"') return 4;
+        else if ('#' <= c && c <= '[') return 39;
+        else if (c == '\\') return 42;
+        else if (']' <= c && c <= (char)127) return 39;
         else return 0;
     case 40:
         if ('0' <= c && c <= '9') return 1;
@@ -1179,28 +1182,39 @@ int DictReg::next(int state, const char c)
         else if ('v' <= c && c <= 'z') return 1;
         else return 0;
     case 42:
-        if ((char)0 <= c && c <= (char)9) return 42;
-        else if (c == (char)10) return 20;
-        else if ((char)11 <= c && c <= (char)127) return 42;
+        if (c == (char)0) return 39;
+        else if (c == '\"') return 39;
+        else if (c == '\'') return 39;
+        else if ('0' <= c && c <= '7') return 39;
+        else if (c == '\?') return 39;
+        else if (c == 'X') return 50;
+        else if (c == '\\') return 39;
+        else if ('a' <= c && c <= 'b') return 39;
+        else if (c == 'f') return 39;
+        else if (c == 'n') return 39;
+        else if (c == 'r') return 39;
+        else if (c == 't') return 39;
+        else if (c == 'v') return 39;
+        else if (c == 'x') return 50;
         else return 0;
     case 43:
+        if ((char)0 <= c && c <= (char)9) return 43;
+        else if (c == (char)10) return 20;
+        else if ((char)11 <= c && c <= (char)127) return 43;
+        else return 0;
+    case 44:
         if ((char)0 <= c && c <= ')') return 38;
-        else if (c == '*') return 43;
+        else if (c == '*') return 44;
         else if ('+' <= c && c <= '.') return 38;
         else if (c == '/') return 21;
         else if ('0' <= c && c <= (char)127) return 38;
         else return 0;
-    case 44:
-        if ('0' <= c && c <= '9') return 2;
-        else return 0;
     case 45:
-        if (' ' <= c && c <= '!') return 45;
-        else if (c == '\"') return 4;
-        else if ('#' <= c && c <= '~') return 45;
+        if ('0' <= c && c <= '9') return 2;
         else return 0;
     case 46:
         if (c == '*') return 38;
-        else if (c == '/') return 42;
+        else if (c == '/') return 43;
         else return 0;
     case 47:
         if (c == '+') return 49;
@@ -1212,6 +1226,11 @@ int DictReg::next(int state, const char c)
         else return 0;
     case 49:
         if ('0' <= c && c <= '9') return 37;
+        else return 0;
+    case 50:
+        if ('0' <= c && c <= '9') return 39;
+        else if ('A' <= c && c <= 'F') return 39;
+        else if ('a' <= c && c <= 'f') return 39;
         else return 0;
     }
     return 0;
@@ -1358,6 +1377,7 @@ int DictReg::GroupGet(int accept)
 
 
 
+
 const size_t DictPraser::StateCount = 30;
 const size_t DictPraser::NonTerminalCount = 7;
 const size_t DictPraser::TerminalCount = 24;
@@ -1395,35 +1415,35 @@ const int DictPraser::GOTO[30][7] = { \
 {1, 1, 1, 1, 1, 1, 1} };
 //==============================
 const int DictPraser::ACTION[30][25] = { \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 10, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57}, \
 {0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{5, 22, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5}, \
 {1, 22, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 118, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 26, 1, 1, 30, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 74, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 74, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 75, 1, 1, 75, 1, 1, 1, 1, 1, 1, 75, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 102, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 31, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 1, 1, 51, 1, 1, 1, 1, 1, 1, 51, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 55, 1, 1, 55, 1, 1, 1, 1, 1, 1, 55, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 47, 1, 1, 47, 1, 1, 1, 1, 1, 1, 47, 1, 1, 1, 1, 1}, \
+{37, 37, 37, 37, 37, 37, 37, 37, 37, 102, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37}, \
+{37, 37, 37, 37, 37, 37, 37, 37, 37, 31, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 71, 1, 1, 71, 1, 1, 1, 1, 1, 1, 71, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 67, 1, 1, 67, 1, 1, 1, 1, 1, 1, 67, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 63, 1, 1, 63, 1, 1, 1, 1, 1, 1, 63, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 75, 1, 1, 75, 1, 1, 1, 1, 1, 1, 75, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 51, 1, 1, 51, 1, 1, 1, 1, 1, 1, 51, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 55, 1, 1, 55, 1, 1, 1, 1, 1, 1, 55, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 59, 1, 1, 59, 1, 1, 1, 1, 1, 1, 59, 1, 1, 1, 1, 1}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 63, 1, 1, 63, 1, 1, 1, 1, 1, 1, 63, 1, 1, 1, 1, 1}, \
 {1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 86, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 90, 1, 1, 1, 1, 1, 1, 94, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 35, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 27, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1, 1, 39, 1, 1, 1, 1, 1}, \
-{1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 1, 1, 1, 1, 1, 1, 1, 1, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{37, 37, 37, 37, 37, 37, 37, 37, 37, 27, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37}, \
+{1, 1, 46, 50, 54, 58, 62, 66, 70, 1, 1, 1, 1, 1, 10, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{37, 37, 37, 37, 37, 37, 37, 37, 37, 35, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37}, \
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1, 1, 43, 1, 1, 1, 1, 1}, \
 {1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 19, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
-{1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 11, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{37, 37, 37, 37, 37, 37, 37, 37, 37, 110, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37}, \
+{1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 23, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
+{1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1, 1, 1, 1}, \
 {7, 1, 1, 1, 1, 1, 1, 1, 1, 7, 1, 1, 7, 1, 1, 1, 1, 1, 1, 7, 1, 1, 1, 1, 1} };
 //==============================
 const int DictPraser::RulesToSymbol[19] = { \
@@ -1450,15 +1470,15 @@ const int DictPraser::RulesToSymbol[19] = { \
 const int DictPraser::RulesLength[19] = { \
 1,\
 3,\
-2,\
-1,\
-4,\
-4,\
-3,\
 1,\
 2,\
+4,\
+4,\
+2,\
+1,\
 3,\
 1,\
+3,\
 1,\
 1,\
 1,\
@@ -1471,23 +1491,23 @@ const int DictPraser::RulesLength[19] = { \
 const char* const DictPraser::RulesName[19] = { \
 "all->DICTIONARY ",\
 "DICTIONARY->braceL KVS braceR ",\
-"KVS->KVS KV ",\
 "KVS->KV ",\
-"KV->id colon VALUE semicolon ",\
+"KVS->KVS KV ",\
 "KV->id value VALUE semicolon ",\
-"VALUE->squareL UNITS squareR ",\
-"VALUE->UNIT ",\
+"KV->id colon VALUE semicolon ",\
 "VALUE->squareL squareR ",\
-"UNITS->UNITS comma UNIT ",\
+"VALUE->UNIT ",\
+"VALUE->squareL UNITS squareR ",\
 "UNITS->UNIT ",\
-"UNIT->string ",\
-"UNIT->integer ",\
-"UNIT->real ",\
-"UNIT->NULL ",\
-"UNIT->null ",\
-"UNIT->true ",\
+"UNITS->UNITS comma UNIT ",\
+"UNIT->DICTIONARY ",\
 "UNIT->false ",\
-"UNIT->DICTIONARY " };
+"UNIT->true ",\
+"UNIT->null ",\
+"UNIT->NULL ",\
+"UNIT->real ",\
+"UNIT->integer ",\
+"UNIT->string " };
 //==============================
 const int DictPraser::Implicit[19] = { \
 0, \
