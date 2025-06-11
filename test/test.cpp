@@ -624,7 +624,7 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
             if (iterator.state() == 0)
             {
                 size_t infor = GT->root().site;
-                std::cout << "infor: " << infor << std::endl;
+                //std::cout << "infor: " << infor << std::endl;
                 if (GT->root().rules)
                 {
                     if (infor == (int)Preparser::INCLUDE_include2_)
@@ -633,10 +633,10 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
                         include = true;
                         begin = GT->child(0)->root().site;
                         count = 2;
-                        std::cout << "begin: " << begin << std::endl;
-                        std::cout << "output.GetWord(site): " << output.GetWord(site) << std::endl;
+                        //std::cout << "begin: " << begin << std::endl;
+                        //std::cout << "output.GetWord(site): " << output.GetWord(site) << std::endl;
                         name = output.GetString(site);
-                        std::cout << "name: " << name << std::endl;
+                        //std::cout << "name: " << name << std::endl;
                         file = output[site].file;
                         break;
                     }
@@ -646,9 +646,9 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
                         include = true;
                         begin = GT->child(0)->root().site;
                         count = 3;
-                        std::cout << "2begin: " << begin << std::endl;
+                        //std::cout << "2begin: " << begin << std::endl;
                         name = output.GetString(site);
-                        std::cout << "2name: " << name << std::endl;
+                        //std::cout << "2name: " << name << std::endl;
                         file = output[site].file;
                         break;
                     }
