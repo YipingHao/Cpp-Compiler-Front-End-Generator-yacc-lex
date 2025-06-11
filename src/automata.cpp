@@ -639,10 +639,10 @@ void Morpheme::backspace(indexT& index, size_t count) const
 bool Morpheme::operator==(const Morpheme& source) const
 {
 	if (count != source.count) return false;
-	if (SrcFile.count() != source.SrcFile.count()) return false;
+	//if (SrcFile.count() != source.SrcFile.count()) return false;
 	for (size_t i = 0; i < SrcFile.count(); i++)
 	{
-		if (!compare(SrcFile[i], source.SrcFile[i])) return false;
+		//if (!compare(SrcFile[i], source.SrcFile[i])) return false;
 	}
 	if (lex.count() != source.lex.count()) return false;
 	for (size_t i = 0; i < lex.count(); i++)
