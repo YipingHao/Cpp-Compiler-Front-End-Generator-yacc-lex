@@ -714,10 +714,10 @@ int static Test001(const hyperlex::dictionary& para)
     hyperlex::BufferChar MorOut;
     derived.print(MorOut);
 
-    
+    std::cout << MorOut.ptr() << std::endl;
 
     std::cout << "derived == here : " << (derived == here) << std::endl;
-    std::cout << MorOut.ptr() << endl;
+    
 	return error;
 }
 struct test003
