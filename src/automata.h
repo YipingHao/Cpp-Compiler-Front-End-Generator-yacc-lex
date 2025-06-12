@@ -373,7 +373,8 @@ namespace hyperlex
 		~FilePath();
 		void build(const char* path);
 		void operator+=(const FilePath& path);
-		char* print(char divide = '/');
+		char* print(char divide = '/')const;
+		void demo(FILE* fp = stdout)const;
 	private:
 		bool absolute;
 		vector<char*> PathUnit;

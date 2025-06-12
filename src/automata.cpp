@@ -1691,7 +1691,7 @@ void FilePath::operator+=(const FilePath& rhs)
 		}
 	}
 }
-char* FilePath::print(char divider) {
+char* FilePath::print(char divider)const {
 	size_t total = absolute ? 1 : 0;
 	const size_t count = PathUnit.count();
 
@@ -1722,6 +1722,23 @@ char* FilePath::print(char divider) {
 	*ptr = '\0';
 
 	return buf;
+}
+void FilePath::demo(FILE* fp = stdout)const
+{
+	fprintf(fp, "[FilePath Demo]");
+	fprintf(fp, "-Absolute: %s, ", absolute ? "true" : "false");
+
+	char* pathStr = print();
+	fprintf(fp, "-Path: %s, ", pathStr);
+	free((void*)pathStr);
+
+	fprintf(fp, "-Units: ");
+	for (size_t i = 0; i < PathUnit.count(); i++)
+	{
+		const char* unit = PathUnit[i];
+		fprintf(fp, "[%s] ", unit);
+	}
+	fprintf(fp, "\n");
 }
 void FilePath::append_copy(const char* str)
 {

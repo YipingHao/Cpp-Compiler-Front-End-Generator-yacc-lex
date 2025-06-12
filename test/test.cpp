@@ -828,18 +828,11 @@ int static Test002(const hyperlex::dictionary& para)
 	}
     hyperlex::FilePath A, B, C;
     A.build("./data/vain.txt");
-    char* here;
-    here = A.print();
-    std::cout << "here: " << here << std::endl;
-    free(here);
+    A.demo();
     B.build("header.h");
-    here = B.print();
-    std::cout << "here: " << here << std::endl;
-    free(here);
+    B.demo();
     A += B;
-    here = A.print();
-    std::cout << "here: " << here << std::endl;
-    free(here);
+    A.demo();
 
     return error;
 }
