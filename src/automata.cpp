@@ -1660,20 +1660,42 @@ void FilePath::build(const char* path)
 	clear();
 	if (!path || *path == '\0') return;
 
-	absolute = (path[0] == '/');
+	absolute = (path[0] == '/' || path[0] == '\\');
 	const char* start = absolute ? path + 1 : path;
 
 	while (*start) {
-		while (*start == '/') ++start;
+		while (*start == '/' || *start == '\\') ++start;
 		if (!*start) break;
 
 		const char* end = start;
-		while (*end && *end != '/') ++end;
+		while (*end && *end != '/' && *end != '\\') ++end;
 
 		char* unit = (char*)malloc(end - start + 1);
 		memcpy(unit, start, end - start);
 		unit[end - start] = '\0';
-		PathUnit.append(unit);
+
+		if (strcmp(unit, ".") == 0) {
+			// 当前目录符号，跳过不添加
+			free(unit);
+		}
+		else if (strcmp(unit, "..") == 0) {
+			// 父目录符号
+			if (PathUnit.count() > 1) {
+				// 移除前一个路径单元（回退一级）
+				char* last;
+				PathUnit.pop(last);
+				free(last);
+			}
+			else if (absolute) {
+				free(unit);
+			}
+		}
+		else {
+			// 普通路径单元，添加到列表
+			PathUnit.append(unit);
+		}
+
+
 
 		start = end;
 	}
@@ -1692,6 +1714,24 @@ void FilePath::operator+=(const FilePath& rhs)
 			append_copy(rhs.PathUnit[i]);
 		}
 	}
+}
+bool FilePath::operator==(const FilePath& rhs) const
+{
+	// 比较绝对路径标志是否相同
+	if (absolute != rhs.absolute)
+		return false;
+
+	// 比较路径单元数量是否相同
+	if (PathUnit.count() != rhs.PathUnit.count())
+		return false;
+
+	// 逐个比较每个路径单元
+	for (size_t i = 0; i < PathUnit.count(); ++i) {
+		if (strcmp(PathUnit[i], rhs.PathUnit[i]) != 0)
+			return false;
+	}
+
+	return true;
 }
 char* FilePath::print(char divider)const
 {
@@ -1772,6 +1812,46 @@ void FilePath::RearCut(void)
 		absolute = false;
 	}
 }
+void FilePath::clean(void)
+{
+	if (PathUnit.count() == 0)return;
+
+	vector<char*>temp;
+	temp.copy(PathUnit);
+	
+	for (size_t i = 0; i < temp.count(); i++)
+	{
+		char* unit = temp[i];
+		if (strcmp(unit, "..") == 0)
+		{
+			long int j;
+			for (j = i - 1; j >= 0L; j--)
+				if (strcmp(temp[j], ".") != 0) break;
+			if (j >= 0L)
+			{
+				unit[1] = '\0';
+				temp[j][0] = '.';
+				temp[j][1] = '\0';
+			}
+			else if(absolute) unit[1] = '\0';
+		}
+	}
+	size_t offset = 0;
+	PathUnit[offset] = temp[0];
+	offset++;
+	for (size_t i = 1; i < temp.count(); i++)
+	{
+		const char* unit = temp[i];
+		if (strcmp(unit, ".") == 0)
+			free(unit);
+		else
+		{
+			PathUnit[offset] = unit;
+			offset++;
+		}
+	}
+	PathUnit.recount(offset);
+}
 void FilePath::RearCutAppend(const FilePath& rhs)
 {
 	RearCut();
@@ -1787,6 +1867,7 @@ void FilePath::RearCutAppend(const FilePath& rhs)
 			append_copy(rhs.PathUnit[i]);
 		}
 	}
+	clean();
 }
 
 static const char* Copy(const char* input)
