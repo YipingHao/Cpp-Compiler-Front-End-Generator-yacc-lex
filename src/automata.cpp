@@ -1726,6 +1726,15 @@ char* FilePath::print(char divider)const
 
 	return buf;
 }
+void FilePath::copy(const FilePath& source)
+{
+	clear();
+	absolute = source.absolute;
+	for (size_t i = 0; i < source.PathUnit.count(); i++)
+	{
+		append_copy(source.PathUnit[i]);
+	}
+}
 void FilePath::demo(FILE* fp)const
 {
 	fprintf(fp, "[FilePath Demo]");
@@ -1749,8 +1758,36 @@ void FilePath::append_copy(const char* str)
 	strcpy(copy, str);
 	PathUnit.append(copy);
 }
-
-
+void FilePath::RearCut(void)
+{
+	if (PathUnit.count() != 0)
+	{
+		char* out;
+		PathUnit.pop(out);
+		free(out);
+		return;
+	}
+	else if(absolute)
+	{
+		absolute = false;
+	}
+}
+void FilePath::RearCutAppend(const FilePath& path)
+{
+	RearCut();
+	if (rhs.absolute) {
+		clear();
+		absolute = true;
+		for (size_t i = 0; i < rhs.PathUnit.count(); ++i) {
+			append_copy(rhs.PathUnit[i]);
+		}
+	}
+	else {
+		for (size_t i = 0; i < rhs.PathUnit.count(); ++i) {
+			append_copy(rhs.PathUnit[i]);
+		}
+	}
+}
 
 static const char* Copy(const char* input)
 {
