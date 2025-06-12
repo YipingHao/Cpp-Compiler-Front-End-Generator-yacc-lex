@@ -866,6 +866,9 @@ int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
             left.build(output.GetFile(file));
             left.RearCutAppend(here);
 
+            here.demo();
+            left.demo();
+
             for (size_t i = 0; i < output.FileCount(); i++)
             {
                 hyperlex::FilePath right;
