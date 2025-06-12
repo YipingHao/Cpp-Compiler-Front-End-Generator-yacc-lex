@@ -1652,6 +1652,8 @@ void FilePath::clear()
 	{
 		free(PathUnit[i]);
 	}
+	PathUnit.clear();
+
 }
 void FilePath::build(const char* path)
 {
