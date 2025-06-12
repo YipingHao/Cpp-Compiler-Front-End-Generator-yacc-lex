@@ -846,6 +846,7 @@ int static Test002(const hyperlex::dictionary& para)
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     A.build(".//data/././vain.txt");
     A.demo();
+    C.demo();
     C += A;
     C.demo();
     A.copy(B);
