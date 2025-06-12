@@ -881,8 +881,9 @@ int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
             }
             char* newFile = left.print();
             FILE* fp = CF.OpenRead(newFile);
-            free(newFile);
             output.append(newFile);
+            free(newFile);
+            
             int error = eme.Build<PreTreat>(fp);
             fclose(fp);
             if (error != 0) return error * 16 + 1;
