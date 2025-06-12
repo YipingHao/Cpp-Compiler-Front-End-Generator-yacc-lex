@@ -682,91 +682,7 @@ static bool compare(const char* str1, const char* str2)
     for (i = 0; (str1[i] != '\0') && (str1[i] == str2[i]); i++);
     return str1[i] == str2[i];
 }
-int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
-{
-    CFile CF;
-    FILE* fp = CF.OpenRead(SrcName);
-    int error = output.Build<PreTreat>(fp);
-    output.append(SrcName);
-    if (error != 0) return error * 16;
-    bool include;
-    do
-    {
-        include = false;
-        size_t begin = 0;
-        size_t count = 0;
-        size_t file = 0;
-        const char* name = NULL;
-        hyperlex::GrammarTree Tree;
-        error = Tree.build<Preparser>(output);
-        if (error != 0) return error * 16 + 2;
-        GTiterator iterator;
-        iterator.initial(Tree.GT);
-        while (iterator.still())
-        {
-            GTNode* GT = iterator.target();
-            if (iterator.state() == 0)
-            {
-                size_t infor = GT->root().site;
-                //std::cout << "infor: " << infor << std::endl;
-                if (GT->root().rules)
-                {
-                    if (infor == (int)Preparser::INCLUDE_include2_)
-                    {
-                        size_t site = GT->child(1)->root().site;
-                        include = true;
-                        begin = GT->child(0)->root().site;
-                        count = 2;
-                        name = output.GetString(site);
-                        file = output[site].file;
-                        break;
-                    }
-                    else if (infor == (int)Preparser::INCLUDE_include_)
-                    {
-                        size_t site = GT->child(2)->root().site;
-                        include = true;
-                        begin = GT->child(0)->root().site;
-                        count = 3;
-                        //std::cout << "2begin: " << begin << std::endl;
-                        name = output.GetString(site);
-                        //std::cout << "2name: " << name << std::endl;
-                        file = output[site].file;
-                        break;
-                    }
-                }
-            }
-            iterator.next();
-        }
-        if (include)
-        {
-            hyperlex::Morpheme eme;
-            CFile CF;
-            hyperlex::FilePath left, here;
-            here.build(name);
-            left.build(output.GetFile(file));
-            left.RearCutAppend(here);
-            
-            for (size_t i = 0; i < output.FileCount(); i++)
-            {
-                hyperlex::FilePath right;
-                right.build(output.GetFile(i));
-                if(left == right) return error * 16 + 5;
-            }
-            char* newFile = left.print();
-            FILE* fp = CF.OpenRead(newFile);
-            free(newFile);
-            output.append(newFile);
-            int error = eme.Build<PreTreat>(fp);
-            fclose(fp);
-            if (error != 0) return error * 16 + 1;
-            eme.SetFile(output.FileCount() - 1);
-            output.insert(begin, count, eme);
 
-        }
-    } while (include);
-
-    return error;
-}
 
 
 
@@ -805,6 +721,8 @@ int static Test001(const hyperlex::dictionary& para)
     here.Demo(stdout);
 
     hyperlex::Morpheme derived;
+
+
 
     error = pretreatment(file.c_str(), here, derived);
     std::cout << "error: " << error << std::endl;
@@ -884,9 +802,134 @@ int static Test002(const hyperlex::dictionary& para)
     A.demo();
     return error;
 }
+int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
+{
+    CFile CF;
+    FILE* fp = CF.OpenRead(SrcName);
+    int error = output.Build<PreTreat>(fp);
+    output.append(SrcName);
+    if (error != 0) return error * 16;
+    bool include;
+    do
+    {
+        include = false;
+        size_t begin = 0;
+        size_t count = 0;
+        size_t file = 0;
+        const char* name = NULL;
+        hyperlex::GrammarTree Tree;
+        error = Tree.build<Preparser>(output);
+        if (error != 0) return error * 16 + 2;
+        GTiterator iterator;
+        iterator.initial(Tree.GT);
+        while (iterator.still())
+        {
+            GTNode* GT = iterator.target();
+            if (iterator.state() == 0)
+            {
+                size_t infor = GT->root().site;
+                //std::cout << "infor: " << infor << std::endl;
+                if (GT->root().rules)
+                {
+                    if (infor == (int)Preparser::INCLUDE_include2_)
+                    {
+                        size_t site = GT->child(1)->root().site;
+                        include = true;
+                        begin = GT->child(0)->root().site;
+                        count = 2;
+                        name = output.GetString(site);
+                        file = output[site].file;
+                        break;
+                    }
+                    else if (infor == (int)Preparser::INCLUDE_include_)
+                    {
+                        size_t site = GT->child(2)->root().site;
+                        include = true;
+                        begin = GT->child(0)->root().site;
+                        count = 3;
+                        //std::cout << "2begin: " << begin << std::endl;
+                        name = output.GetString(site);
+                        //std::cout << "2name: " << name << std::endl;
+                        file = output[site].file;
+                        break;
+                    }
+                }
+            }
+            iterator.next();
+        }
+        if (include)
+        {
+            hyperlex::Morpheme eme;
+            CFile CF;
+            hyperlex::FilePath left, here;
+            here.build(name);
+            left.build(output.GetFile(file));
+            left.RearCutAppend(here);
+
+            for (size_t i = 0; i < output.FileCount(); i++)
+            {
+                hyperlex::FilePath right;
+                right.build(output.GetFile(i));
+                if (left == right) return error * 16 + 5;
+            }
+            char* newFile = left.print();
+            FILE* fp = CF.OpenRead(newFile);
+            free(newFile);
+            output.append(newFile);
+            int error = eme.Build<PreTreat>(fp);
+            fclose(fp);
+            if (error != 0) return error * 16 + 1;
+            eme.SetFile(output.FileCount() - 1);
+            output.insert(begin, count, eme);
+
+        }
+    } while (include);
+
+    return error;
+}
 int static Test003(const hyperlex::dictionary& para)
 {
     int error = 0;
+    hyperlex::InputPanel IP;
+    std::string file;
+    FILE* fp;
+    hyperlex::BufferChar input;
+    hyperlex::BufferChar temp;
+    CFile CF;
+    std::string OutputLabel2, OutputLabel;
+    OutputLabel = para.search("lexer", "OutputLabel");
+    OutputLabel2 = para.search("parser", "OutputLabel2");
+
+    file = para.search("./data/grammerT.txt", "InputFileName");
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fp = CF.OpenRead(file.c_str());
+    std::cout << "InputFileName: " << file << std::endl;
+    input << fp;
+    temp.append(input);
+    std::cout << "/*" << std::endl;
+    std::cout << temp.ptr() << std::endl;
+    std::cout << "*/" << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fclose(fp);
+
+    hyperlex::Morpheme here;
+    error = here.Build<PreTreat>(input.ptr());
+    std::cout << "error: " << error << std::endl;
+    here.Demo(stdout);
+
+    hyperlex::Morpheme derived;
+
+    error = pretreatment(file.c_str(), derived);
+
+    std::cout << "error: " << error << std::endl;
+    derived.Demo(stdout);
+    hyperlex::BufferChar MorOut;
+    derived.print(MorOut);
+
+    std::cout << MorOut.ptr() << std::endl;
+
+    std::cout << "derived == here : " << (derived == here) << std::endl;
+
     return error;
 }
 int static Test004(const hyperlex::dictionary& para)
