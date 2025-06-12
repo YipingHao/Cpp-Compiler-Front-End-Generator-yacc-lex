@@ -1794,8 +1794,25 @@ void FilePath::append_copy(const char* str)
 		}
 		else if (PathUnit.count() == 1)
 		{
-			PathUnit[0][0] = '.';
-			PathUnit[0][1] = '\0';
+			if (strcmp(PathUnit[0], "..") == 0)
+			{
+				char* copy = (char*)malloc(strlen("..") + 1);
+				strcpy(copy, "..");
+				PathUnit.append(copy);
+			}
+			else if (strcmp(PathUnit[0], ".") == 0)
+			{
+				char* copy = (char*)malloc(strlen("..") + 1);
+				strcpy(copy, "..");
+				free(PathUnit[0]);
+				PathUnit[0] = copy;
+			}
+			else
+			{
+				PathUnit[0][0] = '.';
+				PathUnit[0][1] = '\0';
+			}
+			
 		}
 	}
 	else {
