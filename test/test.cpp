@@ -89,6 +89,7 @@ int testNew(hyperlex::dictionary& para)
 	}
     case 2:
     {
+        std::cout << "Test class file path "<< std::endl;
         error = Test002(para);
         break;
     }
