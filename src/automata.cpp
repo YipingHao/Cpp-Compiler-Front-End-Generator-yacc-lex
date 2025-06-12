@@ -1772,7 +1772,7 @@ void FilePath::RearCut(void)
 		absolute = false;
 	}
 }
-void FilePath::RearCutAppend(const FilePath& path)
+void FilePath::RearCutAppend(const FilePath& rhs)
 {
 	RearCut();
 	if (rhs.absolute) {

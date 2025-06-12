@@ -379,7 +379,7 @@ namespace hyperlex
 		void copy(const FilePath& source);
 		//the input path can't be 'this'。 A += A is wrong;
 		void RearCut(void);
-		void RearCutAppend(const FilePath& path);
+		void RearCutAppend(const FilePath& rhs);
 		void clear(void);
 	private:
 		bool absolute;
