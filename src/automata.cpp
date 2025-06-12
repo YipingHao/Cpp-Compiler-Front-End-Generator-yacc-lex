@@ -1723,7 +1723,7 @@ char* FilePath::print(char divider)const {
 
 	return buf;
 }
-void FilePath::demo(FILE* fp = stdout)const
+void FilePath::demo(FILE* fp)const
 {
 	fprintf(fp, "[FilePath Demo]");
 	fprintf(fp, "-Absolute: %s, ", absolute ? "true" : "false");
