@@ -827,13 +827,13 @@ int static Test002(const hyperlex::dictionary& para)
 		test003 temp;
 	}
     hyperlex::FilePath A, B, C;
-    A.build("./data/vain.txt");
+    A.build(".//data///vain.txt");
     A.demo();
     B.build("header.h");
     B.demo();
     A += B;
     A.demo();
-    B.build("/share/Hyper/git/data/header.h");
+    B.build("/share/Hyper///git/data/header.h");
     B.demo();
     A += B;
     A.demo();
