@@ -1637,6 +1637,99 @@ void RegularExp::set(const Morpheme& eme, hyperlex::tree<GrammarTree::TreeInfor>
 	set(TreeNow);
 }
 
+#include<string.h>
+FilePath::FilePath()
+{
+	absolute = false;
+}
+FilePath::~FilePath()
+{
+	clear();
+}
+void FilePath::clear()
+{
+	for (size_t i = 0; i < PathUnit.count(); ++i)
+	{
+		free(PathUnit[i]);
+	}
+}
+void FilePath::build(const char* path)
+{
+	clear();
+	if (!path || *path == '\0') return;
+
+	absolute = (path[0] == '/');
+	const char* start = absolute ? path + 1 : path;
+
+	while (*start) {
+		while (*start == '/') ++start;
+		if (!*start) break;
+
+		const char* end = start;
+		while (*end && *end != '/') ++end;
+
+		char* unit = (char*)malloc(end - start + 1);
+		memcpy(unit, start, end - start);
+		unit[end - start] = '\0';
+		PathUnit.append(unit);
+
+		start = end;
+	}
+}
+void FilePath::operator+=(const FilePath& rhs)
+{
+	if (rhs.absolute) {
+		clear();
+		absolute = true;
+		for (size_t i = 0; i < rhs.PathUnit.count(); ++i) {
+			append_copy(rhs.PathUnit[i]);
+		}
+	}
+	else {
+		for (size_t i = 0; i < rhs.PathUnit.count(); ++i) {
+			append_copy(rhs.PathUnit[i]);
+		}
+	}
+}
+char* FilePath::print(char divider = '/') {
+	size_t total = absolute ? 1 : 0;
+	const size_t count = PathUnit.count();
+
+	for (size_t i = 0; i < count; ++i) {
+		total += strlen(PathUnit[i]) + (i != count - 1 ? 1 : 0);
+	}
+
+	char* buf = (char*)malloc(total + 1);
+	char* ptr = buf;
+
+	if (absolute && count > 0)
+	{
+		*ptr = divider;
+		ptr++;
+	}
+
+	for (size_t i = 0; i < count; ++i) {
+		const char* unit = PathUnit[i];
+		const size_t len = strlen(unit);
+		memcpy(ptr, unit, len);
+		ptr += len;
+		if (i != count - 1) 
+		{
+			*ptr = divider;
+			ptr++;
+		}
+	}
+	*ptr = '\0';
+
+	return buf;
+}
+void FilePath::append_copy(const char* str)
+{
+	char* copy = (char*)malloc(strlen(str) + 1);
+	strcpy(copy, str);
+	PathUnit.append(copy);
+}
+
 
 
 static const char* Copy(const char* input)
@@ -6499,6 +6592,7 @@ static size_t strlength(const char* str)
 	for (i = 0; str[i] != '\0'; i++);
 	return i;
 }
+
 static void strfree(const char** strs, size_t length)
 {
 	size_t i;

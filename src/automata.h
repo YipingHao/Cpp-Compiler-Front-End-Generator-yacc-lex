@@ -366,6 +366,20 @@ namespace hyperlex
 	class Morpheme;
 	class GrammarTree;
 	
+	class FilePath
+	{
+	public:
+		FilePath();
+		~FilePath();
+		void build(const char* path);
+		void operator+=(const FilePath& path);
+		char* print(char divide = '/');
+	private:
+		bool absolute;
+		vector<char*> PathUnit;
+		void clear(void);
+		void append_copy(const char* str);
+	};
 	class GrammarTree
 	{
 	public:
