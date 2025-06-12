@@ -833,7 +833,7 @@ int static Test002(const hyperlex::dictionary& para)
     B.demo();
     A += B;
     A.demo();
-    B.build("/share/Hyper//./git/./././../git/data/header.h");
+    B.build("/share/Hyper//./git/./././///../git/data/header.h");
     B.demo();
     B.clean();
     B.demo();
@@ -843,8 +843,11 @@ int static Test002(const hyperlex::dictionary& para)
     A.demo();
     A += B;
     A.demo();
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     A.build(".//data/././vain.txt");
     A.demo();
+    C += A;
+    C.demo();
     A.copy(B);
     A.demo();
     return error;

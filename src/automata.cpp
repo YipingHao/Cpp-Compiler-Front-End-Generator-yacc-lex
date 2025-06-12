@@ -60,7 +60,7 @@ void BufferChar::operator+=(const char* input)
 }
 void BufferChar::operator+=(long int source)
 {
-	size_t i;
+	//size_t i;
 	long long int r, ele, top;
 	char stack[32];
 	ele = source;
