@@ -863,13 +863,15 @@ int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
             CFile CF;
             hyperlex::FilePath left, here;
             here.build(name);
+            std::cout << "file: " << file << std::endl;
+            std::cout << "output.GetFile(file): " << output.GetFile(file) << std::endl;
             left.build(output.GetFile(file));
             here.demo();
             left.demo();
             left.RearCutAppend(here);
             
             left.demo();
-            std::cout << "==========" << std::endl;
+            std::cout << "=============" << std::endl;
                  
             for (size_t i = 0; i < output.FileCount(); i++)
             {
