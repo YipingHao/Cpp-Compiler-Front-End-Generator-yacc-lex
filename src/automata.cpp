@@ -1674,28 +1674,9 @@ void FilePath::build(const char* path)
 		memcpy(unit, start, end - start);
 		unit[end - start] = '\0';
 
-		if (strcmp(unit, ".") == 0) {
-			// 当前目录符号，跳过不添加
-			free(unit);
-		}
-		else if (strcmp(unit, "..") == 0) {
-			// 父目录符号
-			if (PathUnit.count() > 1) {
-				// 移除前一个路径单元（回退一级）
-				char* last;
-				PathUnit.pop(last);
-				free(last);
-			}
-			else if (absolute) {
-				free(unit);
-			}
-		}
-		else {
-			// 普通路径单元，添加到列表
-			PathUnit.append(unit);
-		}
-
-
+		append_copy(unit);
+		free(unit);
+		
 
 		start = end;
 	}
@@ -1794,9 +1775,35 @@ void FilePath::demo(FILE* fp)const
 }
 void FilePath::append_copy(const char* str)
 {
-	char* copy = (char*)malloc(strlen(str) + 1);
-	strcpy(copy, str);
-	PathUnit.append(copy);
+	if (strcmp(str, ".") == 0)
+	{
+		if (PathUnit.count() == 0)
+		{
+			char* copy = (char*)malloc(strlen(str) + 1);
+			strcpy(copy, str);
+			PathUnit.append(copy);
+		}
+	}
+	else if (strcmp(str, "..") == 0) {
+		// 父目录符号
+		if (PathUnit.count() > 1) {
+			// 移除前一个路径单元（回退一级）
+			char* last;
+			PathUnit.pop(last);
+			free(last);
+		}
+		else if (PathUnit.count() == 1)
+		{
+			PathUnit[0][0] = '.';
+			PathUnit[0][1] = '\0';
+		}
+	}
+	else {
+		char* copy = (char*)malloc(strlen(str) + 1);
+		strcpy(copy, str);
+		PathUnit.append(copy);
+	}
+
 }
 void FilePath::RearCut(void)
 {
