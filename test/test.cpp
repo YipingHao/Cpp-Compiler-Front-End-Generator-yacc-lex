@@ -676,11 +676,17 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
     
 	return error;
 }
-
-int static pretreatment(const char* SrcName, const char* path, hyperlex::Morpheme& output)
+static bool compare(const char* str1, const char* str2)
 {
-    int error = 0;// output.Build<PreTreat>(input);
-
+    size_t i;
+    for (i = 0; (str1[i] != '\0') && (str1[i] == str2[i]); i++);
+    return str1[i] == str2[i];
+}
+int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
+{
+    CFile CF;
+    FILE* fp = CF.OpenRead(SrcName);
+    int error = output.Build<PreTreat>(fp);
     output.append(SrcName);
     if (error != 0) return error * 16;
     bool include;
@@ -711,10 +717,7 @@ int static pretreatment(const char* SrcName, const char* path, hyperlex::Morphem
                         include = true;
                         begin = GT->child(0)->root().site;
                         count = 2;
-                        //std::cout << "begin: " << begin << std::endl;
-                        //std::cout << "output.GetWord(site): " << output.GetWord(site) << std::endl;
                         name = output.GetString(site);
-                        //std::cout << "name: " << name << std::endl;
                         file = output[site].file;
                         break;
                     }
@@ -738,15 +741,26 @@ int static pretreatment(const char* SrcName, const char* path, hyperlex::Morphem
         {
             hyperlex::Morpheme eme;
             CFile CF;
-            FILE* fp = CF.OpenRead(name);
-            output.append(name);
-            //output.Demo(stdout);
+            hyperlex::FilePath left, here;
+            here.build(name);
+            left.build(output.GetFile(file));
+            left.RearCutAppend(here);
+            
+            for (size_t i = 0; i < output.FileCount(); i++)
+            {
+                hyperlex::FilePath right;
+                right.build(output.GetFile(i));
+                if(left == right) return error * 16 + 5;
+            }
+            char* newFile = left.print();
+            FILE* fp = CF.OpenRead(newFile);
+            free(newFile);
+            output.append(newFile);
             int error = eme.Build<PreTreat>(fp);
             fclose(fp);
             if (error != 0) return error * 16 + 1;
             eme.SetFile(output.FileCount() - 1);
             output.insert(begin, count, eme);
-            //output.Demo(stdout);
 
         }
     } while (include);

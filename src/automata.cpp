@@ -579,6 +579,10 @@ void Morpheme::SetFile(size_t value)
 	}
 	lex[count - 1].file = 0;
 }
+const char* Morpheme::GetFile(size_t value) const
+{
+	return SrcFile[value];
+}
 size_t Morpheme::FileCount(void) const
 {
 	return SrcFile.count();

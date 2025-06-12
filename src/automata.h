@@ -470,6 +470,7 @@ namespace hyperlex
 
 		void insert(size_t from, size_t deleted, const Morpheme& src);
 		void SetFile(size_t value);
+		const char* GetFile(size_t value) const;
 		size_t FileCount(void) const;
 		void shrink(void);
 		void sort(void);
