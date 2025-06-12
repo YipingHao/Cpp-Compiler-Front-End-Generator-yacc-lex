@@ -1886,9 +1886,6 @@ void FilePath::clean(void)
 void FilePath::RearCutAppend(const FilePath& rhs)
 {
 	RearCut();
-	std::cout << "sfdsfsdfsdf" << std::endl;
-	demo();
-	rhs.demo();
 	if (rhs.absolute) {
 		clear();
 		absolute = true;
@@ -1899,8 +1896,6 @@ void FilePath::RearCutAppend(const FilePath& rhs)
 	else {
 		for (size_t i = 0; i < rhs.PathUnit.count(); ++i) {
 			append_copy(rhs.PathUnit[i]);
-			std::cout << "sfdsf======f" << std::endl;
-			demo();
 		}
 	}
 }

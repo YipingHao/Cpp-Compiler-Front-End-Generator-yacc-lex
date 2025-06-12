@@ -857,7 +857,7 @@ int static Test002(const hyperlex::dictionary& para)
     B.copy(A);
     B.demo();
     A.RearCutAppend(B);
-    B.demo();
+    A.demo();
     return error;
 }
 int static Test003(const hyperlex::dictionary& para)
