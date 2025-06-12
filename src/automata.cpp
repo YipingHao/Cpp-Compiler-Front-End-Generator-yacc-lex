@@ -1841,7 +1841,7 @@ void FilePath::clean(void)
 	offset++;
 	for (size_t i = 1; i < temp.count(); i++)
 	{
-		const char* unit = temp[i];
+		char* unit = temp[i];
 		if (strcmp(unit, ".") == 0)
 			free(unit);
 		else
