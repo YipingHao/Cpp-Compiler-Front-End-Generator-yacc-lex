@@ -1814,6 +1814,13 @@ void FilePath::append_copy(const char* str)
 			}
 			
 		}
+		else if (!absolute)
+		{
+			char* copy = (char*)malloc(strlen(str) + 1);
+			strcpy(copy, str);
+			PathUnit.append(copy);
+		}
+		
 	}
 	else {
 		char* copy = (char*)malloc(strlen(str) + 1);
