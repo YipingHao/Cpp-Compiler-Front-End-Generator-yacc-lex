@@ -805,7 +805,7 @@ int static Test002(const hyperlex::dictionary& para)
 int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
 {
     CFile CF;
-    FILE* fp = CF.OpenRead(SrcName);
+    FILE* fp = fopen(SrcName, "r");
     int error = output.Build<PreTreat>(fp);
     output.append(SrcName);
     if (error != 0) return error * 16;
@@ -860,19 +860,18 @@ int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
         if (include)
         {
             hyperlex::Morpheme eme;
-            CFile CF;
             hyperlex::FilePath left, here;
             here.build(name);
-            std::cout << "file: " << file << std::endl;
-            std::cout << "output.GetFile(file): " << output.GetFile(file) << std::endl;
+            //std::cout << "file: " << file << std::endl;
+            //std::cout << "output.GetFile(file): " << output.GetFile(file) << std::endl;
             left.build(output.GetFile(file));
-            here.demo();
-            left.demo();
+            //here.demo();
+            //left.demo();
             left.RearCutAppend(here);
-            
-            left.demo();
-            std::cout << "=============" << std::endl;
-                 
+
+            //left.demo();
+            //std::cout << "=============" << std::endl;
+
             for (size_t i = 0; i < output.FileCount(); i++)
             {
                 hyperlex::FilePath right;
@@ -880,12 +879,12 @@ int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
                 if (left == right) return error * 16 + 5;
             }
             char* newFile = left.print();
-            FILE* fp = CF.OpenRead(newFile);
+            FILE* fp2 = fopen(newFile, "r");
             output.append(newFile);
             free(newFile);
-            
-            int error = eme.Build<PreTreat>(fp);
-            fclose(fp);
+
+            int error = eme.Build<PreTreat>(fp2);
+            fclose(fp2);
             if (error != 0) return error * 16 + 1;
             eme.SetFile(output.FileCount() - 1);
             output.insert(begin, count, eme);

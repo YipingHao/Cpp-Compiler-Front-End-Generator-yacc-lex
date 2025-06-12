@@ -583,7 +583,8 @@ namespace hyperlex
 		typedef const vector<const char*> cvccp;
 		InputPanel();
 		~InputPanel();
-		int pretreatment(const char* input, Morpheme& output);
+		
+		int build_v02(const char* file);
 		int build(FILE* fp);
 		int build(const char* input);
 		void demo(FILE* fp) const;
@@ -677,6 +678,7 @@ namespace hyperlex
 
 		Morpheme LexicalSource;
 
+		int pretreatment(const char* input, Morpheme& output);
 
 		void initial(void);
 		void clear(void);
