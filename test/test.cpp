@@ -859,6 +859,15 @@ int static Test002(const hyperlex::dictionary& para)
     B.demo();
     A.RearCutAppend(B);
     A.demo();
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    A.build("././././../hahahahahahahahaha///gg/../hahaha/header.txt");
+    A.demo();
+    B.copy(A);
+    B.demo();
+    A.RearCutAppend(B);
+    A.demo();
+    A.RearCutAppend(B);
+    A.demo();
     return error;
 }
 int static Test003(const hyperlex::dictionary& para)
