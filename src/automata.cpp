@@ -1874,7 +1874,6 @@ void FilePath::RearCutAppend(const FilePath& rhs)
 			append_copy(rhs.PathUnit[i]);
 		}
 	}
-	clean();
 }
 
 static const char* Copy(const char* input)
