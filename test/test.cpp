@@ -852,7 +852,7 @@ int static Test002(const hyperlex::dictionary& para)
     A.copy(B);
     A.demo();
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
-    A.build("././././../hahahahha/header.txt");
+    A.build("././././../hahahahahahahahaha/hahaha/header.txt");
     A.demo();
     B.copy(A);
     B.demo();
