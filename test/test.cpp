@@ -837,6 +837,8 @@ int static Test002(const hyperlex::dictionary& para)
     B.demo();
     A += B;
     A.demo();
+    A += B;
+    A.demo();
     return error;
 }
 int static Test003(const hyperlex::dictionary& para)
