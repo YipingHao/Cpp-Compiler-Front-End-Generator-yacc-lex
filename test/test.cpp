@@ -833,7 +833,10 @@ int static Test002(const hyperlex::dictionary& para)
     B.demo();
     A += B;
     A.demo();
-
+    B.build("/share/Hyper/git/data/header.h");
+    B.demo();
+    A += B;
+    A.demo();
     return error;
 }
 int static Test003(const hyperlex::dictionary& para)
