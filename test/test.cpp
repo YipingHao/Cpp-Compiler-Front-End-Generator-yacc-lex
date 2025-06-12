@@ -676,9 +676,9 @@ int static pretreatment(const char*SrcName, hyperlex::Morpheme& input, hyperlex:
 	return error;
 }
 
-int static pretreatment(const char* SrcName, hyperlex::Morpheme& input, hyperlex::Morpheme& output)
+int static pretreatment(const char* SrcName, const char* path, hyperlex::Morpheme& output)
 {
-    int error = output.Build<PreTreat>(input);
+    //int error = output.Build<PreTreat>(input);
     output.append(SrcName);
     if (error != 0) return error * 16;
     bool include;
