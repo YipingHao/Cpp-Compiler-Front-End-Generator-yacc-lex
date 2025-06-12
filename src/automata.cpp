@@ -2777,9 +2777,9 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 {
 	typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor> GTNode;
 	typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor>::PostIterator GTiterator;
-	FILE* fp = fopen(SrcName, "r");
+	FILE* fp = fopen(input, "r");
 	int error = output.Build<PreTreat>(fp);
-	output.append(SrcName);
+	output.append(input);
 	if (error != 0) return error * 16;
 	bool include;
 	do
