@@ -1691,7 +1691,7 @@ void FilePath::operator+=(const FilePath& rhs)
 		}
 	}
 }
-char* FilePath::print(char divider = '/') {
+char* FilePath::print(char divider) {
 	size_t total = absolute ? 1 : 0;
 	const size_t count = PathUnit.count();
 
