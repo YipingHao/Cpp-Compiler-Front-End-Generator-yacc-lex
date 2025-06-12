@@ -837,7 +837,7 @@ int static Test002(const hyperlex::dictionary& para)
     B.demo();
     B.clean();
     B.demo();
-
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     A += B;
 
     A.demo();
