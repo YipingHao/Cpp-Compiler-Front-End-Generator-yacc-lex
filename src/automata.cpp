@@ -2197,11 +2197,12 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		fprintf(fp, "\n");
 		break;
 	case InputPanel::ErrorinputLEXICAL:
+	{
 		fprintf(fp, "ErrorinputLEXICAL: \n");
 		record = 0;
 		for (i = 0; i < LexicalSource.GetCount(); i++)
 		{
-			if(LexicalSource[i].accept<0) 
+			if (LexicalSource[i].accept < 0)
 			{
 				record = LexicalSource[i].line;
 				break;
@@ -2217,13 +2218,15 @@ void InputPanel::ErrorDemo(FILE* fp) const
 			}
 		}
 		break;
+	}
 	case InputPanel::ErrorinputGrammar:
+	{
 		fprintf(fp, "ErrorinputGrammar: Something was wrong when parsing of line:");
 		record = LexicalSource[errorInfor1].line;
 		fprintf(fp, "%zu\n", record);
 		for (i = 0; i < LexicalSource.GetCount(); i++)
 		{
-			uintTemp = LexicalSource[i].line;
+			size_t uintTemp = LexicalSource[i].line;
 			if (record == uintTemp || uintTemp + 1 == record)
 			{
 				if (i == errorInfor1)
@@ -2233,20 +2236,23 @@ void InputPanel::ErrorDemo(FILE* fp) const
 			}
 		}
 		break;
+	}
 	case InputPanel::regGroupMissing:
+	{
 		fprintf(fp, "regGroupMissing: There is no corresponding regular expression group as:");
 		fprintf(fp, "%s\n", LexicalSource.GetWord(errorInfor1));
 		record = LexicalSource[errorInfor1].line;
 		fprintf(fp, "line[%zu]: ", record + 1);
 		for (i = 0; i < LexicalSource.GetCount(); i++)
 		{
-			uintTemp = LexicalSource[i].line;
+			size_t uintTemp = LexicalSource[i].line;
 			if (i == errorInfor1)
 				fprintf(fp, "| %s |", LexicalSource.GetWord(i));
 			else
 				fprintf(fp, "%s", LexicalSource.GetWord(i));
 		}
 		break;
+	}
 	case InputPanel::buildUndone:
 		fprintf(fp, "buildUndone: has not been built.\n");
 		fprintf(fp, "\n");
