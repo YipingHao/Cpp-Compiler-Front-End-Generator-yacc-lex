@@ -59,8 +59,6 @@ namespace hyperlex
             missingIdinRegdef,
             ErrorinputLEXICAL,
             ErrorinputGrammar,
-            PretreatLEXICAL,
-            PretreatRepeat,
             buildUndone,
         };
 

@@ -8,10 +8,10 @@
 	//server = "GPU";
 
 	
-	//InputFileName = "./data/error.txt";
+	InputFileName = "./data/vain.txt";
 	//InputFileName = "./data/grammerT2.txt";
 	//InputFileName = "./data/sample.txt";
-	InputFileName = "./data/dictionary.txt";
+	//InputFileName = "./data/dictionary.txt";
 	//InputFileName = "./data/input.txt";
 	OutputFileName = "./output/L.txt";
 	PrintToFile = true;//F if print to screen;
@@ -21,10 +21,11 @@
 	OutputFileName2 = "./output/G.txt";
 	OutputFileName3 = "./output/G2.txt";
 	//item = "test old";
-	item = "simple LR";
-	//item = "test";
+	//item = "simple LR";
+	//item = "simple LR v02";
+	item = "test";
 	TestItem = 
 	{
-		item = 0;
+		item = 3;
 	};
 }
