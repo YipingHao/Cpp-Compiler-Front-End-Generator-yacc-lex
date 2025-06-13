@@ -871,13 +871,6 @@ int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
 
             //left.demo();
             //std::cout << "=============" << std::endl;
-
-            for (size_t i = 0; i < output.FileCount(); i++)
-            {
-                hyperlex::FilePath right;
-                right.build(output.GetFile(i));
-                if (left == right) return error * 16 + 5;
-            }
             char* newFile = left.print();
             FILE* fp2 = fopen(newFile, "r");
             output.append(newFile);
@@ -887,6 +880,14 @@ int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
             fclose(fp2);
             if (error != 0) return error * 16 + 1;
             eme.SetFile(output.FileCount() - 1);
+
+            for (size_t i = 0; i < output.FileCount(); i++)
+            {
+                hyperlex::FilePath right;
+                right.build(output.GetFile(i));
+                if (left == right) return error * 16 + 5;
+            }
+           
             output.insert(begin, count, eme);
 
         }

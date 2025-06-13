@@ -2099,7 +2099,7 @@ void InputPanel::demo(FILE* fp) const
 void InputPanel::ErrorDemo(FILE* fp) const
 {
 	const char* s_temp_1, * s_temp_2; 
-	size_t i, j, record, uintTemp;
+	size_t i, j, record;
 	switch (errorCode)
 	{
 	case InputPanel::NoError:
@@ -2127,6 +2127,54 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		s_temp_1 = GrammarG[errorInfor1]->rules[errorInfor2]->name;
 		fprintf(fp, "repeatGName: Conflict grammar rule name: %s\n", s_temp_1);
 		break;
+	case InputPanel::PretreatLEXICAL:
+	{
+		fprintf(fp, "PretreatLEXICAL: Error happenned during pretreatment.\n");
+		fprintf(fp, "Lexical analysis of No.%zu ", errorInfor1);
+		fprintf(fp, "source file %s made a mistake\n", LexicalSource.GetFile(errorInfor1));
+		break;
+	}	
+	case InputPanel::PretreatGRAMMAR:
+	{
+		fprintf(fp, "PretreatGRAMMAR: Error happenned during pretreatment.\n");
+		fprintf(fp, "Grammar analysis of No.%zu ", errorInfor1);
+		fprintf(fp, "source file %s made a mistake ", LexicalSource.GetFile(errorInfor1));
+
+		size_t RLine = LexicalSource[errorInfor2].line;
+		size_t RFile = LexicalSource[errorInfor2].file;
+
+		fprintf(fp, "in line %zu\n", RLine);
+
+		fprintf(fp, "%zu\n", record);
+		for (i = 0; i < LexicalSource.GetCount(); i++)
+		{
+			size_t uintTemp1 = LexicalSource[i].line;
+			size_t uintTemp2 = LexicalSource[i].file;
+			if ((record == uintTemp1 || uintTemp1 + 1 == record) && uintTemp2 = RFile)
+			{
+				if (i == errorInfor1)
+					fprintf(fp, "| %s |", LexicalSource.GetWord(i));
+				else
+					fprintf(fp, "%s", LexicalSource.GetWord(i));
+			}
+		}
+		break;
+	}
+	case InputPanel::PretreatRepeat:
+	{
+		fprintf(fp, "PretreatRepeat: Error happenned during pretreatment.\n");
+		fprintf(fp, "No.%zu ", errorInfor1);
+		fprintf(fp, "source file %s repeats with existed ", LexicalSource.GetFile(errorInfor1));
+		fprintf(fp, "%zu file %s\n", errorInfor2, LexicalSource.GetFile(errorInfor2));
+		break;
+	}
+	case InputPanel::PretreatOpenfail:
+	{
+		fprintf(fp, "PretreatOpenfail: Error happenned during pretreatment.\n");
+		fprintf(fp, "Open of No.%zu ", errorInfor1);
+		fprintf(fp, "source file %s made a mistake\n", LexicalSource.GetFile(errorInfor1));
+		break;
+	}
 	case InputPanel::ErrorNonTernimal:
 		fprintf(fp, "ErrorNonTernimal: Non-ternimal symbols in rules' body are conflict with their names.\n");
 		fprintf(fp, "Non-ternimal count in body: %zu, in their head: %zu\n", NontTerminal.count(), GrammarG.count());
@@ -2162,7 +2210,7 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		fprintf(fp, "line[%zu]: ", record + 1);
 		for (i = 0; i < LexicalSource.GetCount(); i++)
 		{
-			uintTemp = LexicalSource[i].line;
+			size_t  uintTemp = LexicalSource[i].line;
 			if (record == uintTemp)
 			{
 				fprintf(fp, "%s", LexicalSource.GetWord(i));
@@ -2186,7 +2234,7 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		}
 		break;
 	case InputPanel::regGroupMissing:
-		fprintf(fp, "ErrorinputGrammar: There is no corresponding regular expression group as:");
+		fprintf(fp, "regGroupMissing: There is no corresponding regular expression group as:");
 		fprintf(fp, "%s\n", LexicalSource.GetWord(errorInfor1));
 		record = LexicalSource[errorInfor1].line;
 		fprintf(fp, "line[%zu]: ", record + 1);
@@ -2759,12 +2807,10 @@ int InputPanel::build_v02(const char* file)
 	clear();
 	initial();
 	error = pretreatment(file, LexicalSource);
+
+
 	//error = LexicalSource.Build<Reg>(input);
-	if (error != 0)
-	{
-		errorCode = ErrorinputLEXICAL;
-		return error;
-	}
+	if (error != 0) return error;
 	NeglectNullToken(LexicalSource);
 	//eme.Demo(stdout);
 	error = buildGanalysis(LexicalSource);
@@ -2778,9 +2824,19 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 	typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor> GTNode;
 	typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor>::PostIterator GTiterator;
 	FILE* fp = fopen(input, "r");
+	if (fp == NULL)
+	{
+		errorCode = PretreatOpenfail;
+		return 445624;
+	}
 	int error = output.Build<PreTreat>(fp);
 	output.append(input);
-	if (error != 0) return error * 16;
+	if (error != 0)
+	{
+		errorInfor1 = output.FileCount();
+		errorCode = PretreatLEXICAL;
+		return error;
+	}
 	bool include;
 	do
 	{
@@ -2791,7 +2847,13 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 		const char* name = NULL;
 		hyperlex::GrammarTree Tree;
 		error = Tree.build<Preparser>(output);
-		if (error != 0) return error * 16 + 2;
+		if (error != 0)
+		{
+			errorInfor1 = output.FileCount();
+			errorInfor2 = Tree.error_record02;
+			errorCode = PretreatGRAMMAR;
+			return error;
+		}
 		GTiterator iterator;
 		iterator.initial(Tree.GT);
 		while (iterator.still())
@@ -2843,22 +2905,42 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 
 			//left.demo();
 			//std::cout << "=============" << std::endl;
+			char* newFile = left.print();
+			FILE* fp2 = fopen(newFile, "r");
+			output.append(newFile);
+			free(newFile);
+			if (fp2 == NULL)
+			{
+				errorCode = PretreatOpenfail;
+				return 445625;
+			}
+			int error = eme.Build<PreTreat>(fp2);
+			fclose(fp2);
+			if (error != 0)
+			{
+				errorInfor1 = output.FileCount();
+				errorCode = PretreatLEXICAL;
+				return error;
+			}
+			eme.SetFile(output.FileCount() - 1);
 
 			for (size_t i = 0; i < output.FileCount(); i++)
 			{
 				hyperlex::FilePath right;
 				right.build(output.GetFile(i));
-				if (left == right) return error * 16 + 5;
+				if (left == right)
+				{
+					errorInfor1 = output.FileCount();
+					errorInfor2 = i;
+					errorCode = PretreatRepeat;
+					return 12345678;
+				}
 			}
-			char* newFile = left.print();
-			FILE* fp2 = fopen(newFile, "r"); 
-			output.append(newFile);
-			free(newFile);
+			
 
-			int error = eme.Build<PreTreat>(fp2);
-			fclose(fp2);
-			if (error != 0) return error * 16 + 1;
-			eme.SetFile(output.FileCount() - 1);
+			
+			
+			
 			output.insert(begin, count, eme);
 
 		}
