@@ -32,6 +32,7 @@ private:
 
 };
 int static simpleLR(hyperlex::dictionary& para);
+int static simpleLR_v02(hyperlex::dictionary& para);
 int testNew(hyperlex::dictionary& para);
 int static entrance(int argc, char* argv[])
 {
@@ -69,6 +70,10 @@ int static entrance(int argc, char* argv[])
     else if (compare(item, "simple LR"))
     {
         info = simpleLR(para);
+    }
+    else if (compare(item, "simple LR v02"))
+    {
+        info = simpleLR_v02(para);
     }
     else if (compare(item, "test"))
     {
@@ -109,6 +114,62 @@ int simpleLR(hyperlex::dictionary& para)
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     fclose(fp);
     error = IP.build(input.ptr());
+    std::cout << "error: " << error << std::endl;
+    IP.demo(stdout);
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+
+    FILE* fpL, * fpG, * fpG2;
+    if (para.search(false, "PrintToFile"))
+    {
+        fpL = CF.OpenWritePlus(para.search("./output/L.txt", "OutputFileName"));
+        fpG = CF.OpenWritePlus(para.search("./output/G.txt", "OutputFileName2"));
+        fpG2 = CF.OpenWritePlus(para.search("./output/G2.txt", "OutputFileName3"));
+    }
+    else
+    {
+        fpL = stdout;
+        fpG = stdout;
+        fpG2 = stdout;
+    }
+    error = IP.printL(fpL, OutputLabel.c_str());
+    std::cout << "error: " << error << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    error = IP.printG(fpG, fpG2, OutputLabel2.c_str());
+    std::cout << "error: " << error << std::endl;
+    if (para.search(false, "PrintToFile"))
+    {
+        fclose(fpL);
+        fclose(fpG);
+        fclose(fpG2);
+    }
+    return error;
+}
+int static simpleLR_v02(hyperlex::dictionary& para)
+{
+    hyperlex::InputPanel IP;
+    std::string file;
+    FILE* fp;
+    hyperlex::BufferChar input;
+    hyperlex::BufferChar temp;
+    CFile CF;
+    std::string OutputLabel2, OutputLabel;
+    OutputLabel = para.search("lexer", "OutputLabel");
+    OutputLabel2 = para.search("parser", "OutputLabel2");
+    int error = 0;
+
+
+    file = para.search("./data/grammerT.txt", "InputFileName");
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fp = CF.OpenRead(file.c_str());
+    std::cout << "InputFileName: " << file << std::endl;
+    input << fp;
+    temp.append(input);
+    std::cout << "/*" << std::endl;
+    std::cout << temp.ptr() << std::endl;
+    std::cout << "*/" << std::endl;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    fclose(fp);
+    error = IP.build_v02(file.c_str());
     std::cout << "error: " << error << std::endl;
     IP.demo(stdout);
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
