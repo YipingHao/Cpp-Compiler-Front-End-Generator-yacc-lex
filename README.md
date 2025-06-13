@@ -29,6 +29,7 @@ C++编译器前端生成器:按照编译器领域经典教科书——龙书上�
 ```
 int build(FILE* fp);
 int build(const char* input);
+int build_v02(const char* file);
 void demo(FILE* fp) const;
 void ErrorDemo(FILE* fp) const;
 int printL(FILE* fp, const char* nameL)const;
@@ -37,6 +38,10 @@ int printG(FILE* output, FILE* infor, const char* nameG)const;
 
 ####        1.  编码规则与build
 build方法接受一个可以读的输入文件或者一个字符串(不是文件名而是完整的文件内容)作为输入，文件中字符编码格式应为ASCII.
+
+`build_v02`方法接受一个可以读的输入文件的文件名，注意不是完整的文件内容而是文件名作为输入。
+`build_v02`的改进之处在于它引入了对头文件功能的支持。
+对于一个词法与文法规则数目庞大的语言，分成多个输入文件可以更加便捷。
 ####        2.  输入信息展示
 demo方法展示读入文件的信息，如果发现输入文件有一些错误，那么它可以自动调用`ErrorDemo`方法展示错误。用户也可以主动使用`ErrorDemo`方法输出错误信息。
 ####        3. 输出打印
@@ -165,6 +170,8 @@ grammar: TEXT:
 ### 5.  格式细则：
 输入文件广泛使用C语言风格的花括号，右花括号后面是否跟着一个分号都可以，但是不能跟着多个。
 输入文件的词法分析之后丢弃所有的空格换行和水平制表符号。输入文件支持C语言风格的注释，这个注释由词法分析器识别后丢弃，具体注释的词法请参阅input.txt。
+
+
 
 ### 6.  词法分析输入格式
 #### 正则表达式的命名       
@@ -500,8 +507,103 @@ tree[a + 6]: value;
         }
 ```
 
+### 8.  使用多个输入文件
+
+
+#### 8.1简介
+`build_v02(const char*file)`方法接受一个可以读的输入文件的文件名，注意不是完整的文件内容而是文件名作为输入。
+`build_v02`的改进之处在于它引入了对头文件的支持。
+对于一个词法与文法规模庞大的系统，分成多个文件可以更加便捷。
+
+头文件包含的格式是C语言风格的。只支持字符串格式的文件名，尖括号的不支持。
+因为这个小小的分析器没有官方库。
+
+比如`#include "extern.h"`是合法的输入，但是`#include <extern.h>`是非法输入。
+`#include`中`#`和`include`之间不能有空格，但是`#include `和`"extern.h"`之间可以有任意空格，但是不能换行。
+头文件系统的使用原理和C语言的一样都是单纯的文本替换。我们的生成器也不提供比如`#define`之类的宏定义功能。
+
+#### 8.2头文件中引用头文件
+
+在头文件中可以引用另一个头文件。形成引用的链条。比如以下例子是合法的，
+文件source.txt 中包含了头文件lexical.h，lexical.h中包含了头文件unit。
+头文件包含并展开后得到了正常的规则文件。
+这种引用的链条中同一个文件不能出现两次，更不能成为环形，否则会报错。
+
+source.txt:
+```
+lexical:{
+#include "../data/lexical.h"
+};
+grammar: EXP:
+{
+    LEFT: id;
+    EXP: LEFT value RIGHT; 
+    RIGHT:{
+        single: MULTI;
+        multi: RIGHT [operator1] MULTI; //(MULTI * UNIT)
+    }
+    MULTI: 
+    {
+        single: UNIT;
+        multi: MULTI [operator2] UNIT; //(MULTI * UNIT)
+    }
+    UNIT: 
+    {
+        const: integer;
+        xyz: id;
+        alot: left RIGHT right;//(RIGHT)
+    }
+}
+```
+../data/lexical.h:
+
+```
+#include "unit"
+    id: id(+5): (<letter> | _) (<letter> | _ | <num>)+;
+    number: {integer: ('-'|'+')?<num>+;}
+    operator1:
+    {
+        sum: '+';
+        sub: '-';
+    }
+    operator2:
+    {
+        multi: '*';
+        div: '/';
+    }
+    value: value: '=';
+    braket:
+    {
+        left:'(';
+        right: ')';
+    };
+```
+unit:
+```
+    void: 
+    {
+        num: [0-9];
+        letter: [a-z]|[A-Z];
+    }
+```
+
+#### 8.3头文件的路径
+
+头文件中的名字前可以包含路径。`build_v02(const char*file)`方法输入的文件名中也可以包含路径。
+路径的分隔符应该与用户操作系统默认的格式一致。
+这个路径可以是绝对路径也可是相对路径。如果是绝对路径，那么当然是无歧义的。
+那么如果是相对路径，相对路径的支持规则大致和C语言相同。`build_v02(const char*file)`中如果是相对路径，
+那么相对路径是基于调用本生成器进程的当前路径的。
+如果一个文件A中使用相对路径引用了文件B那么此路径的出发点是A的路径。仅仅使用B的文件名也视为相对路径。
+比如上述例子中`unit`文件的路径其实是`../data/lexical.h`的路径即`../data/unit`。
+
+本软件包在工作的时候不会显示的调用改变进程当前路径的接口。但是会调用fopen函数。
+
 ## 输出文件格式
 相较于输出一个词法分析器加上文法分析器的完整代码，我们更倾向于输出词法分析器和文法分析器的”驱动表“。这种做法有更高的灵活度。如果用户不像动手写分析器，我们提供两个类将输出的”驱动表“转化为完整代码。
+输出的驱动表功能不如输出一个完整分析器功能完全，但是胜在灵活。
+如果用户想要进一步的调用驱动表，代码中也提供了支持此驱动表的分析器。
+
 ### 1.  词法分析器输出格式
 InputPanel的成员函数`int printL(FILE* fp, const char* nameL)const`输出的词法分析器的驱动表是一个结构体`struct nameL`，的声明和定义，声明格式如下:
 ```
