@@ -2150,7 +2150,7 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		{
 			size_t uintTemp1 = LexicalSource[i].line;
 			size_t uintTemp2 = LexicalSource[i].file;
-			if ((record == uintTemp1 || uintTemp1 + 1 == record) && uintTemp2 = RFile)
+			if ((record == uintTemp1 || uintTemp1 + 1 == record) && uintTemp2 == RFile)
 			{
 				if (i == errorInfor1)
 					fprintf(fp, "| %s |", LexicalSource.GetWord(i));
