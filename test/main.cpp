@@ -170,7 +170,7 @@ int static simpleLR_v02(hyperlex::dictionary& para)
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     fclose(fp);
     error = IP.build_v02(file.c_str());
-    std::cout << "error: " << error << std::endl;
+    std::cout << "error-IP.build_v02(file.c_str()): " << error << std::endl;
     IP.demo(stdout);
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
 
@@ -188,10 +188,10 @@ int static simpleLR_v02(hyperlex::dictionary& para)
         fpG2 = stdout;
     }
     error = IP.printL(fpL, OutputLabel.c_str());
-    std::cout << "error: " << error << std::endl;
+    std::cout << "error-IP.printL(fpL, OutputLabel.c_str()): " << error << std::endl;
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     error = IP.printG(fpG, fpG2, OutputLabel2.c_str());
-    std::cout << "error: " << error << std::endl;
+    std::cout << "error-IP.printG(fpG, fpG2, OutputLabel2.c_str()): " << error << std::endl;
     if (para.search(false, "PrintToFile"))
     {
         fclose(fpL);
