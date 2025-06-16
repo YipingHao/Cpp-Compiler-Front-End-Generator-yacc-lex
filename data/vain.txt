@@ -12,13 +12,14 @@ lexical:{
 };
 grammar: EXP:
 {
-	EXP: aa BB aa; 
+	EXP: aa Unit aa; 
+#include "./././//unit.h"
 	BB:
 	{
 		vain: void;
 		multi: BB bb;
 	}
-#include "formula.h"
+
 }
 
 
