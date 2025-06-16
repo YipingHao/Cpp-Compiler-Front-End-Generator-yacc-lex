@@ -2859,6 +2859,8 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 		{
 			errorInfor1 = output.FileCount() - 1;
 			errorInfor2 = Tree.error_record01;
+			std::cout << "Tree.error_record01: " << Tree.error_record01 << std::endl;
+			std::cout << "Tree.error_record02: " << Tree.error_record02 << std::endl;
 			errorCode = PretreatGRAMMAR;
 			return error;
 		}
@@ -2870,7 +2872,7 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 			if (iterator.state() == 0)
 			{
 				size_t infor = GT->root().site;
-				//std::cout << "infor: " << infor << std::endl;
+				
 				if (GT->root().rules)
 				{
 					if (infor == (int)Preparser::INCLUDE_include2_)
