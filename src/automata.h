@@ -408,6 +408,14 @@ namespace hyperlex
 			// rules: true, this may be not a leaf node, 
 			// site is the corresponding production rules
 		};
+		enum GrammarError 
+		{
+			NoError = 0,
+			Undone,
+			ActionError,
+			GotoError,
+			UnExpectEnd
+		};
 		//template<typename T> int build(const char* reg);
 		void Demo(FILE* fp, const Morpheme& input, const char* const* RulesName) const;
 		void clear(void);
@@ -417,7 +425,7 @@ namespace hyperlex
 		//error_record00 =  ture error infor from ACTION, otherwise from the sheet GOTO
 		//error_record01 = lexical unit number;
 		//error_record02 = (size_t)top content of stack;
-		bool error_record00;
+		GrammarError error_record00;
 		size_t error_record01;
 		size_t error_record02;
 	protected:
@@ -1166,6 +1174,7 @@ namespace hyperlex
 			if (!input.still(head))
 			{
 				error = -1;
+				error_record00 = GrammarTree::UnExpectEnd;
 				error_record01 = head;
 				error_record02 = (size_t)top;
 				break;
@@ -1174,8 +1183,8 @@ namespace hyperlex
 			temp = T::ACTION[top][input.accept(head)];
 			information = temp / 4;
 			type = (typename T::type)(temp % 4);
-			printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
-			printf("head = %5zu, lex = %s, \n", head, input.GetWord(head));
+			//printf( "T = %5d, top = %5d, information = %5d, type = %5d, ", input[head].accept, top, information, (int)type);
+			//printf("head = %5zu, lex = %s, \n", head, input.GetWord(head));
 			switch (type)
 			{
 			case T::accept:
@@ -1194,17 +1203,17 @@ namespace hyperlex
 				//TempTree.pop(GT);
 				break;
 			case T::error:
-				error_record00 = true;
+				error_record00 = GrammarTree::ActionError;
 				error_record01 = head;
 				error_record02 = (size_t)top;
-				printf("error_record01: %zu\n", error_record01);
-				printf("error_record02: %zu\n", error_record02);
+				//printf("error_record01: %zu\n", error_record01);
+				//printf("error_record02: %zu\n", error_record02);
 				error = temp;
 				DoNext = false;
 				break;
 			case T::push:
 				
-				printf("<%8zu, %4d: %4d , %s>\n", head, input[head].category, input[head].accept, input.GetWord(head));
+				//printf("<%8zu, %4d: %4d , %s>\n", head, input[head].category, input[head].accept, input.GetWord(head));
 				stack.append(information);
 				TreeNow = new tree<TreeInfor>;
 				TreeNow->root().implicit = false;
@@ -1248,7 +1257,7 @@ namespace hyperlex
 				}
 				else
 				{
-					error_record00 = false;
+					error_record00 = GrammarTree::GotoError;
 					error_record01 = head;
 					error_record02 = (size_t)top;
 					error = GoFull;

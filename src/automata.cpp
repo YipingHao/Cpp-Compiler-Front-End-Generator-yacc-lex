@@ -743,7 +743,7 @@ void Morpheme::SetLine(void)
 
 GrammarTree::GrammarTree()
 {
-	error_record00 = true;
+	error_record00 = Undone;
 	error_record01 = 0;
 	error_record02 = 0;
 	GT = NULL;
@@ -815,6 +815,9 @@ void GrammarTree::clear(void)
 		delete GT;
 	}
 	GT = NULL;
+	error_record00 = Undone;
+	error_record01 = 0;
+	error_record02 = 0;
 }
 GrammarTree::TreeInfor::TreeInfor(void)
 {
