@@ -2143,14 +2143,14 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		size_t RLine = LexicalSource[errorInfor2].line;
 		size_t RFile = LexicalSource[errorInfor2].file;
 
-		fprintf(fp, "in line %zu\n", RLine);
+		fprintf(fp, "in line %zu, file: %zu, unit: %zu\n", RLine, RFile, errorInfor1);
 
-		fprintf(fp, "%zu\n", record);
+		//fprintf(fp, "%zu\n", record);
 		for (i = 0; i < LexicalSource.GetCount(); i++)
 		{
 			size_t uintTemp1 = LexicalSource[i].line;
 			size_t uintTemp2 = LexicalSource[i].file;
-			if ((record == uintTemp1 || uintTemp1 + 1 == record) && uintTemp2 == RFile)
+			if ((RLine == uintTemp1 || uintTemp1 + 1 == RLine) && uintTemp2 == RFile)
 			{
 				if (i == errorInfor1)
 					fprintf(fp, "| %s |", LexicalSource.GetWord(i));
