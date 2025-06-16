@@ -1175,7 +1175,7 @@ namespace hyperlex
 			{
 				error = -1;
 				error_record00 = GrammarTree::UnExpectEnd;
-				error_record01 = head;
+				error_record01 = head - 1;
 				error_record02 = (size_t)top;
 				break;
 			}
