@@ -2815,12 +2815,13 @@ struct Preparser
 int InputPanel::build_v02(const char* file)
 {
 	int error;
+	Morpheme temp;
 	clear();
 	initial();
-	error = pretreatment(file, LexicalSource);
+	error = pretreatment(file, temp);
+	if (error != 0) return error;
 
-
-	//error = LexicalSource.Build<Reg>(input);
+	error = LexicalSource.Build<Reg>(temp);
 	if (error != 0) return error;
 	NeglectNullToken(LexicalSource);
 	//eme.Demo(stdout);
