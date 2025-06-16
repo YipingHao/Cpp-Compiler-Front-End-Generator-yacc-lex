@@ -929,7 +929,7 @@ int static Test003(const hyperlex::dictionary& para)
 
     error = pretreatment(file.c_str(), derived);
 
-    std::cout << "error: " << error << std::endl;
+    std::cout << " error = pretreatment(file.c_str(), derived);: " << error << std::endl;
     derived.Demo(stdout);
     hyperlex::BufferChar MorOut;
     derived.print(MorOut);
