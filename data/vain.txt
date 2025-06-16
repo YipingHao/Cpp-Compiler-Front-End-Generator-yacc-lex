@@ -18,6 +18,7 @@ grammar: EXP:
 		vain: void;
 		multi: BB bb;
 	}
+#include "formula.h"
 }
 
 

@@ -2942,13 +2942,11 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 					return 12345678;
 				}
 			}
-			
-
-			
-			
-			
+			eme.Demo(stdout);
+			output.Demo(stdout);
 			output.insert(begin, count, eme);
-
+			//std::cout << "=============" << std::endl;
+			output.Demo(stdout);
 		}
 	} while (include);
 
