@@ -2858,7 +2858,7 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 		if (error != 0)
 		{
 			errorInfor1 = output.FileCount() - 1;
-			errorInfor2 = Tree.error_record02;
+			errorInfor2 = Tree.error_record01;
 			errorCode = PretreatGRAMMAR;
 			return error;
 		}
