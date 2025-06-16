@@ -2862,8 +2862,8 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 		{
 			errorInfor1 = output.FileCount() - 1;
 			errorInfor2 = Tree.error_record01;
-			std::cout << "Tree.error_record01: " << Tree.error_record01 << std::endl;
-			std::cout << "Tree.error_record02: " << Tree.error_record02 << std::endl;
+			//std::cout << "Tree.error_record01: " << Tree.error_record01 << std::endl;
+			//std::cout << "Tree.error_record02: " << Tree.error_record02 << std::endl;
 			errorCode = PretreatGRAMMAR;
 			return error;
 		}
@@ -2909,14 +2909,14 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 			hyperlex::Morpheme eme;
 			hyperlex::FilePath left, here;
 			here.build(name);
-			std::cout << "file: " << file << std::endl;
-			std::cout << "output.GetFile(file): " << output.GetFile(file) << std::endl;
+			//std::cout << "file: " << file << std::endl;
+			//std::cout << "output.GetFile(file): " << output.GetFile(file) << std::endl;
 			left.build(output.GetFile(file));
-			here.demo();
-			left.demo();
-			std::cout << "begin: " << begin << std::endl;
-			std::cout << "name: " << name << std::endl;
-			std::cout << "count: " << count << std::endl;
+			//here.demo();
+			//left.demo();
+			//std::cout << "begin: " << begin << std::endl;
+			//std::cout << "name: " << name << std::endl;
+			//std::cout << "count: " << count << std::endl;
 			left.RearCutAppend(here);
 
 			//left.demo();
@@ -2952,11 +2952,11 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 					return 12345678;
 				}
 			}
-			eme.Demo(stdout);
-			output.Demo(stdout);
+			//eme.Demo(stdout);
+			//output.Demo(stdout);
 			output.insert(begin, count, eme);
 			//std::cout << "=============" << std::endl;
-			output.Demo(stdout);
+			//output.Demo(stdout);
 		}
 	} while (include);
 
