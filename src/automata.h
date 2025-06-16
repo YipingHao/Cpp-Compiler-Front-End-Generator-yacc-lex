@@ -958,8 +958,10 @@ namespace hyperlex
 		char now;
 		indexT index;
 		ruin();
-		
-		SrcFile.copy(src.SrcFile);
+		for (size_t i = 0; i < src.SrcFile.count(); i++)
+		{
+			append(src.SrcFile[i]);
+		}
 		size_t record = index.UnitOffest;
 		while (RunBuild<T>(accept, result, src, intermediate, index))
 		{
