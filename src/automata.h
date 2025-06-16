@@ -1166,6 +1166,8 @@ namespace hyperlex
 			if (!input.still(head))
 			{
 				error = -1;
+				error_record01 = head;
+				error_record02 = (size_t)top;
 				break;
 			}
 			top = stack.top();
