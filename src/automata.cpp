@@ -2855,7 +2855,7 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 		error = Tree.build<Preparser>(output);
 		if (error != 0)
 		{
-			errorInfor1 = output.FileCount();
+			errorInfor1 = output.FileCount() - 1;
 			errorInfor2 = Tree.error_record02;
 			errorCode = PretreatGRAMMAR;
 			return error;
@@ -2939,7 +2939,7 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 				right.build(output.GetFile(i));
 				if (left == right)
 				{
-					errorInfor1 = output.FileCount();
+					errorInfor1 = output.FileCount() - 1;
 					errorInfor2 = i;
 					errorCode = PretreatRepeat;
 					return 12345678;
