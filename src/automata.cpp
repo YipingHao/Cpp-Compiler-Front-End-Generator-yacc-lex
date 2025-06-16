@@ -748,7 +748,7 @@ GrammarTree::GrammarTree()
 	error_record02 = 0;
 	GT = NULL;
 
-	printf("GrammarTree::GrammarTree()\n");
+	//printf("GrammarTree::GrammarTree()\n");
 }
 GrammarTree::~GrammarTree()
 {
