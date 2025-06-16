@@ -523,9 +523,9 @@ void Morpheme::insert(size_t from, size_t deleted, const Morpheme& src)
 	size_t RearCount = count - rear_;
 	size_t OldStorage = storage.count();
 	
-	for (size_t i = 0; i < RearCount; i++)
+	for (size_t i = RearCount; i > 0; i--)
 	{
-		lex[i + NewCount + from] = lex[i + rear_];
+		lex[i - 1 + NewCount + from] = lex[i - 1 + rear_];
 	}
 	storage.append(src.storage);
 	for (size_t i = 0; i < NewCount; i++)
