@@ -881,7 +881,7 @@ int static pretreatment(const char* SrcName, hyperlex::Morpheme& output)
             if (error != 0) return error * 16 + 1;
             eme.SetFile(output.FileCount() - 1);
 
-            for (size_t i = 0; i < output.FileCount(); i++)
+            for (size_t i = 0; i + 1 < output.FileCount(); i++)
             {
                 hyperlex::FilePath right;
                 right.build(output.GetFile(i));

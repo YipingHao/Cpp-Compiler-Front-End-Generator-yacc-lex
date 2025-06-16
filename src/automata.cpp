@@ -2933,7 +2933,7 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 			}
 			eme.SetFile(output.FileCount() - 1);
 
-			for (size_t i = 0; i < output.FileCount(); i++)
+			for (size_t i = 0; i + 1 < output.FileCount(); i++)
 			{
 				hyperlex::FilePath right;
 				right.build(output.GetFile(i));
