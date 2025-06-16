@@ -2828,6 +2828,7 @@ int InputPanel::build_v02(const char* file)
 	error = buildGanalysis(LexicalSource);
 	if (error != 0) return error;
 	errorCode = NoError;
+	return error;
 }
 
 
