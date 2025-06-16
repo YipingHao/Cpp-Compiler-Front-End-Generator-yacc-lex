@@ -2902,11 +2902,14 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 			hyperlex::Morpheme eme;
 			hyperlex::FilePath left, here;
 			here.build(name);
-			//std::cout << "file: " << file << std::endl;
-			//std::cout << "output.GetFile(file): " << output.GetFile(file) << std::endl;
+			std::cout << "file: " << file << std::endl;
+			std::cout << "output.GetFile(file): " << output.GetFile(file) << std::endl;
 			left.build(output.GetFile(file));
-			//here.demo();
-			//left.demo();
+			here.demo();
+			left.demo();
+			std::cout << "begin: " << begin << std::endl;
+			std::cout << "name: " << name << std::endl;
+			std::cout << "count: " << count << std::endl;
 			left.RearCutAppend(here);
 
 			//left.demo();
