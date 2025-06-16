@@ -1195,6 +1195,8 @@ namespace hyperlex
 				error_record00 = true;
 				error_record01 = head;
 				error_record02 = (size_t)top;
+				printf("error_record01: %zu\n", error_record01);
+				printf("error_record02: %zu\n", error_record02);
 				error = temp;
 				DoNext = false;
 				break;
