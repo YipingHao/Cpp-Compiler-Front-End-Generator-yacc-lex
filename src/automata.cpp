@@ -2145,7 +2145,7 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		size_t RLine = LexicalSource[errorInfor2].line;
 		size_t RFile = LexicalSource[errorInfor2].file;
 
-		fprintf(fp, "in line %zu, file: %zu, unit: %zu\n", RLine, RFile, errorInfor1);
+		fprintf(fp, "in line %zu, file: %zu, unit: %zu\n", RLine, RFile, errorInfor2);
 
 		//fprintf(fp, "%zu\n", record);
 		for (i = 0; i < LexicalSource.GetCount(); i++)
