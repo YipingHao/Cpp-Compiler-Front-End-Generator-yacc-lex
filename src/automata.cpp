@@ -2183,6 +2183,7 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		break;
 	}
 	case InputPanel::ErrorNonTernimal:
+	{
 		fprintf(fp, "ErrorNonTernimal: Non-ternimal symbols in rules' body are conflict with their names.\n");
 		fprintf(fp, "Non-ternimal count in body: %zu, in their head: %zu\n", NontTerminal.count(), GrammarG.count());
 		for (i = 0; i < NontTerminal.count() && i < GrammarG.count(); i++)
@@ -2191,7 +2192,34 @@ void InputPanel::ErrorDemo(FILE* fp) const
 			fprintf(fp, "symbol[%zu]: %s, None\n", j, NontTerminal[j]);
 		for (j = i; j < GrammarG.count(); j++)
 			fprintf(fp, "symbol[%zu]: None, %s\n", j, GrammarG[j]->name);
+		for (i = 0; i < NontTerminal.count(); i++)
+		{
+			const char* Lstring = NontTerminal[i];
+			for (j = 0; j < GrammarG.count(); j++)
+			{
+				const char* Rstring = GrammarG[j]->name;
+				if (compare(Lstring, Rstring)) break;
+			}
+			if (j == GrammarG.count())
+			{
+				fprintf(fp, "NontTerminal[%zu]: %s, unmatched\n", i, NontTerminal[i]);
+			}
+		}
+		for (i = 0; i < GrammarG.count(); i++)
+		{
+			const char* Lstring = GrammarG[i]->name;
+			for (j = 0; j < NontTerminal.count(); j++)
+			{
+				const char* Rstring = NontTerminal[j];
+				if (compare(Lstring, Rstring)) break;
+			}
+			if (j == NontTerminal.count())
+			{
+				fprintf(fp, "GrammarG[%zu]->name: %s, unmatched\n", i, NontTerminal[i]);
+			}
+		}
 		break;
+	}
 	case InputPanel::WorngRuleBody:
 		fprintf(fp, "WorngRuleBody: symbol 'all' can not appear in rule body as a non-ternimal symbol.\n");
 		fprintf(fp, "symbol[%zu](%s)", errorInfor1, GrammarG[errorInfor1]->name);
