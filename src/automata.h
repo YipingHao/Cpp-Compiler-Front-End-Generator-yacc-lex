@@ -483,9 +483,9 @@ namespace hyperlex
 		void shrink(void);
 		void sort(void);
 		bool withTernimal(void)const;
-		template<typename T> int Build(const char* reg);
-		template<typename T> int Build(FILE* fp);
-		template<typename T> int Build(const Morpheme& src);
+		template<typename T> size_t Build(const char* reg);
+		template<typename T> size_t Build(FILE* fp);
+		template<typename T> size_t Build(const Morpheme& src);
 		//size_t index;
 		void clear(void);
 		void ruin(void);
@@ -897,7 +897,7 @@ namespace hyperlex
 }
 namespace hyperlex
 {
-	template<typename T> int Morpheme::Build(FILE* fp)
+	template<typename T> size_t Morpheme::Build(FILE* fp)
 	{
 		BufferChar input;
 		BufferChar result;
@@ -916,14 +916,16 @@ namespace hyperlex
 				input.dequeue(now);
 				result.append(now);
 				append(result, -1, -1);
-				error = -1;
+				AppendEnd(0);
+				SetLine();
+				return count;
 			}
 		}
 		AppendEnd(0);
 		SetLine();
 		return error;
 	}
-	template<typename T> int Morpheme::Build(const char* reg)
+	template<typename T> size_t Morpheme::Build(const char* reg)
 	{
 		BufferChar input;
 		BufferChar result;
@@ -941,7 +943,9 @@ namespace hyperlex
 				input.dequeue(now);
 				result.append(now);
 				append(result, -1, -1);
-				error = -1;
+				AppendEnd(0);
+				SetLine();
+				return count;
 			}
 		}
 		AppendEnd(0);
@@ -949,7 +953,7 @@ namespace hyperlex
 		
 		return error;
 	}
-	template<typename T> int Morpheme::Build(const Morpheme& src)
+	template<typename T> size_t Morpheme::Build(const Morpheme& src)
 	{
 		//BufferChar input;
 		BufferChar result;
@@ -977,14 +981,16 @@ namespace hyperlex
 				src.backspace(index, 1);
 				result.append(now);
 				append(result, -1, -1);
-				error = -1;
+				AppendEnd(0);
+				SetLine();
+				return count;
 			}
 			lex[count - 1].line = src.lex[record].line;
 			lex[count - 1].file = src.lex[record].file;
 			record = index.UnitOffest;
 		}
 		AppendEnd(0);
-		return error;
+		return 0;
 	}
 	template<typename T> bool Morpheme::RunBuild(int& accept, BufferChar& result, BufferChar& input, BufferChar& intermediate)
 	{

@@ -2136,7 +2136,7 @@ void InputPanel::ErrorDemo(FILE* fp) const
 	case InputPanel::PretreatLEXICAL:
 	{
 		fprintf(fp, "PretreatLEXICAL: Error happenned during pretreatment.\n");
-		fprintf(fp, "Lexical analysis of No.%zu ", errorInfor1);
+		fprintf(fp, "Lexical analysis line: %zu of No.%zu ", errorInfor2, errorInfor1);
 		fprintf(fp, "source file %s made a mistake\n", MorphemePre.GetFile(errorInfor1));
 		break;
 	}	
@@ -2937,7 +2937,8 @@ int InputPanel::pretreatment(const char* input, Morpheme& output)
 			fclose(fp2);
 			if (error != 0)
 			{
-				errorInfor1 = output.FileCount();
+				errorInfor1 = output.FileCount() - 1;
+				errorInfor2 = eme[eme.GetCount() - 2].line;
 				errorCode = PretreatLEXICAL;
 				return error;
 			}
