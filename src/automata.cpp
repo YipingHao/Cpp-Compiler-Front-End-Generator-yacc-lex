@@ -1963,6 +1963,7 @@ void InputPanel::initial(void)
 	//Terminal.append(s_temp);
 	RootName = NULL;
 
+	LexicalSource.append("source");
 	addVoidGroup();
 
 	errorCode = buildUndone;
