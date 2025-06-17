@@ -688,6 +688,7 @@ namespace hyperlex
 		const char* errorInfor3;
 		bool errorInfor4;
 
+		Morpheme MorphemePre;
 		Morpheme LexicalSource;
 
 		int pretreatment(const char* input, Morpheme& output);

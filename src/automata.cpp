@@ -1998,6 +1998,7 @@ void InputPanel::clear(void)
 	free(RootName);
 	RootName = NULL;
 	
+	MorphemePre.clear();
 	LexicalSource.clear();
 
 	GrammarEnclosed = false;
@@ -2136,31 +2137,31 @@ void InputPanel::ErrorDemo(FILE* fp) const
 	{
 		fprintf(fp, "PretreatLEXICAL: Error happenned during pretreatment.\n");
 		fprintf(fp, "Lexical analysis of No.%zu ", errorInfor1);
-		fprintf(fp, "source file %s made a mistake\n", LexicalSource.GetFile(errorInfor1));
+		fprintf(fp, "source file %s made a mistake\n", MorphemePre.GetFile(errorInfor1));
 		break;
 	}	
 	case InputPanel::PretreatGRAMMAR:
 	{
 		fprintf(fp, "PretreatGRAMMAR: Error happenned during pretreatment.\n");
 		fprintf(fp, "Grammar analysis of No.%zu ", errorInfor1);
-		fprintf(fp, "source file %s made a mistake ", LexicalSource.GetFile(errorInfor1));
+		fprintf(fp, "source file %s made a mistake ", MorphemePre.GetFile(errorInfor1));
 
-		size_t RLine = LexicalSource[errorInfor2].line;
-		size_t RFile = LexicalSource[errorInfor2].file;
+		size_t RLine = MorphemePre[errorInfor2].line;
+		size_t RFile = MorphemePre[errorInfor2].file;
 
 		fprintf(fp, "in line %zu, file: %zu, unit: %zu\n", RLine, RFile, errorInfor2);
 
 		//fprintf(fp, "%zu\n", record);
-		for (i = 0; i < LexicalSource.GetCount(); i++)
+		for (i = 0; i < MorphemePre.GetCount(); i++)
 		{
-			size_t uintTemp1 = LexicalSource[i].line;
-			size_t uintTemp2 = LexicalSource[i].file;
+			size_t uintTemp1 = MorphemePre[i].line;
+			size_t uintTemp2 = MorphemePre[i].file;
 			if ((RLine == uintTemp1 || uintTemp1 + 1 == RLine) && uintTemp2 == RFile)
 			{
 				if (i == errorInfor1)
-					fprintf(fp, "| %s |", LexicalSource.GetWord(i));
+					fprintf(fp, "| %s |", MorphemePre.GetWord(i));
 				else
-					fprintf(fp, "%s", LexicalSource.GetWord(i));
+					fprintf(fp, "%s", MorphemePre.GetWord(i));
 			}
 		}
 		break;
@@ -2169,15 +2170,15 @@ void InputPanel::ErrorDemo(FILE* fp) const
 	{
 		fprintf(fp, "PretreatRepeat: Error happenned during pretreatment.\n");
 		fprintf(fp, "No.%zu ", errorInfor1);
-		fprintf(fp, "source file %s repeats with existed ", LexicalSource.GetFile(errorInfor1));
-		fprintf(fp, "%zu file %s\n", errorInfor2, LexicalSource.GetFile(errorInfor2));
+		fprintf(fp, "source file %s repeats with existed ", MorphemePre.GetFile(errorInfor1));
+		fprintf(fp, "%zu file %s\n", errorInfor2, MorphemePre.GetFile(errorInfor2));
 		break;
 	}
 	case InputPanel::PretreatOpenfail:
 	{
 		fprintf(fp, "PretreatOpenfail: Error happenned during pretreatment.\n");
 		fprintf(fp, "Open of No.%zu ", errorInfor1);
-		fprintf(fp, "source file %s made a mistake\n", LexicalSource.GetFile(errorInfor1));
+		fprintf(fp, "source file %s made a mistake\n", MorphemePre.GetFile(errorInfor1));
 		break;
 	}
 	case InputPanel::ErrorNonTernimal:
@@ -2815,13 +2816,13 @@ struct Preparser
 int InputPanel::build_v02(const char* file)
 {
 	int error;
-	Morpheme temp;
+	
 	clear();
 	initial();
-	error = pretreatment(file, temp);
+	error = pretreatment(file, MorphemePre);
 	if (error != 0) return error;
 
-	error = LexicalSource.Build<Reg>(temp);
+	error = LexicalSource.Build<Reg>(MorphemePre);
 	if (error != 0) return error;
 	NeglectNullToken(LexicalSource);
 	//eme.Demo(stdout);
