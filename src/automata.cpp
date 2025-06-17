@@ -2228,12 +2228,15 @@ void InputPanel::ErrorDemo(FILE* fp) const
 	case InputPanel::ErrorinputGrammar:
 	{
 		fprintf(fp, "ErrorinputGrammar: Something was wrong when parsing of line:");
-		record = LexicalSource[errorInfor1].line;
-		fprintf(fp, "%zu\n", record);
+		size_t RLine = LexicalSource[errorInfor1].line;
+		size_t RFile = LexicalSource[errorInfor1].file;
+		fprintf(fp, "%zu", RLine);
+		fprintf(fp, " of No.%zu file %s\n", RFile, LexicalSource.GetFile(RFile));
 		for (i = 0; i < LexicalSource.GetCount(); i++)
 		{
-			size_t uintTemp = LexicalSource[i].line;
-			if (record == uintTemp || uintTemp + 1 == record)
+			size_t uintTemp1 = LexicalSource[i].line;
+			size_t uintTemp2 = LexicalSource[i].file;
+			if ((RLine == uintTemp1 || uintTemp1 + 1 == RLine) && uintTemp2 == RFile)
 			{
 				if (i == errorInfor1)
 					fprintf(fp, "| %s |", LexicalSource.GetWord(i));
