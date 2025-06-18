@@ -8267,15 +8267,15 @@ int PreTreat::next(int state, const char c)
 		else if (c == (char)13) return 28;
 		else if (c == ' ') return 7;
 		else if (c == '\"') return 31;
-		else if (c == '#') return 35;
-		else if (c == '\'') return 36;
+		else if (c == '#') return 34;
+		else if (c == '\'') return 35;
 		else if (c == '(') return 15;
 		else if (c == ')') return 16;
 		else if (c == '*') return 24;
 		else if (c == '+') return 25;
 		else if (c == '-') return 23;
 		else if (c == '.') return 12;
-		else if (c == '/') return 39;
+		else if (c == '/') return 38;
 		else if ('0' <= c && c <= '9') return 4;
 		else if (c == ':') return 11;
 		else if (c == ';') return 10;
@@ -8340,7 +8340,9 @@ int PreTreat::next(int state, const char c)
 	case 20:
 		return 0;
 	case 21:
-		return 0;
+		if ((char)0 <= c && c <= (char)9) return 21;
+		else if ((char)11 <= c && c <= (char)127) return 21;
+		else return 0;
 	case 22:
 		return 0;
 	case 23:
@@ -8365,61 +8367,56 @@ int PreTreat::next(int state, const char c)
 		else return 0;
 	case 30:
 		if ((char)0 <= c && c <= ')') return 30;
-		else if (c == '*') return 34;
+		else if (c == '*') return 33;
 		else if ('+' <= c && c <= (char)127) return 30;
 		else return 0;
 	case 31:
 		if (' ' <= c && c <= '!') return 31;
 		else if (c == '\"') return 5;
 		else if ('#' <= c && c <= '[') return 31;
-		else if (c == '\\') return 37;
+		else if (c == '\\') return 36;
 		else if (']' <= c && c <= (char)127) return 31;
 		else return 0;
 	case 32:
-		if (c == (char)0) return 38;
-		else if (c == '\"') return 38;
-		else if (c == '\'') return 38;
-		else if ('0' <= c && c <= '7') return 45;
-		else if (c == '\?') return 38;
-		else if (c == 'X') return 40;
-		else if (c == '\\') return 38;
-		else if ('a' <= c && c <= 'b') return 38;
-		else if (c == 'f') return 38;
-		else if (c == 'n') return 38;
-		else if (c == 'r') return 38;
-		else if (c == 't') return 38;
-		else if (c == 'v') return 38;
-		else if (c == 'x') return 40;
+		if (c == (char)0) return 37;
+		else if (c == '\"') return 37;
+		else if (c == '\'') return 37;
+		else if ('0' <= c && c <= '7') return 44;
+		else if (c == '\?') return 37;
+		else if (c == 'X') return 39;
+		else if (c == '\\') return 37;
+		else if ('a' <= c && c <= 'b') return 37;
+		else if (c == 'f') return 37;
+		else if (c == 'n') return 37;
+		else if (c == 'r') return 37;
+		else if (c == 't') return 37;
+		else if (c == 'v') return 37;
+		else if (c == 'x') return 39;
 		else return 0;
 	case 33:
-		if ((char)0 <= c && c <= (char)9) return 33;
-		else if (c == (char)10) return 21;
-		else if ((char)11 <= c && c <= (char)127) return 33;
-		else return 0;
-	case 34:
 		if ((char)0 <= c && c <= ')') return 30;
-		else if (c == '*') return 34;
+		else if (c == '*') return 33;
 		else if ('+' <= c && c <= '.') return 30;
 		else if (c == '/') return 22;
 		else if ('0' <= c && c <= (char)127) return 30;
 		else return 0;
+	case 34:
+		if (c == 'i') return 43;
+		else return 0;
 	case 35:
-		if (c == 'i') return 44;
+		if (' ' <= c && c <= '!') return 37;
+		else if ('#' <= c && c <= '&') return 37;
+		else if ('(' <= c && c <= '[') return 37;
+		else if (c == '\\') return 32;
+		else if (']' <= c && c <= '~') return 37;
 		else return 0;
 	case 36:
-		if (' ' <= c && c <= '!') return 38;
-		else if ('#' <= c && c <= '&') return 38;
-		else if ('(' <= c && c <= '[') return 38;
-		else if (c == '\\') return 32;
-		else if (']' <= c && c <= '~') return 38;
-		else return 0;
-	case 37:
 		if (c == (char)0) return 31;
 		else if (c == '\"') return 31;
 		else if (c == '\'') return 31;
 		else if ('0' <= c && c <= '7') return 31;
 		else if (c == '\?') return 31;
-		else if (c == 'X') return 46;
+		else if (c == 'X') return 45;
 		else if (c == '\\') return 31;
 		else if ('a' <= c && c <= 'b') return 31;
 		else if (c == 'f') return 31;
@@ -8427,56 +8424,56 @@ int PreTreat::next(int state, const char c)
 		else if (c == 'r') return 31;
 		else if (c == 't') return 31;
 		else if (c == 'v') return 31;
-		else if (c == 'x') return 46;
+		else if (c == 'x') return 45;
+		else return 0;
+	case 37:
+		if (c == '\'') return 3;
 		else return 0;
 	case 38:
-		if (c == '\'') return 3;
+		if (c == '*') return 30;
+		else if (c == '/') return 21;
 		else return 0;
 	case 39:
-		if (c == '*') return 30;
-		else if (c == '/') return 33;
+		if ('0' <= c && c <= '9') return 48;
+		else if ('A' <= c && c <= 'F') return 48;
+		else if ('a' <= c && c <= 'f') return 48;
 		else return 0;
 	case 40:
-		if ('0' <= c && c <= '9') return 49;
-		else if ('A' <= c && c <= 'F') return 49;
-		else if ('a' <= c && c <= 'f') return 49;
+		if (c == 'c') return 46;
 		else return 0;
 	case 41:
-		if (c == 'c') return 47;
+		if (c == 'd') return 42;
 		else return 0;
 	case 42:
-		if (c == 'd') return 43;
-		else return 0;
-	case 43:
 		if (c == 'e') return 6;
 		else return 0;
+	case 43:
+		if (c == 'n') return 40;
+		else return 0;
 	case 44:
-		if (c == 'n') return 41;
+		if (c == '\'') return 3;
+		else if ('0' <= c && c <= '7') return 49;
 		else return 0;
 	case 45:
-		if (c == '\'') return 3;
-		else if ('0' <= c && c <= '7') return 50;
-		else return 0;
-	case 46:
 		if ('0' <= c && c <= '9') return 31;
 		else if ('A' <= c && c <= 'F') return 31;
 		else if ('a' <= c && c <= 'f') return 31;
 		else return 0;
+	case 46:
+		if (c == 'l') return 47;
+		else return 0;
 	case 47:
-		if (c == 'l') return 48;
+		if (c == 'u') return 41;
 		else return 0;
 	case 48:
-		if (c == 'u') return 42;
+		if (c == '\'') return 3;
+		else if ('0' <= c && c <= '9') return 37;
+		else if ('A' <= c && c <= 'F') return 37;
+		else if ('a' <= c && c <= 'f') return 37;
 		else return 0;
 	case 49:
 		if (c == '\'') return 3;
-		else if ('0' <= c && c <= '9') return 38;
-		else if ('A' <= c && c <= 'F') return 38;
-		else if ('a' <= c && c <= 'f') return 38;
-		else return 0;
-	case 50:
-		if (c == '\'') return 3;
-		else if ('0' <= c && c <= '7') return 38;
+		else if ('0' <= c && c <= '7') return 37;
 		else return 0;
 	}
 	return 0;
@@ -8605,6 +8602,7 @@ int PreTreat::GroupGet(int accept)
 	}
 	return 0;
 }
+
 
 
 //Preparser
@@ -8868,6 +8866,7 @@ const int Preparser::Implicit[40] = { \
 1, \
 1, \
 1 };
+
 
 
 
