@@ -7301,7 +7301,7 @@ int Reg::next(int state, const char c)
 		else if (c == '+') return 27;
 		else if (c == '-') return 25;
 		else if (c == '.') return 14;
-		else if (c == '/') return 54;
+		else if (c == '/') return 53;
 		else if ('0' <= c && c <= '9') return 4;
 		else if (c == ':') return 13;
 		else if (c == ';') return 12;
@@ -7393,7 +7393,9 @@ int Reg::next(int state, const char c)
 	case 22:
 		return 0;
 	case 23:
-		return 0;
+		if ((char)0 <= c && c <= (char)9) return 23;
+		else if ((char)11 <= c && c <= (char)127) return 23;
+		else return 0;
 	case 24:
 		return 0;
 	case 25:
@@ -7511,15 +7513,15 @@ int Reg::next(int state, const char c)
 		else return 0;
 	case 44:
 		if ((char)0 <= c && c <= ')') return 44;
-		else if (c == '*') return 53;
+		else if (c == '*') return 52;
 		else if ('+' <= c && c <= (char)127) return 44;
 		else return 0;
 	case 45:
-		if (' ' <= c && c <= '!') return 55;
-		else if ('#' <= c && c <= '&') return 55;
-		else if ('(' <= c && c <= '[') return 55;
+		if (' ' <= c && c <= '!') return 54;
+		else if ('#' <= c && c <= '&') return 54;
+		else if ('(' <= c && c <= '[') return 54;
 		else if (c == '\\') return 51;
-		else if (']' <= c && c <= '~') return 55;
+		else if (']' <= c && c <= '~') return 54;
 		else return 0;
 	case 46:
 		if ('0' <= c && c <= '9') return 1;
@@ -7562,58 +7564,53 @@ int Reg::next(int state, const char c)
 		else if ('s' <= c && c <= 'z') return 1;
 		else return 0;
 	case 51:
-		if (c == (char)0) return 55;
-		else if (c == '\"') return 55;
-		else if (c == '\'') return 55;
-		else if ('0' <= c && c <= '7') return 57;
-		else if (c == '\?') return 55;
-		else if (c == 'X') return 56;
-		else if (c == '\\') return 55;
-		else if ('a' <= c && c <= 'b') return 55;
-		else if (c == 'f') return 55;
-		else if (c == 'n') return 55;
-		else if (c == 'r') return 55;
-		else if (c == 't') return 55;
-		else if (c == 'v') return 55;
-		else if (c == 'x') return 56;
+		if (c == (char)0) return 54;
+		else if (c == '\"') return 54;
+		else if (c == '\'') return 54;
+		else if ('0' <= c && c <= '7') return 56;
+		else if (c == '\?') return 54;
+		else if (c == 'X') return 55;
+		else if (c == '\\') return 54;
+		else if ('a' <= c && c <= 'b') return 54;
+		else if (c == 'f') return 54;
+		else if (c == 'n') return 54;
+		else if (c == 'r') return 54;
+		else if (c == 't') return 54;
+		else if (c == 'v') return 54;
+		else if (c == 'x') return 55;
 		else return 0;
 	case 52:
-		if ((char)0 <= c && c <= (char)9) return 52;
-		else if (c == (char)10) return 23;
-		else if ((char)11 <= c && c <= (char)127) return 52;
-		else return 0;
-	case 53:
 		if ((char)0 <= c && c <= ')') return 44;
-		else if (c == '*') return 53;
+		else if (c == '*') return 52;
 		else if ('+' <= c && c <= '.') return 44;
 		else if (c == '/') return 24;
 		else if ('0' <= c && c <= (char)127) return 44;
 		else return 0;
-	case 54:
+	case 53:
 		if (c == '*') return 44;
-		else if (c == '/') return 52;
+		else if (c == '/') return 23;
 		else return 0;
-	case 55:
+	case 54:
 		if (c == '\'') return 3;
 		else return 0;
+	case 55:
+		if ('0' <= c && c <= '9') return 57;
+		else if ('A' <= c && c <= 'F') return 57;
+		else if ('a' <= c && c <= 'f') return 57;
+		else return 0;
 	case 56:
-		if ('0' <= c && c <= '9') return 58;
-		else if ('A' <= c && c <= 'F') return 58;
-		else if ('a' <= c && c <= 'f') return 58;
+		if (c == '\'') return 3;
+		else if ('0' <= c && c <= '7') return 58;
 		else return 0;
 	case 57:
 		if (c == '\'') return 3;
-		else if ('0' <= c && c <= '7') return 59;
+		else if ('0' <= c && c <= '9') return 54;
+		else if ('A' <= c && c <= 'F') return 54;
+		else if ('a' <= c && c <= 'f') return 54;
 		else return 0;
 	case 58:
 		if (c == '\'') return 3;
-		else if ('0' <= c && c <= '9') return 55;
-		else if ('A' <= c && c <= 'F') return 55;
-		else if ('a' <= c && c <= 'f') return 55;
-		else return 0;
-	case 59:
-		if (c == '\'') return 3;
-		else if ('0' <= c && c <= '7') return 55;
+		else if ('0' <= c && c <= '7') return 54;
 		else return 0;
 	}
 	return 0;
@@ -7784,6 +7781,7 @@ int Reg::GroupGet(int accept)
 	}
 	return 0;
 }
+
 
 const size_t Panel::StateCount = 107;
 const size_t Panel::NonTerminalCount = 24;
