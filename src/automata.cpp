@@ -2223,12 +2223,15 @@ void InputPanel::ErrorDemo(FILE* fp) const
 		break;
 	}
 	case InputPanel::WorngRuleBody:
+	{
 		fprintf(fp, "WorngRuleBody: symbol 'all' can not appear in rule body as a non-ternimal symbol.\n");
 		fprintf(fp, "symbol[%zu](%s)", errorInfor1, GrammarG[errorInfor1]->name);
 		fprintf(fp, "rule[%zu](%s): ", errorInfor2, (GrammarG[errorInfor1])->rules[errorInfor2]->name);
 		GrammarG[errorInfor1]->rules[errorInfor2]->demo(fp, NontTerminal, Terminal);
 		fprintf(fp, "\n");
 		break;
+	}
+		
 	case InputPanel::missingIdinRegdef:
 		fprintf(fp, "missingIdinRegdef: need definition of regular expression: %s.\n", errorInfor3);
 		fprintf(fp, "\n");
