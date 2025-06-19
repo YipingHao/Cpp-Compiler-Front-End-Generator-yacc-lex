@@ -11,7 +11,7 @@ COFILE = $(ODIR)automata.o  $(ODIR)dictionary.o
 HOFILE = $(CODE)automata.h  $(CODE)dictionary.h
 TestOFile = $(TEST)main.o $(TEST)test_old.o  $(TEST)test.o  
 
-OPTION = -O0 
+OPTION ?= -O2 
 #OPTION = -O3
 EXTRA =-Wall -Wextra -fno-strict-aliasing -fwrapv -fno-aggressive-loop-optimizations -Wconversion -ftrapv
 #CC = icc
