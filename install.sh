@@ -3,6 +3,7 @@
 # 默认参数
 OPTIMIZATION="-O0"
 CLEAN=no
+CLEANquit=no
 DEBUG=no
 
 # 解析命令行参数
@@ -21,6 +22,10 @@ while getopts "go:c" opt; do
       ;;
     c)
       CLEAN=yes
+      ;;
+    C)
+      CLEAN=yes
+      CLEANquit=yes
       ;;
     *)
       echo "Usage: $0 [-g] [-o <0|1|2|3>] [-c]" >&2
@@ -42,6 +47,10 @@ cd "./tools/" || { echo "Failed to enter tools directory"; exit 1; }
 
 if [[ "$CLEAN" == "yes" ]]; then
   make clean
+fi
+
+if [[ "$CLEANquit" == "yes" ]]; then
+  exit 0
 fi
 
 if [[ -n "$MAKE_OPTION" ]]; then
