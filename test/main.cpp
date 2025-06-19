@@ -62,7 +62,7 @@ int static entrance(int argc, char* argv[])
     fclose(fp);
     error = para.build(input.ptr());
     std::cout << "error: " << error << std::endl;
-    para.print(stdout);
+    
 
     hyperlex::FilePath Opath;
     hyperlex::FilePath O_1, O_2, O_3;
@@ -71,8 +71,23 @@ int static entrance(int argc, char* argv[])
     O_1.build(para.search("L.txt", "OutputFileName"));
     O_2.build(para.search("G.txt", "OutputFileName2"));
     O_3.build(para.search("G2.txt", "OutputFileName3"));
-  
 
+    hyperlex::FilePath F_1, F_2, F_3;
+
+    F_1.copy(Opath);
+    F_2.copy(Opath);
+    F_3.copy(Opath);
+
+    F_1.RearOnlyAppend(O_1);
+    F_2.RearOnlyAppend(O_2);
+    F_3.RearOnlyAppend(O_3);
+
+
+    temp.assign("OutputFileName", F_1.path());
+    temp.assign("OutputFileName2", F_2.path());
+    temp.assign("OutputFileName3", F_3.path());
+  
+    para.print(stdout);
 
     const char* item;
     item = para.search("test old", "item");
