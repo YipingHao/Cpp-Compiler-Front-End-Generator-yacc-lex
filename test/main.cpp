@@ -38,17 +38,21 @@ int static entrance(int argc, char* argv[])
 {
     hyperlex::dictionary para;
     FILE* fp;
-    std::string file;
+    std::string file, outputDir;
     CFile CF;
     int error;
     hyperlex::BufferChar input;
     hyperlex::BufferChar temp;
     int info;
 
-    file = "./parameter/para.txt";
+    if (argc > 1) file = argv[1];
+    else file = "./parameter/para.txt";
+    if (argc > 1) outputDir = argv[2];
+    else outputDir = "./output/;
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     fp = CF.OpenRead(file.c_str());
     std::cout << "InputFileName: " << file << std::endl;
+    std::cout << "OutputFilePath: " << outputDir << std::endl;
     input << fp;
     temp.append(input);
     std::cout << "/*" << std::endl;
@@ -60,12 +64,22 @@ int static entrance(int argc, char* argv[])
     std::cout << "error: " << error << std::endl;
     para.print(stdout);
 
+    hyperlex::FilePath Opath;
+    hyperlex::FilePath O_1, O_2, O_3;
+    Opath.build(outputDir.c_str());
+
+    O_1.build(para.search("L.txt", "OutputFileName"));
+    O_2.build(para.search("G.txt", "OutputFileName2"));
+    O_3.build(para.search("G2.txt", "OutputFileName3"));
+  
+
+
     const char* item;
     item = para.search("test old", "item");
     std::cout << "item: " << item << std::endl;
     if (compare(item, "test old"))
     {
-        info = test_entrance(argv[1]);
+        info = test_entrance(outputDir.c_str());
     }
     else if (compare(item, "simple LR"))
     {

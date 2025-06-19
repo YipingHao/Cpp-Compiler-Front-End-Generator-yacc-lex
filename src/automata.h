@@ -376,17 +376,20 @@ namespace hyperlex
 		//the input path can't be 'this'。 A += A is wrong;
 		bool operator==(const FilePath& rhs) const;
 		char* print(char divide = '/')const;
+		const char* path(void) const;
 		void demo(FILE* fp = stdout)const;
 		void copy(const FilePath& source);
 		//the input path can't be 'this'。 A += A is wrong;
 		void RearCut(void);
 		void RearCutAppend(const FilePath& rhs);
+		void RearOnlyAppend(const FilePath& rhs);
 		void clear(void);
 		void clean(void);
 	private:
 		bool absolute;
 		vector<char*> PathUnit;
-		
+		char* FullPath;
+		void refresh(void);
 		void append_copy(const char* str);
 	};
 	class GrammarTree

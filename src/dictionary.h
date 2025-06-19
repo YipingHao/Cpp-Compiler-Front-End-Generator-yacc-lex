@@ -34,6 +34,7 @@ namespace hyperlex
             KV();
             ~KV();
             void ruin(void);
+            void copy(const KV& src);
             void clear(void);
             void initial(void);
             void recapacity(size_t NewSize);
@@ -44,19 +45,11 @@ namespace hyperlex
             size_t capacity() const;
             size_t count() const;
             element& operator[](size_t i);
-            const element& operator[](size_t i) const;
+            element const& operator[](size_t i) const;
         };
         enum errorType
         {
             NoError = 0,
-            ConflictRegGroupName = 1,
-            repeatRegName = 2,
-            missingId = 3,
-            repeatGGroupName = 4,
-            repeatGName = 5,
-            ErrorNonTernimal,
-            WorngRuleBody,
-            missingIdinRegdef,
             ErrorinputLEXICAL,
             ErrorinputGrammar,
             buildUndone,
@@ -88,6 +81,10 @@ namespace hyperlex
         size_t append(const char* key, size_t value);
         size_t append(const char* key, bool value);
         size_t append(const char* key, dictionary* value);
+
+        size_t assign(const char* key, element value, Ktype T);
+        size_t assign(const char* key, const char* value);
+        void copy(const dictionary& source);
     private:
         typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor> GLTree;
         typedef hyperlex::tree<hyperlex::GrammarTree::TreeInfor>::PostIterator GTIter;

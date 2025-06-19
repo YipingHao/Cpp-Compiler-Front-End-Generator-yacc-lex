@@ -943,6 +943,44 @@ int static Test003(const hyperlex::dictionary& para)
 int static Test004(const hyperlex::dictionary& para)
 {
     int error = 0;
+    para.print(stdout);
+    hyperlex::dictionary temp;
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    temp.copy(para);
+    temp.print(stdout);
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+
+    hyperlex::FilePath Opath;
+    hyperlex::FilePath O_1, O_2, O_3;
+    Opath.build("data/output");
+
+    O_1.build(temp.search("L.txt", "OutputFileName"));
+    O_2.build(temp.search("G.txt", "OutputFileName2"));
+    O_3.build(temp.search("G2.txt", "OutputFileName3"));
+
+    hyperlex::FilePath F_1, F_2, F_3;
+
+    F_1.copy(Opath);
+    F_2.copy(Opath);
+    F_3.copy(Opath);
+    
+    F_1.demo();
+
+    F_1.RearOnlyAppend(O_1);
+    F_2.RearOnlyAppend(O_2);
+    F_3.RearOnlyAppend(O_3);
+
+    F_1.demo();
+    F_2.demo();
+    F_3.demo();
+
+    temp.assign("OutputFileName", F_1.path());
+    temp.assign("OutputFileName2", F_2.path());
+    temp.assign("OutputFileName3", F_3.path());
+    
+    temp.assign("OutputFileName1", "test");
+    std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
+    temp.print(stdout);
     return error;
 }
 int static Test005(const hyperlex::dictionary& para)

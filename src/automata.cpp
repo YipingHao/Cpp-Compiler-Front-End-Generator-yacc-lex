@@ -1650,6 +1650,7 @@ void RegularExp::set(const Morpheme& eme, hyperlex::tree<GrammarTree::TreeInfor>
 FilePath::FilePath()
 {
 	absolute = false;
+	FullPath = NULL;
 }
 FilePath::~FilePath()
 {
@@ -1662,7 +1663,8 @@ void FilePath::clear()
 		free(PathUnit[i]);
 	}
 	PathUnit.clear();
-
+	free(FullPath);
+	FullPath = NULL;
 }
 void FilePath::build(const char* path)
 {
@@ -1689,6 +1691,8 @@ void FilePath::build(const char* path)
 
 		start = end;
 	}
+
+	refresh();
 }
 void FilePath::operator+=(const FilePath& rhs)
 {
@@ -1704,6 +1708,7 @@ void FilePath::operator+=(const FilePath& rhs)
 			append_copy(rhs.PathUnit[i]);
 		}
 	}
+	refresh();
 }
 bool FilePath::operator==(const FilePath& rhs) const
 {
@@ -1756,6 +1761,10 @@ char* FilePath::print(char divider)const
 
 	return buf;
 }
+const char* FilePath::path(void) const
+{
+	return FullPath;
+}
 void FilePath::copy(const FilePath& source)
 {
 	clear();
@@ -1764,15 +1773,14 @@ void FilePath::copy(const FilePath& source)
 	{
 		append_copy(source.PathUnit[i]);
 	}
+	refresh();
 }
 void FilePath::demo(FILE* fp)const
 {
 	fprintf(fp, "[FilePath Demo]");
 	fprintf(fp, "-Absolute: %s, ", absolute ? "true" : "false");
 
-	char* pathStr = print();
-	fprintf(fp, "-Path: [%s], ", pathStr);
-	free((void*)pathStr);
+	fprintf(fp, "-Path: [%s], ", FullPath);
 
 	fprintf(fp, "-Units: ");
 	for (size_t i = 0; i < PathUnit.count(); i++)
@@ -1851,6 +1859,7 @@ void FilePath::RearCut(void)
 	{
 		absolute = false;
 	}
+	refresh();
 }
 void FilePath::clean(void)
 {
@@ -1891,6 +1900,7 @@ void FilePath::clean(void)
 		}
 	}
 	PathUnit.recount(offset);
+	refresh();
 }
 void FilePath::RearCutAppend(const FilePath& rhs)
 {
@@ -1907,6 +1917,18 @@ void FilePath::RearCutAppend(const FilePath& rhs)
 			append_copy(rhs.PathUnit[i]);
 		}
 	}
+	refresh();
+}
+void FilePath::RearOnlyAppend(const FilePath& rhs)
+{
+	size_t i = rhs.PathUnit.count();
+	if (i != 0) append_copy(rhs.PathUnit[i - 1]);
+	refresh();
+}
+void FilePath::refresh(void)
+{
+	free(FullPath);
+	FullPath = print();
 }
 
 static const char* Copy(const char* input)
