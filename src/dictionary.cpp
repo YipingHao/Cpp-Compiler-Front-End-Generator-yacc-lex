@@ -47,13 +47,13 @@ void dictionary::KV::copy(const KV& src)
 	T = src.T;
 	
 	// Éî¿½±´ key
-	if (src.key != nullptr) 
+	if (src.key != NULL) 
 	{
 		setName(src.ke);
 	}
 	else 
 	{
-		key = nullptr;
+		key = NULL;
 	}
 	recapacity(src.Capacity);
 	Count = src.Count;
@@ -76,13 +76,13 @@ void dictionary::KV::copy(const KV& src)
 	{
 		for (size_t i = 0; i < Count; ++i)
 		{
-			if(src.Content[i].ss != nullptr)
+			if(src.Content[i].ss != NULL)
 			{
 				Content[i].ss = Copy(src.Content[i].ss); 
 			}
 			else 
 			{
-				Content[i].ss = nullptr;
+				Content[i].ss = NULL;
 			}
 		}
 		break;
