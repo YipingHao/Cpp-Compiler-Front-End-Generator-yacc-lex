@@ -46,8 +46,8 @@ int static entrance(int argc, char* argv[])
     int info;
 
     if (argc > 1) file = argv[1];
-    else file = "./parameter/para.txt";
-    if (argc > 1) outputDir = argv[2];
+    else file = "./parameter/parameter.txt";
+    if (argc > 2) outputDir = argv[2];
     else outputDir = "./output/";
     std::cout << "+++++++++++++++++++++++++++++++++++++++++++++" << std::endl;
     fp = CF.OpenRead(file.c_str());
