@@ -6,7 +6,7 @@ using namespace hyperlex;
 
 static bool compare(const char* str1, const char* str2);
 static void write_escaped_string(const char* str, FILE* file);
-static const char* Copy(const char* input);
+static char* Copy(const char* input);
 
 dictionary::dictionary()
 {
@@ -1746,7 +1746,7 @@ static bool compare(const char* str1, const char* str2)
 	for (i = 0; (str1[i] != '\0') && (str1[i] == str2[i]); i++);
 	return str1[i] == str2[i];
 }
-static const char* Copy(const char* input)
+static char* Copy(const char* input)
 {
 	char* nnnn;
 	size_t length, i;
