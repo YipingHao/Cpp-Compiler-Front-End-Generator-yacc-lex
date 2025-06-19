@@ -485,7 +485,7 @@ size_t dictionary::assign(const char* key, element value, Ktype T)
 		if (compare(storage[i - 1], target->Content[j].key))
 		{
 			target->Content[j].clear();
-			target->Content[j].T = T
+			target->Content[j].T = T;
 			target->Content[j].append(value);
 			return site;
 		}
