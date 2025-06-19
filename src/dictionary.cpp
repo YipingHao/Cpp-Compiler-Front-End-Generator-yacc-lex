@@ -520,7 +520,7 @@ void dictionary::copy(const dictionary& source)
 	for (size_t i = 0; i < source.Content.count(); i++)
 	{
 		KV * temp = new KV;
-		temp->copy(source[i]);
+		temp->copy(source.Content[i]);
 		move(temp);
 	}
 
