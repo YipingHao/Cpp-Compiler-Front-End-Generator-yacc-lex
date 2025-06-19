@@ -83,9 +83,9 @@ int static entrance(int argc, char* argv[])
     F_3.RearOnlyAppend(O_3);
 
 
-    temp.assign("OutputFileName", F_1.path());
-    temp.assign("OutputFileName2", F_2.path());
-    temp.assign("OutputFileName3", F_3.path());
+    para.assign("OutputFileName", F_1.path());
+    para.assign("OutputFileName2", F_2.path());
+    para.assign("OutputFileName3", F_3.path());
   
     para.print(stdout);
 
