@@ -49,7 +49,7 @@ void dictionary::KV::copy(const KV& src)
 	// Éî¿½±´ key
 	if (src.key != NULL) 
 	{
-		setName(src.ke);
+		setName(src.key);
 	}
 	else 
 	{
