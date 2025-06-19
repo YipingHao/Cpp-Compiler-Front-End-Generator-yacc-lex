@@ -46,8 +46,8 @@ while [[ $# -gt 0 ]]; do
                 echo "-i requires an argument." >&2
                 usage
             fi
-            #input_right="$2"
-            input_file="./parameter"+"$2"
+            input_file="./parameter/"
+            input_file+="$2"
             shift 2
             ;;
         -o)
