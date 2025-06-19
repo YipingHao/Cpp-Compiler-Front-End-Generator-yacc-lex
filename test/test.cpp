@@ -952,7 +952,7 @@ int static Test004(const hyperlex::dictionary& para)
 
     hyperlex::FilePath Opath;
     hyperlex::FilePath O_1, O_2, O_3;
-    Opath.build("data/output");
+    Opath.build("./data/output/fun");
 
     O_1.build(temp.search("L.txt", "OutputFileName"));
     O_2.build(temp.search("G.txt", "OutputFileName2"));
