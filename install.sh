@@ -7,7 +7,7 @@ CLEANquit=no
 DEBUG=no
 
 # 解析命令行参数
-while getopts "go:c" opt; do
+while getopts "go:cC" opt; do
   case $opt in
     g)
       DEBUG=yes
