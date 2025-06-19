@@ -17,7 +17,8 @@ usage() {
     echo "  -g     : Use gdb to launch a.exe, followed by optional gdb arguments."
     echo "  -i arg : Specify input file (default: input.txt)"
     echo "  -o arg : Specify output file (default: output.txt)"
-    exit 1
+    echo "  -h           Show this help message"
+    
 }
 
 # 手动解析参数
@@ -37,6 +38,7 @@ while [[ $# -gt 0 ]]; do
             if [[ $# -lt 2 ]]; then
                 echo "-i requires an argument." >&2
                 usage
+                exit 1
             fi
             input_file="$2"
             shift 2
@@ -45,6 +47,7 @@ while [[ $# -gt 0 ]]; do
             if [[ $# -lt 2 ]]; then
                 echo "-i requires an argument." >&2
                 usage
+                exit 1
             fi
             input_file="./parameter/"
             input_file+="$2"
@@ -54,13 +57,19 @@ while [[ $# -gt 0 ]]; do
             if [[ $# -lt 2 ]]; then
                 echo "-o requires an argument." >&2
                 usage
+                exit 1
             fi
             output_file="$2"
             shift 2
             ;;
+        -h)
+            usage
+            exit 0
+            ;;
         *)
             echo "Unknown option: $1" >&2
             usage
+            exit 1
             ;;
     esac
 done
